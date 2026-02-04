@@ -1,10 +1,6 @@
 # Supabase Configuration File
 # Documentation: https://supabase.com/docs/guides/cli/config
 
-[project]
-# Project URL from Supabase Dashboard
-project_url = "https://jtgupdeuwovoyadgtcns.supabase.co"
-
 [api]
 # Port to use for the API URL.
 port = 54321
