@@ -1,0 +1,646 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Plus, Calculator, Save, Users } from 'lucide-react';
+import { BudgetItem, getBudgetItems, createBudgetItem, updateBudgetItem, deleteBudgetItem } from '../lib/events';
+import { EquipmentItem, getEquipmentItems } from '../lib/equipment';
+import { WorkItem, getWorkItems, getBudgetItemPersonnel, assignPersonnelToBudgetItem } from '../lib/personnel';
+import { Category, getCategories, createCategory, updateCategory } from '../lib/categories';
+import { PersonnelSelector } from './PersonnelSelector';
+import { CategoryBlock } from './CategoryBlock';
+
+interface BudgetEditorProps {
+  eventId: string;
+  eventName: string;
+  onClose: () => void;
+}
+
+interface GroupedItems {
+  [categoryId: string]: BudgetItem[];
+}
+
+export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps) {
+  const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [equipment, setEquipment] = useState<EquipmentItem[]>([]);
+  const [workItems, setWorkItems] = useState<WorkItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [selectedItemType, setSelectedItemType] = useState<string>('Оборудование');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedEquipmentCategory, setSelectedEquipmentCategory] = useState<string>('Все');
+  const [exchangeRate, setExchangeRate] = useState(3.0);
+  const [showInBYN, setShowInBYN] = useState(false);
+  const [personnelSelectorOpen, setPersonnelSelectorOpen] = useState(false);
+  const [selectedBudgetItemForPersonnel, setSelectedBudgetItemForPersonnel] = useState<string | null>(null);
+  const [budgetItemPersonnel, setBudgetItemPersonnel] = useState<Record<string, string[]>>({});
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const [draggedItem, setDraggedItem] = useState<{ type: 'category' | 'item'; id: string } | null>(null);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [activeCategoryIds, setActiveCategoryIds] = useState<Set<string>>(new Set());
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+
+  const budgetListRef = useRef<HTMLDivElement>(null);
+  const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const lastAddedItemRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    loadData();
+  }, [eventId]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showCategoryDropdown) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.category-dropdown-container')) {
+          setShowCategoryDropdown(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showCategoryDropdown]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [budgetData, categoriesData, equipmentData, workItemsData] = await Promise.all([
+        getBudgetItems(eventId),
+        getCategories(),
+        getEquipmentItems(),
+        getWorkItems()
+      ]);
+      setBudgetItems(budgetData);
+      setCategories(categoriesData);
+      setEquipment(equipmentData);
+      setWorkItems(workItemsData);
+
+      if (budgetData.length > 0 && budgetData[0].exchange_rate) {
+        setExchangeRate(budgetData[0].exchange_rate);
+      }
+
+      const initialExpanded: Record<string, boolean> = {};
+      const initialActive = new Set<string>();
+
+      categoriesData.forEach(cat => {
+        initialExpanded[cat.id] = true;
+      });
+
+      budgetData.forEach(item => {
+        if (item.category_id) {
+          initialActive.add(item.category_id);
+        }
+      });
+
+      setExpandedCategories(initialExpanded);
+      setActiveCategoryIds(initialActive);
+
+      const personnelMap: Record<string, string[]> = {};
+      for (const item of budgetData) {
+        try {
+          const personnel = await getBudgetItemPersonnel(item.id);
+          personnelMap[item.id] = personnel.map(p => p.id);
+        } catch (error) {
+          console.error('Error loading personnel for budget item:', error);
+        }
+      }
+      setBudgetItemPersonnel(personnelMap);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      alert('Ошибка загрузки данных');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectCategory = async (categoryId: string) => {
+    setShowCategoryDropdown(false);
+
+    const newActiveCategoryIds = new Set(activeCategoryIds);
+    newActiveCategoryIds.add(categoryId);
+    setActiveCategoryIds(newActiveCategoryIds);
+
+    setExpandedCategories({ ...expandedCategories, [categoryId]: true });
+  };
+
+  const handleAddItem = async (equipmentItem: EquipmentItem, categoryId?: string) => {
+    try {
+      const targetCategoryId = categoryId || selectedCategoryId || undefined;
+
+      const newItem = await createBudgetItem({
+        event_id: eventId,
+        equipment_id: equipmentItem.id,
+        item_type: 'equipment',
+        quantity: 1,
+        price: equipmentItem.rental_price,
+        exchange_rate: exchangeRate,
+        category_id: targetCategoryId,
+        notes: ''
+      });
+      const updatedItems = [...budgetItems, newItem];
+      setBudgetItems(updatedItems);
+      lastAddedItemRef.current = newItem.id;
+
+      if (targetCategoryId) {
+        const newActiveCategoryIds = new Set(activeCategoryIds);
+        newActiveCategoryIds.add(targetCategoryId);
+        setActiveCategoryIds(newActiveCategoryIds);
+
+        if (!expandedCategories[targetCategoryId]) {
+          setExpandedCategories({ ...expandedCategories, [targetCategoryId]: true });
+        }
+      }
+
+      setTimeout(() => {
+        if (budgetListRef.current) {
+          budgetListRef.current.scrollTop = budgetListRef.current.scrollHeight;
+        }
+      }, 150);
+    } catch (error: any) {
+      console.error('Error adding item:', error);
+      alert(`Ошибка добавления: ${error.message}`);
+    }
+  };
+
+  const handleAddWorkItem = async (workItem: WorkItem, categoryId?: string) => {
+    try {
+      const targetCategoryId = categoryId || selectedCategoryId || undefined;
+
+      const newItem = await createBudgetItem({
+        event_id: eventId,
+        work_item_id: workItem.id,
+        item_type: 'work',
+        quantity: 1,
+        price: 0,
+        exchange_rate: exchangeRate,
+        category_id: targetCategoryId,
+        notes: ''
+      });
+      const updatedItems = [...budgetItems, newItem];
+      setBudgetItems(updatedItems);
+      lastAddedItemRef.current = newItem.id;
+
+      if (targetCategoryId) {
+        const newActiveCategoryIds = new Set(activeCategoryIds);
+        newActiveCategoryIds.add(targetCategoryId);
+        setActiveCategoryIds(newActiveCategoryIds);
+
+        if (!expandedCategories[targetCategoryId]) {
+          setExpandedCategories({ ...expandedCategories, [targetCategoryId]: true });
+        }
+      }
+
+      setTimeout(() => {
+        if (budgetListRef.current) {
+          budgetListRef.current.scrollTop = budgetListRef.current.scrollHeight;
+        }
+      }, 150);
+    } catch (error: any) {
+      console.error('Error adding work item:', error);
+      alert(`Ошибка добавления: ${error.message}`);
+    }
+  };
+
+  const handleUpdateItem = async (itemId: string, updates: Partial<BudgetItem>) => {
+    try {
+      const updatedItem = await updateBudgetItem(itemId, updates);
+      setBudgetItems(budgetItems.map(item =>
+        item.id === itemId ? { ...item, ...updatedItem } : item
+      ));
+    } catch (error: any) {
+      console.error('Error updating item:', error);
+      alert(`Ошибка обновления: ${error.message}`);
+    }
+  };
+
+  const handleOpenPersonnelSelector = (budgetItemId: string) => {
+    setSelectedBudgetItemForPersonnel(budgetItemId);
+    setPersonnelSelectorOpen(true);
+  };
+
+  const handlePersonnelConfirm = async (personnelIds: string[]) => {
+    if (!selectedBudgetItemForPersonnel) return;
+
+    try {
+      await assignPersonnelToBudgetItem(selectedBudgetItemForPersonnel, personnelIds);
+      setBudgetItemPersonnel({
+        ...budgetItemPersonnel,
+        [selectedBudgetItemForPersonnel]: personnelIds
+      });
+    } catch (error: any) {
+      console.error('Error assigning personnel:', error);
+      alert(`Ошибка назначения персонала: ${error.message}`);
+    }
+  };
+
+  const handleDeleteItem = async (itemId: string) => {
+    if (!confirm('Удалить позицию из сметы?')) return;
+    try {
+      await deleteBudgetItem(itemId);
+      setBudgetItems(budgetItems.filter(item => item.id !== itemId));
+    } catch (error: any) {
+      console.error('Error deleting item:', error);
+      alert(`Ошибка удаления: ${error.message}`);
+    }
+  };
+
+  const handleUpdateCategoryName = async (categoryId: string, newName: string) => {
+    try {
+      await updateCategory(categoryId, { name: newName });
+      setCategories(categories.map(cat =>
+        cat.id === categoryId ? { ...cat, name: newName } : cat
+      ));
+    } catch (error: any) {
+      console.error('Error updating category:', error);
+      alert(`Ошибка обновления категории: ${error.message}`);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+
+      for (const item of budgetItems) {
+        await updateBudgetItem(item.id, { exchange_rate: exchangeRate });
+      }
+
+      alert('Смета сохранена успешно');
+      onClose();
+    } catch (error: any) {
+      console.error('Error saving budget:', error);
+      alert(`Ошибка сохранения: ${error.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, type: 'category' | 'item', id: string) => {
+    setDraggedItem({ type, id });
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetCategoryId: string) => {
+    e.preventDefault();
+    if (!draggedItem) return;
+
+    if (draggedItem.type === 'item') {
+      handleUpdateItem(draggedItem.id, { category_id: targetCategoryId });
+    }
+
+    setDraggedItem(null);
+  };
+
+  const calculateBYN = (priceUSD: number, quantity: number): number => {
+    const baseAmount = priceUSD * exchangeRate * quantity;
+    const withMarkup = baseAmount * 1.2;
+    return Math.round(withMarkup / 5) * 5;
+  };
+
+  const equipmentCategories = ['Все', ...Array.from(new Set(equipment.map(item => item.category)))];
+
+  const filteredEquipment = equipment.filter(item => {
+    const hasPrice = item.rental_price > 0;
+    const matchesSearch = !searchTerm ||
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedEquipmentCategory === 'Все' || item.category === selectedEquipmentCategory;
+    return hasPrice && matchesSearch && matchesCategory;
+  });
+
+  const filteredWorkItems = workItems.filter(item =>
+    !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const groupedItems: GroupedItems = budgetItems.reduce((acc, item) => {
+    const catId = item.category_id || 'uncategorized';
+    if (!acc[catId]) acc[catId] = [];
+    acc[catId].push(item);
+    return acc;
+  }, {} as GroupedItems);
+
+  const totalUSD = budgetItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const totalBYN = budgetItems.reduce((sum, item) =>
+    sum + calculateBYN(item.price, item.quantity), 0
+  );
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-gray-900 p-8 rounded-lg">
+          <p className="text-white">Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 rounded-lg w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-white">Смета мероприятия</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white p-2"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+         <div className="flex-1 overflow-hidden p-6 min-h-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+            <div className="flex flex-col h-full min-h-0">
+              <div className="bg-gray-800 rounded-lg p-4 mb-4 flex-shrink-0">
+                <div className="flex items-center justify-between">
+               ...
+
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm text-gray-400">Курс $:</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        value={exchangeRate}
+                        onChange={(e) => setExchangeRate(parseFloat(e.target.value) || 3.0)}
+                        className="w-20 px-2 py-1 bg-gray-900 border border-gray-700 rounded text-white text-sm"
+                      />
+                      <span className="text-sm text-gray-400">BYN</span>
+                    </div>
+
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={showInBYN}
+                        onChange={(e) => setShowInBYN(e.target.checked)}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm text-gray-300">В BYN</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              
+                <button
+                  onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                  className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors"
+                ><div className="flex items-center gap-2 mb-4 relative category-dropdown-container flex-shrink-0">
+                  <Plus className="w-4 h-4" />
+                  Категория
+                </button>
+                
+                {showCategoryDropdown && (
+                  <div className="absolute top-full left-0 mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50 min-w-[250px] max-h-[300px] overflow-y-auto">
+                    {categories.map(category => (
+                      <button
+                        key={category.id}
+                        onClick={() => handleSelectCategory(category.id)}
+                        className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                      >
+                        {category.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div
+                ref={budgetListRef}
+                className="flex-1 overflow-y-auto space-y-3 pr-2 min-h-0"
+                style={{ maxHeight: 'calc(90vh - 320px)' }}
+              >
+                {budgetItems.length === 0 && activeCategoryIds.size === 0 ? (
+                  <p className="text-gray-400 text-center py-8">
+                    Смета пуста. Добавьте категорию или позиции из списка справа
+                  </p>
+                ) : (
+                  <>
+                    {categories.map(category => {
+                      const categoryItems = groupedItems[category.id] || [];
+                      const isActive = activeCategoryIds.has(category.id);
+
+                      if (categoryItems.length === 0 && !isActive) return null;
+
+                      return (
+                        <CategoryBlock
+                          key={category.id}
+                          categoryId={category.id}
+                          categoryName={category.name}
+                          items={categoryItems}
+                          isExpanded={expandedCategories[category.id] || false}
+                          isSelected={selectedCategoryId === category.id}
+                          onToggleExpand={() => setExpandedCategories({
+                            ...expandedCategories,
+                            [category.id]: !expandedCategories[category.id]
+                          })}
+                          onSelect={() => setSelectedCategoryId(
+                            selectedCategoryId === category.id ? null : category.id
+                          )}
+                          onUpdateCategoryName={(newName) => handleUpdateCategoryName(category.id, newName)}
+                          onUpdateItem={handleUpdateItem}
+                          onDeleteItem={handleDeleteItem}
+                          onAssignPersonnel={handleOpenPersonnelSelector}
+                          showInBYN={showInBYN}
+                          exchangeRate={exchangeRate}
+                          onDragStart={handleDragStart}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleDrop(e, category.id)}
+                          categoryRef={(el) => {
+                            categoryRefs.current[category.id] = el;
+                          }}
+                        />
+                      );
+                    })}
+
+                    {groupedItems['uncategorized'] && groupedItems['uncategorized'].length > 0 && (
+                      <CategoryBlock
+                        categoryId="uncategorized"
+                        categoryName="Без категории"
+                        items={groupedItems['uncategorized']}
+                        isExpanded={expandedCategories['uncategorized'] !== false}
+                        isSelected={selectedCategoryId === 'uncategorized'}
+                        onToggleExpand={() => setExpandedCategories({
+                          ...expandedCategories,
+                          uncategorized: !expandedCategories['uncategorized']
+                        })}
+                        onSelect={() => setSelectedCategoryId(
+                          selectedCategoryId === 'uncategorized' ? null : 'uncategorized'
+                        )}
+                        onUpdateCategoryName={() => {}}
+                        onUpdateItem={handleUpdateItem}
+                        onDeleteItem={handleDeleteItem}
+                        onAssignPersonnel={handleOpenPersonnelSelector}
+                        showInBYN={showInBYN}
+                        exchangeRate={exchangeRate}
+                        onDragStart={handleDragStart}
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, '')}
+                        categoryRef={(el) => {
+                          categoryRefs.current['uncategorized'] = el;
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4 mt-4 flex-shrink-0">
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-semibold text-white">Итого:</span>
+                  <span className="text-2xl font-bold text-cyan-400">
+                    {showInBYN
+                      ? `${totalBYN.toFixed(2)} BYN`
+                      : `$${totalUSD.toFixed(2)}`
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col h-full min-h-0">
+              <div className="bg-gray-800 rounded-lg p-4 flex flex-col h-full min-h-0">
+                <div className="flex items-center gap-2 mb-4 flex-shrink-0">
+                  <Plus className="w-5 h-5 text-cyan-400" />
+                  <h3 className="text-lg font-semibold text-white">Добавить позицию</h3>
+                </div>
+
+                <div className="flex gap-2 mb-4 flex-shrink-0">
+                  <button
+                    onClick={() => setSelectedItemType('Оборудование')}
+                    className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+                      selectedItemType === 'Оборудование'
+                        ? 'bg-cyan-600 text-white'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    Оборудование
+                  </button>
+                  <button
+                    onClick={() => setSelectedItemType('Работа')}
+                    className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+                      selectedItemType === 'Работа'
+                        ? 'bg-cyan-600 text-white'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    Работа
+                  </button>
+                </div>
+
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Поиск..."
+                  className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white mb-4 flex-shrink-0"
+                />
+
+                {selectedItemType === 'Оборудование' && (
+                  <div className="mb-4 flex-shrink-0">
+                    <label className="text-sm text-gray-400 mb-2 block">Категория оборудования</label>
+                    <select
+                      value={selectedEquipmentCategory}
+                      onChange={(e) => setSelectedEquipmentCategory(e.target.value)}
+                      className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                    >
+                      {equipmentCategories.map(category => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div className="flex-1 overflow-y-auto space-y-2 min-h-0" style={{ maxHeight: 'calc(90vh - 420px)' }}>
+                  {selectedItemType === 'Оборудование' ? (
+                    filteredEquipment.length === 0 ? (
+                      <p className="text-gray-400 text-center py-8">Оборудование не найдено</p>
+                    ) : (
+                      filteredEquipment.map(item => (
+                        <div key={item.id} className="bg-gray-900 rounded-lg p-3 hover:bg-gray-850">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <p className="text-white font-medium">{item.name}</p>
+                              <p className="text-sm text-gray-400">{item.category}</p>
+                              <div className="flex gap-4 mt-1 text-xs text-gray-500">
+                                <span>Доступно: {item.quantity}</span>
+                                <span>Цена: ${item.rental_price.toFixed(2)}</span>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleAddItem(item)}
+                              className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-1 rounded text-sm"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )
+                  ) : (
+                    filteredWorkItems.length === 0 ? (
+                      <p className="text-gray-400 text-center py-8">Работы не найдены</p>
+                    ) : (
+                      filteredWorkItems.map(item => (
+                        <div key={item.id} className="bg-gray-900 rounded-lg p-3 hover:bg-gray-850">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <p className="text-white font-medium">{item.name}</p>
+                              <p className="text-sm text-gray-400">Ед. изм: {item.unit}</p>
+                            </div>
+                            <button
+                              onClick={() => handleAddWorkItem(item)}
+                              className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-1 rounded text-sm"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-gray-800 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+          >
+            Отмена
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
+          >
+            <Save className="w-4 h-4" />
+            {saving ? 'Сохранение...' : 'Сохранить'}
+          </button>
+        </div>
+      </div>
+
+      {personnelSelectorOpen && selectedBudgetItemForPersonnel && (
+        <PersonnelSelector
+          selectedIds={budgetItemPersonnel[selectedBudgetItemForPersonnel] || []}
+          onConfirm={handlePersonnelConfirm}
+          onClose={() => {
+            setPersonnelSelectorOpen(false);
+            setSelectedBudgetItemForPersonnel(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
