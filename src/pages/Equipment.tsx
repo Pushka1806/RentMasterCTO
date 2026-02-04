@@ -86,9 +86,7 @@ export function Equipment() {
   };
 
   const filteredItems = items.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.attribute.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'all' || item.category === filterCategory;
     const matchesType = filterType === 'all' || item.type === filterType;
     return matchesSearch && matchesCategory && matchesType;
@@ -150,7 +148,7 @@ export function Equipment() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
             <input
               type="text"
-              placeholder="Поиск по названию, артикулу, атрибуту..."
+              placeholder="Поиск по названию..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
@@ -214,16 +212,10 @@ export function Equipment() {
             <thead className="bg-gray-800 border-b border-gray-700">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Артикул
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Наименование
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Категория / Тип
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Атрибут
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Кол-во
@@ -239,16 +231,13 @@ export function Equipment() {
             <tbody className="divide-y divide-gray-800">
               {filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                     Оборудование не найдено
                   </td>
                 </tr>
               ) : (
                 filteredItems.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-800/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="text-cyan-400 font-mono text-sm">{item.sku}</div>
-                    </td>
                     <td className="px-6 py-4">
                       <div className="text-white font-medium">{item.name}</div>
                       {item.note && (
@@ -259,14 +248,11 @@ export function Equipment() {
                       <div className="text-white">{item.category}</div>
                       <div className="text-sm text-gray-400">{item.type} {item.subtype && `/ ${item.subtype}`}</div>
                     </td>
-                    <td className="px-6 py-4 text-gray-300">
-                      {item.attribute}
-                    </td>
                     <td className="px-6 py-4">
                       <div className="text-white font-medium">{item.quantity}</div>
                     </td>
                     <td className="px-6 py-4 text-white">
-                      {item.rental_price > 0 ? `$${item.rental_price}` : '-'}
+                      {item.rental_price > 0 ? `${item.rental_price}` : '-'}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
