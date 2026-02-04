@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Plus, Calculator, Save, Users, Package, Download, FileText } from 'lucide-react';
+import { X, Plus, Save, Package, Download, FileText, Settings, ChevronDown } from 'lucide-react';
 import { BudgetItem, getBudgetItems, createBudgetItem, updateBudgetItem, deleteBudgetItem, getEvent } from '../lib/events';
 import { EquipmentItem, getEquipmentItems, getEquipmentModifications, EquipmentModification } from '../lib/equipment';
 import { WorkItem, getWorkItems } from '../lib/personnel';
-import { Category, getCategories, createCategory, updateCategory } from '../lib/categories';
+import { Category, getCategories, updateCategory } from '../lib/categories';
 import { CategoryBlock } from './CategoryBlock';
 import { WorkPersonnelManager } from './WorkPersonnelManager';
 import { TemplatesInBudget } from './TemplatesInBudget';
@@ -48,6 +48,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
   const [selectedEquipmentForMods, setSelectedEquipmentForMods] = useState<EquipmentItem | null>(null);
   const [equipmentModifications, setEquipmentModifications] = useState<EquipmentModification[]>([]);
   const [loadingModifications, setLoadingModifications] = useState(false);
+  const [showExchangeRatePopover, setShowExchangeRatePopover] = useState(false);
 
   const budgetListRef = useRef<HTMLDivElement>(null);
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -65,11 +66,17 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
           setShowCategoryDropdown(false);
         }
       }
+      if (showExchangeRatePopover) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.exchange-rate-container')) {
+          setShowExchangeRatePopover(false);
+        }
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showCategoryDropdown]);
+  }, [showCategoryDropdown, showExchangeRatePopover]);
 
   const loadData = async () => {
     try {
@@ -335,14 +342,6 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     setDragOverTarget(targetCategoryId);
   };
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    const relatedTarget = e.relatedTarget as HTMLElement;
-    if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
-      setDragOverTarget(null);
-    }
-  };
-
   const handleDrop = async (e: React.DragEvent, targetCategoryId: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -422,47 +421,52 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 rounded-lg w-[95vw] max-w-[1600px] max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="p-3 border-b border-gray-800 flex justify-between items-center">
+        {/* Header */}
+        <div className="px-4 py-3 border-b border-gray-800 flex justify-between items-center flex-shrink-0">
           <div>
-            <h2 className="text-2xl font-bold text-white">Смета мероприятия</h2>
+            <h2 className="text-xl font-semibold text-white">Смета мероприятия</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white p-2"
+            className="text-gray-400 hover:text-white p-1"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
-         <div className="flex-1 overflow-hidden p-4 min-h-0">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-            <div className="flex flex-col h-full min-h-0">
-              <div className="bg-gray-800 rounded-lg p-3 mb-5 flex-shrink-0">
+
+        {/* Main content - 2 column layout */}
+        <div className="flex-1 overflow-hidden min-h-0">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-0 h-full">
+            {/* Left column - Budget table */}
+            <div className="flex flex-col h-full min-h-0 border-r border-gray-800">
+              {/* Compact toolbar */}
+              <div className="bg-gray-900 border-b border-gray-800 px-3 py-2 flex-shrink-0">
                 <div className="flex items-center justify-between relative category-dropdown-container flex-wrap gap-2">
                   <div className="flex gap-2">
                     <button
                       onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                      className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded transition-colors border border-gray-700"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-3.5 h-3.5" />
                       Категория
                     </button>
 
                     <button
                       onClick={() => setShowTemplates(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded transition-colors border border-gray-700"
                     >
-                      <Package className="w-4 h-4" />
+                      <Package className="w-3.5 h-3.5" />
                       Шаблоны
                     </button>
                   </div>
 
                   {showCategoryDropdown && (
-                    <div className="absolute top-full left-0 mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50 min-w-[250px] max-h-[300px] overflow-y-auto">
+                    <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50 min-w-[220px] max-h-[280px] overflow-y-auto">
                       {categories.map(category => (
                         <button
                           key={category.id}
                           onClick={() => handleSelectCategory(category.id)}
-                          className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                          className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors first:rounded-t-lg last:rounded-b-lg"
                         >
                           {category.name}
                         </button>
@@ -470,40 +474,55 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                     </div>
                   )}
 
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm text-gray-400">Курс $:</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        value={exchangeRate}
-                        onChange={(e) => setExchangeRate(parseFloat(e.target.value) || 3.0)}
-                        className="w-20 px-2 py-1 bg-gray-900 border border-gray-700 rounded text-white text-sm"
-                      />
-                      <span className="text-sm text-gray-400">BYN</span>
-                    </div>
+                  {/* Exchange rate popover */}
+                  <div className="relative exchange-rate-container">
+                    <button
+                      onClick={() => setShowExchangeRatePopover(!showExchangeRatePopover)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-gray-400 hover:text-gray-300 text-sm transition-colors"
+                    >
+                      <Settings className="w-3.5 h-3.5" />
+                      <span>{showInBYN ? 'BYN' : '$'}</span>
+                      <span className="text-xs text-gray-500">({exchangeRate.toFixed(2)})</span>
+                      <ChevronDown className="w-3 h-3" />
+                    </button>
 
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={showInBYN}
-                        onChange={(e) => setShowInBYN(e.target.checked)}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-sm text-gray-300">В BYN</span>
-                    </label>
+                    {showExchangeRatePopover && (
+                      <div className="absolute top-full right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50 p-3 min-w-[180px]">
+                        <div className="space-y-3">
+                          <div>
+                            <label className="text-xs text-gray-400 block mb-1">Курс $:</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0.01"
+                              value={exchangeRate}
+                              onChange={(e) => setExchangeRate(parseFloat(e.target.value) || 3.0)}
+                              className="w-full px-2 py-1 bg-gray-900 border border-gray-600 rounded text-white text-sm"
+                            />
+                          </div>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={showInBYN}
+                              onChange={(e) => setShowInBYN(e.target.checked)}
+                              className="w-4 h-4"
+                            />
+                            <span className="text-sm text-gray-300">Показать в BYN</span>
+                          </label>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
+              {/* Budget list */}
               <div
                 ref={budgetListRef}
-                className="flex-1 overflow-y-auto space-y-3 pr-2 min-h-0"
-                style={{ maxHeight: 'calc(90vh - 320px)' }}
+                className="flex-1 overflow-y-auto p-2 space-y-1 min-h-0"
               >
                 {budgetItems.length === 0 && activeCategoryIds.size === 0 ? (
-                  <p className="text-gray-400 text-center py-8">
+                  <p className="text-gray-500 text-center py-8 text-sm">
                     Смета пуста. Добавьте категорию или позиции из списка справа
                   </p>
                 ) : (
@@ -588,65 +607,54 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                   </>
                 )}
               </div>
-
-              <div className="bg-gray-800 rounded-lg p-4 mt-4 flex-shrink-0">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold text-white">Итого:</span>
-                  <span className="text-2xl font-bold text-cyan-400">
-                    {showInBYN
-                      ? `${totalBYN.toFixed(2)} BYN`
-                      : `$${totalUSD.toFixed(2)}`
-                    }
-                  </span>
-                </div>
-              </div>
             </div>
 
-            <div className="flex flex-col h-full min-h-0">
-              <div className="bg-gray-800 rounded-lg p-4 flex flex-col h-full min-h-0">
-                <div className="flex items-center gap-2 mb-4 flex-shrink-0">
-                  <Plus className="w-5 h-5 text-cyan-400" />
-                  <h3 className="text-lg font-semibold text-white">Добавить позицию</h3>
+            {/* Right column - Add items panel */}
+            <div className="flex flex-col h-full min-h-0 bg-gray-900">
+              {/* Compact header with tabs */}
+              <div className="border-b border-gray-800 flex-shrink-0">
+                {/* Search on top */}
+                <div className="p-2 pb-1">
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Поиск..."
+                    className="w-full px-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-600"
+                  />
                 </div>
 
-                <div className="flex gap-2 mb-4 flex-shrink-0">
+                {/* Compact segment control */}
+                <div className="flex p-2 pt-1">
                   <button
                     onClick={() => setSelectedItemType('Оборудование')}
-                    className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+                    className={`flex-1 px-3 py-1.5 text-sm rounded-l transition-colors ${
                       selectedItemType === 'Оборудование'
                         ? 'bg-cyan-600 text-white'
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                     }`}
                   >
                     Оборудование
                   </button>
                   <button
                     onClick={() => setSelectedItemType('Работа')}
-                    className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+                    className={`flex-1 px-3 py-1.5 text-sm rounded-r transition-colors ${
                       selectedItemType === 'Работа'
                         ? 'bg-cyan-600 text-white'
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                     }`}
                   >
                     Работа
                   </button>
                 </div>
 
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Поиск..."
-                  className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white mb-4 flex-shrink-0"
-                />
-
+                {/* Equipment category filter */}
                 {selectedItemType === 'Оборудование' && (
-                  <div className="mb-4 flex-shrink-0">
-                    <label className="text-sm text-gray-400 mb-2 block">Категория оборудования</label>
+                  <div className="px-2 pb-2">
                     <select
                       value={selectedEquipmentCategory}
                       onChange={(e) => setSelectedEquipmentCategory(e.target.value)}
-                      className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                      className="w-full px-2 py-1 bg-gray-800 border border-gray-700 rounded text-xs text-gray-300 focus:outline-none focus:border-gray-600"
                     >
                       {equipmentCategories.map(category => (
                         <option key={category} value={category}>
@@ -656,93 +664,99 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                     </select>
                   </div>
                 )}
+              </div>
 
-                <div className="flex-1 overflow-y-auto space-y-2 min-h-0" style={{ maxHeight: 'calc(90vh - 420px)' }}>
-                  {selectedItemType === 'Оборудование' ? (
-                    filteredEquipment.length === 0 ? (
-                      <p className="text-gray-400 text-center py-8">Оборудование не найдено</p>
-                    ) : (
-                      filteredEquipment.map(item => (
-                        <div key={item.id} className="bg-gray-900 rounded-lg p-3 hover:bg-gray-850 transition-colors">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <p className="text-white font-medium">{item.name}</p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <p className="text-sm text-gray-400">{item.category}</p>
-                                {item.type && (
-                                  <>
-                                    <span className="text-gray-600">•</span>
-                                    <p className="text-sm text-gray-400">{item.type}</p>
-                                  </>
-                                )}
-                              </div>
-                              <p className="text-sm text-cyan-400 mt-1">${item.rental_price}</p>
-                            </div>
-                            <button
-                              onClick={() => handleEquipmentClick(item)}
-                              disabled={loadingModifications}
-                              className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    )
+              {/* Items list - compact */}
+              <div className="flex-1 overflow-y-auto min-h-0">
+                {selectedItemType === 'Оборудование' ? (
+                  filteredEquipment.length === 0 ? (
+                    <p className="text-gray-500 text-center py-8 text-sm">Оборудование не найдено</p>
                   ) : (
-                    filteredWorkItems.length === 0 ? (
-                      <p className="text-gray-400 text-center py-8">Работы не найдены</p>
-                    ) : (
-                      filteredWorkItems.map(item => (
-                        <div key={item.id} className="bg-gray-900 rounded-lg p-3 hover:bg-gray-850">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <p className="text-white font-medium">{item.name}</p>
-                              <p className="text-sm text-gray-400">Ед. изм: {item.unit}</p>
-                            </div>
+                    <div className="divide-y divide-gray-800">
+                      {filteredEquipment.map(item => (
+                        <div
+                          key={item.id}
+                          className="group flex items-center justify-between px-3 py-2 hover:bg-gray-800 transition-colors cursor-pointer"
+                          onClick={() => handleEquipmentClick(item)}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-gray-300 truncate">{item.name}</p>
+                            <p className="text-xs text-gray-500">{item.category}</p>
+                          </div>
+                          <div className="flex items-center gap-2 ml-2">
+                            <span className="text-xs text-cyan-400">${item.rental_price}</span>
                             <button
-                              onClick={() => handleAddWorkItem(item)}
-                              className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-1 rounded text-sm"
+                              disabled={loadingModifications}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-cyan-400"
                             >
                               <Plus className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
-                      ))
-                    )
-                  )}
-                </div>
+                      ))}
+                    </div>
+                  )
+                ) : (
+                  filteredWorkItems.length === 0 ? (
+                    <p className="text-gray-500 text-center py-8 text-sm">Работы не найдены</p>
+                  ) : (
+                    <div className="divide-y divide-gray-800">
+                      {filteredWorkItems.map(item => (
+                        <div
+                          key={item.id}
+                          className="group flex items-center justify-between px-3 py-2 hover:bg-gray-800 transition-colors cursor-pointer"
+                          onClick={() => handleAddWorkItem(item)}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-gray-300 truncate">{item.name}</p>
+                            <p className="text-xs text-gray-500">{item.unit}</p>
+                          </div>
+                          <button className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-cyan-400 ml-2">
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="p-2 border-t border-gray-800 flex items-center justify-between">
-          <div className="flex gap-3">
+        {/* Fixed bottom bar with total and actions */}
+        <div className="px-4 py-2 border-t border-gray-800 flex items-center justify-between bg-gray-900 flex-shrink-0">
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-400">Итого:</span>
+            <span className="text-lg font-semibold text-cyan-400">
+              {showInBYN ? `${totalBYN.toFixed(2)} BYN` : `$${totalUSD.toFixed(2)}`}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleExportPDF}
               disabled={generatingPDF || budgetItems.length === 0}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded transition-colors disabled:opacity-50 border border-gray-700"
             >
-              <Download className="w-4 h-4" />
-              {generatingPDF ? 'Создание...' : 'Сохранить в PDF'}
+              <Download className="w-3.5 h-3.5" />
+              PDF
             </button>
             <button
               type="button"
               onClick={() => setShowWarehouseSpec(true)}
               disabled={budgetItems.length === 0}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded transition-colors disabled:opacity-50 border border-gray-700"
             >
-              <FileText className="w-4 h-4" />
-              Спецификация кладовщику
+              <FileText className="w-3.5 h-3.5" />
+              Спецификация
             </button>
-          </div>
-          <div className="flex gap-3">
+            <div className="w-px h-6 bg-gray-700 mx-1"></div>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+              className="px-3 py-1.5 text-gray-400 hover:text-gray-300 text-sm transition-colors"
             >
               Отмена
             </button>
@@ -750,9 +764,9 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors disabled:opacity-50"
             >
-              <Save className="w-4 h-4" />
+              <Save className="w-3.5 h-3.5" />
               {saving ? 'Сохранение...' : 'Сохранить'}
             </button>
           </div>

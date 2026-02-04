@@ -71,15 +71,16 @@ export function CategoryBlock({
   return (
     <div
       ref={categoryRef}
-      className={`bg-gray-800 rounded-lg border overflow-hidden transition-all ${
-        isSelected ? 'border-cyan-500 ring-2 ring-cyan-500/50' : 'border-gray-700'
+      className={`bg-gray-900 border-b border-gray-800 transition-all ${
+        isSelected ? 'bg-gray-800/50' : ''
       }`}
       onDragOver={(e) => onDragOver?.(e, categoryId)}
       onDrop={(e) => onDrop?.(e, categoryId)}
     >
+      {/* Category header - compact, sticky */}
       <div
-        className={`flex items-center gap-2 p-3 transition-colors cursor-pointer ${
-          isSelected ? 'bg-cyan-900/30' : 'bg-gray-750 hover:bg-gray-700'
+        className={`flex items-center gap-1.5 px-2 py-1.5 transition-colors cursor-pointer sticky top-0 z-10 ${
+          isSelected ? 'bg-cyan-900/20' : 'bg-gray-900 hover:bg-gray-800'
         }`}
         onClick={onSelect}
       >
@@ -89,10 +90,10 @@ export function CategoryBlock({
             e.stopPropagation();
             onDragStart?.(e, 'category', categoryId);
           }}
-          className="text-gray-400 hover:text-white cursor-move"
+          className="text-gray-500 hover:text-gray-400 cursor-move"
           onClick={(e) => e.stopPropagation()}
         >
-          <GripVertical className="w-4 h-4" />
+          <GripVertical className="w-3.5 h-3.5" />
         </div>
 
         <button
@@ -101,17 +102,17 @@ export function CategoryBlock({
             e.stopPropagation();
             onToggleExpand();
           }}
-          className="text-gray-400 hover:text-white transition-colors"
+          className="text-gray-500 hover:text-gray-400 transition-colors"
         >
           {isExpanded ? (
-            <ChevronDown className="w-5 h-5" />
+            <ChevronDown className="w-4 h-4" />
           ) : (
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4" />
           )}
         </button>
 
         {isEditingName ? (
-          <div className="flex items-center gap-2 flex-1" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-1 flex-1" onClick={(e) => e.stopPropagation()}>
             <input
               type="text"
               value={editedName}
@@ -120,7 +121,7 @@ export function CategoryBlock({
                 if (e.key === 'Enter') handleSaveName();
                 if (e.key === 'Escape') handleCancelEdit();
               }}
-              className="flex-1 px-2 py-1 bg-gray-900 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+              className="flex-1 px-2 py-0.5 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-cyan-500"
               autoFocus
             />
             <button
@@ -129,9 +130,9 @@ export function CategoryBlock({
                 e.stopPropagation();
                 handleSaveName();
               }}
-              className="text-green-400 hover:text-green-300"
+              className="text-green-500 hover:text-green-400"
             >
-              <Check className="w-4 h-4" />
+              <Check className="w-3.5 h-3.5" />
             </button>
             <button
               type="button"
@@ -139,14 +140,14 @@ export function CategoryBlock({
                 e.stopPropagation();
                 handleCancelEdit();
               }}
-              className="text-red-400 hover:text-red-300"
+              className="text-red-500 hover:text-red-400"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         ) : (
           <>
-            <h3 className="font-semibold text-white flex-1">{categoryName}</h3>
+            <h3 className="font-medium text-sm text-gray-300 flex-1 truncate">{categoryName}</h3>
             {hasWorkItems && onManagePersonnel && (
               <button
                 type="button"
@@ -154,10 +155,10 @@ export function CategoryBlock({
                   e.stopPropagation();
                   onManagePersonnel(categoryId);
                 }}
-                className="text-blue-400 hover:text-blue-300 transition-colors"
+                className="text-blue-500 hover:text-blue-400 transition-colors"
                 title="Управление персоналом"
               >
-                <Users className="w-4 h-4" />
+                <Users className="w-3.5 h-3.5" />
               </button>
             )}
             <button
@@ -166,40 +167,43 @@ export function CategoryBlock({
                 e.stopPropagation();
                 setIsEditingName(true);
               }}
-              className="text-gray-400 hover:text-white transition-colors"
+              className="text-gray-500 hover:text-gray-400 transition-colors"
             >
-              <Edit2 className="w-4 h-4" />
+              <Edit2 className="w-3 h-3" />
             </button>
           </>
         )}
 
-        <div className="text-sm font-medium text-cyan-400" onClick={(e) => e.stopPropagation()}>
+        <div className="text-xs font-medium text-cyan-400 ml-1" onClick={(e) => e.stopPropagation()}>
           {showInBYN ? `${categoryTotal.toFixed(2)} BYN` : `$${categoryTotal.toFixed(2)}`}
         </div>
 
-        <div className="text-xs text-gray-500 ml-2" onClick={(e) => e.stopPropagation()}>
-          {items.length} {items.length === 1 ? 'позиция' : 'позиций'}
+        <div className="text-xs text-gray-600 ml-1" onClick={(e) => e.stopPropagation()}>
+          ({items.length})
         </div>
       </div>
 
+      {/* Items table - flat, compact */}
       {isExpanded && items.length > 0 && (
         <div>
-          <div className="flex items-center gap-2 px-3 py-2 bg-gray-900/50 border-b border-gray-700">
+          {/* Table header */}
+          <div className="flex items-center gap-1 px-2 py-1 bg-gray-900/50 text-xs text-gray-500 border-b border-gray-800">
             <div className="w-4"></div>
-            <div className="flex-1 grid grid-cols-4 gap-2">
-              <div className="text-xs font-medium text-gray-400 col-span-2">Наименование</div>
-              <div className="text-xs font-medium text-gray-400">Количество</div>
-              <div className="text-xs font-medium text-gray-400">Цена</div>
+            <div className="flex-1 grid grid-cols-12 gap-1">
+              <div className="col-span-5">Наименование</div>
+              <div className="col-span-2 text-center">Кол-во</div>
+              <div className="col-span-2 text-right">Цена</div>
+              <div className="col-span-3 text-right">Сумма</div>
             </div>
-            <div className="text-xs font-medium text-gray-400 w-24 text-right">Сумма</div>
-            <div className="w-4"></div>
+            <div className="w-6"></div>
           </div>
 
-          <div className="divide-y divide-gray-700">
+          {/* Items */}
+          <div>
             {items.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center gap-2 p-3 hover:bg-gray-750 transition-colors group"
+                className="flex items-center gap-1 px-2 py-1 hover:bg-gray-800 transition-colors group border-b border-gray-800/50 last:border-b-0"
               >
                 <div
                   draggable
@@ -207,45 +211,63 @@ export function CategoryBlock({
                     e.stopPropagation();
                     onDragStart?.(e, 'item', item.id);
                   }}
-                  className="text-gray-400 hover:text-white cursor-move opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="text-gray-600 hover:text-gray-400 cursor-move opacity-0 group-hover:opacity-100 transition-opacity"
                 >
-                  <GripVertical className="w-4 h-4" />
+                  <GripVertical className="w-3.5 h-3.5" />
                 </div>
 
-                <div className="flex-1 grid grid-cols-4 gap-2 items-center">
-                  <div className="text-sm text-white col-span-2">
+                <div className="flex-1 grid grid-cols-12 gap-1 items-center text-sm">
+                  <div className="col-span-5 text-gray-300 truncate">
                     {item.equipment?.name || item.work_item?.name || 'Без названия'}
                   </div>
 
-                  <input
-                    type="number"
-                    value={item.quantity}
-                    onChange={(e) => onUpdateItem(item.id, { quantity: parseInt(e.target.value) || 1 })}
-                    className="px-2 py-1 bg-gray-900 border border-gray-600 rounded text-white text-sm w-16 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-                    min="1"
-                  />
+                  <div className="col-span-2 flex justify-center">
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => onUpdateItem(item.id, { quantity: Math.max(1, item.quantity - 1) })}
+                        className="w-5 h-5 flex items-center justify-center text-gray-500 hover:text-gray-300 hover:bg-gray-700 rounded"
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => onUpdateItem(item.id, { quantity: parseInt(e.target.value) || 1 })}
+                        className="w-10 px-1 py-0.5 bg-transparent text-center text-white text-sm focus:outline-none"
+                        min="1"
+                      />
+                      <button
+                        onClick={() => onUpdateItem(item.id, { quantity: item.quantity + 1 })}
+                        className="w-5 h-5 flex items-center justify-center text-gray-500 hover:text-gray-300 hover:bg-gray-700 rounded"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
 
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={item.price}
-                    onChange={(e) => onUpdateItem(item.id, { price: parseFloat(e.target.value) || 0 })}
-                    className="px-2 py-1 bg-gray-900 border border-gray-600 rounded text-white text-sm w-20 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-                  />
-                </div>
+                  <div className="col-span-2 text-right">
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={item.price}
+                      onChange={(e) => onUpdateItem(item.id, { price: parseFloat(e.target.value) || 0 })}
+                      className="w-16 px-1 py-0.5 bg-transparent text-right text-gray-400 text-sm focus:outline-none focus:bg-gray-800 rounded"
+                    />
+                  </div>
 
-                <div className="text-sm font-medium text-cyan-400 w-24 text-right">
-                  {showInBYN
-                    ? `${calculateBYN(item.price, item.quantity).toFixed(2)} BYN`
-                    : `$${(item.price * item.quantity).toFixed(2)}`}
+                  <div className="col-span-3 text-right text-cyan-400 font-medium text-sm">
+                    {showInBYN
+                      ? `${calculateBYN(item.price, item.quantity).toFixed(2)} BYN`
+                      : `$${(item.price * item.quantity).toFixed(2)}`}
+                  </div>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => onDeleteItem(item.id)}
-                  className="text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="text-red-500/50 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity w-6 flex justify-center"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             ))}
