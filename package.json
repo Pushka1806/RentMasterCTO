@@ -1,14 +1,20 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "rentmaster2",
   "private": true,
-  "version": "0.0.0",
+  "version": "2.0.0",
   "type": "module",
+  "description": "RentMaster2 - Event Equipment Rental Management System",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json"
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "setup": "npm install && npm run setup:env",
+    "setup:env": "node -e \"const fs = require('fs'); if (!fs.existsSync('.env')) { fs.copyFileSync('.env.example', '.env'); console.log('✓ Created .env from .env.example'); console.log('⚠ Please edit .env with your Supabase credentials'); } else { console.log('✓ .env already exists'); }\"",
+    "check": "node check-environment.js",
+    "db:migrate": "cd supabase && bash run-migrations.sh",
+    "db:status": "supabase db diff --schema public"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
