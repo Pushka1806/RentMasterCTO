@@ -132,19 +132,18 @@ export async function getCables(eventId: string): Promise<CableItem[]> {
     .from('warehouse_specification_cables')
     .select('*')
     .eq('event_id', eventId)
-    .order('cable_type, cable_length');
+    .order('cable_type')
+    .order('cable_length');
 
   if (error) throw error;
   return data || [];
 }
 
 export async function createCable(cable: Omit<CableItem, 'id' | 'created_at' | 'updated_at'>): Promise<CableItem> {
+  const { picked, ...insertCable } = cable;
   const { data, error } = await supabase
     .from('warehouse_specification_cables')
-    .insert({
-      ...cable,
-      picked: cable.picked || false
-    })
+    .insert(insertCable)
     .select()
     .single();
 
