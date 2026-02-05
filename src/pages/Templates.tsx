@@ -82,7 +82,7 @@ export function Templates() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Package className="w-6 h-6 text-cyan-500" />
+          <Package className="w-6 h-6 text-gray-400" />
           <h1 className="text-2xl font-bold text-white">Шаблоны для сметы</h1>
         </div>
         <button
@@ -90,7 +90,7 @@ export function Templates() {
             setEditingTemplate(null);
             setShowForm(true);
           }}
-          className="flex items-center gap-2 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors text-sm"
+          className="flex items-center gap-2 px-3 py-1.5 bg-white hover:bg-gray-200 text-black rounded-lg transition-colors text-sm"
         >
           <Plus className="w-4 h-4" />
           Создать
@@ -105,7 +105,7 @@ export function Templates() {
             placeholder="Поиск..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
+            className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-400"
           />
         </div>
       </div>
@@ -119,7 +119,7 @@ export function Templates() {
               setEditingTemplate(null);
               setShowForm(true);
             }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors text-sm"
+            className="inline-flex items-center gap-2 px-3 py-1.5 bg-white hover:bg-gray-200 text-black rounded-lg transition-colors text-sm"
           >
             <Plus className="w-4 h-4" />
             Создать первый шаблон

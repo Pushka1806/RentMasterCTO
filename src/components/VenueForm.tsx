@@ -72,7 +72,7 @@ export function VenueForm({ venue, onClose, onSave }: VenueFormProps) {
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400"
                 placeholder="Концертный зал"
               />
             </div>
@@ -85,7 +85,7 @@ export function VenueForm({ venue, onClose, onSave }: VenueFormProps) {
                 type="text"
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400"
                 placeholder="ул. Примерная, 123"
               />
             </div>
@@ -99,7 +99,7 @@ export function VenueForm({ venue, onClose, onSave }: VenueFormProps) {
                   type="text"
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400"
                   placeholder="Минск"
                 />
               </div>
@@ -114,7 +114,7 @@ export function VenueForm({ venue, onClose, onSave }: VenueFormProps) {
                   step="0.1"
                   value={formData.distance_km}
                   onChange={(e) => setFormData({ ...formData, distance_km: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400"
                   placeholder="0"
                 />
               </div>
@@ -129,7 +129,7 @@ export function VenueForm({ venue, onClose, onSave }: VenueFormProps) {
                   type="text"
                   value={formData.contact}
                   onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400"
                   placeholder="+375 29 123-45-67"
                 />
               </div>
@@ -143,7 +143,7 @@ export function VenueForm({ venue, onClose, onSave }: VenueFormProps) {
                   min="0"
                   value={formData.capacity}
                   onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 0 })}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400"
                   placeholder="500"
                 />
               </div>
@@ -157,7 +157,7 @@ export function VenueForm({ venue, onClose, onSave }: VenueFormProps) {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 resize-none"
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400 resize-none"
                 placeholder="Описание площадки..."
               />
             </div>
@@ -170,7 +170,7 @@ export function VenueForm({ venue, onClose, onSave }: VenueFormProps) {
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={2}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 resize-none"
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400 resize-none"
                 placeholder="Дополнительная информация..."
               />
             </div>
@@ -187,7 +187,7 @@ export function VenueForm({ venue, onClose, onSave }: VenueFormProps) {
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors disabled:opacity-50"
+              className="px-6 py-2 bg-white hover:bg-gray-200 text-black rounded-lg transition-colors disabled:opacity-50"
             >
               {saving ? 'Сохранение...' : 'Сохранить'}
             </button>

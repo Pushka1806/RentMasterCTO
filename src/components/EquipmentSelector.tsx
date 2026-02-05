@@ -111,7 +111,7 @@ export function EquipmentSelector({ onSelect, onClose, selectedIds = [] }: Equip
               placeholder="Поиск оборудования..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
+              className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-gray-400"
             />
           </div>
 
@@ -122,7 +122,7 @@ export function EquipmentSelector({ onSelect, onClose, selectedIds = [] }: Equip
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-3 py-1 rounded-lg text-sm transition-colors ${
                   selectedCategory === cat
-                    ? 'bg-cyan-600 text-white'
+                    ? 'bg-white text-black'
                     : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                 }`}
               >
@@ -143,7 +143,7 @@ export function EquipmentSelector({ onSelect, onClose, selectedIds = [] }: Equip
                   onClick={() => handleSelectEquipment(item)}
                   className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                     selectedEquipment?.id === item.id
-                      ? 'bg-cyan-900/30 border-cyan-600'
+                      ? 'bg-gray-900/30 border-white'
                       : 'bg-gray-800 border-gray-700 hover:border-gray-600'
                   }`}
                 >
@@ -154,13 +154,13 @@ export function EquipmentSelector({ onSelect, onClose, selectedIds = [] }: Equip
                         {item.category} {item.type ? `/ ${item.type}` : ''}
                       </div>
                       {item.rental_price && (
-                        <div className="text-sm text-cyan-400 mt-1">
+                        <div className="text-sm text-white mt-1">
                           Цена: {item.rental_price} руб.
                         </div>
                       )}
                     </div>
                     {selectedEquipment?.id === item.id && (
-                      <div className="text-cyan-400">✓</div>
+                      <div className="text-white">✓</div>
                     )}
                   </div>
                 </div>
@@ -180,7 +180,7 @@ export function EquipmentSelector({ onSelect, onClose, selectedIds = [] }: Equip
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Модификация
-                    <span className="ml-2 text-xs text-cyan-400">({modifications.length} доступно)</span>
+                    <span className="ml-2 text-xs text-white">({modifications.length} доступно)</span>
                   </label>
                   <select
                     value={selectedModification || ''}
@@ -189,7 +189,7 @@ export function EquipmentSelector({ onSelect, onClose, selectedIds = [] }: Equip
                       console.log('Selected modification changed:', value);
                       setSelectedModification(value);
                     }}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-gray-400"
                   >
                     <option value="">Без модификации (базовая комплектация)</option>
                     {modifications.map(mod => (
@@ -199,7 +199,7 @@ export function EquipmentSelector({ onSelect, onClose, selectedIds = [] }: Equip
                     ))}
                   </select>
                   {selectedModification && (
-                    <p className="text-xs text-cyan-400 mt-2 flex items-start gap-2">
+                    <p className="text-xs text-white mt-2 flex items-start gap-2">
                       <span>ℹ️</span>
                       <span>Компоненты выбранной модификации будут автоматически добавлены в складскую спецификацию</span>
                     </p>
@@ -214,7 +214,7 @@ export function EquipmentSelector({ onSelect, onClose, selectedIds = [] }: Equip
                     min="1"
                     value={quantity}
                     onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-gray-400"
                   />
                 </div>
               </div>
@@ -227,7 +227,7 @@ export function EquipmentSelector({ onSelect, onClose, selectedIds = [] }: Equip
                 </button>
                 <button
                   onClick={handleConfirmSelection}
-                  className="flex-1 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
                   Добавить

@@ -174,7 +174,7 @@ export function WorkPersonnelManager({ workItems, onClose, onSave, showInBYN, ex
                     </div>
 
                     <div className="text-right">
-                      <p className="text-cyan-400 font-semibold">
+                      <p className="text-white font-semibold">
                         {showInBYN ? `${totalAmount.toFixed(2)} BYN` : `$${totalAmount.toFixed(2)}`}
                       </p>
                       <p className="text-sm text-gray-400">

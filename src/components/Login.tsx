@@ -42,7 +42,7 @@ export function Login({ onSuccess, onSwitchToRegister }: LoginProps) {
       <div className="w-full max-w-md">
         <div className="bg-gray-900 rounded-lg shadow-xl p-8 border border-gray-800">
           <div className="flex items-center justify-center mb-8">
-            <LogIn className="w-12 h-12 text-cyan-500" />
+            <LogIn className="w-12 h-12 text-gray-400" />
           </div>
 
           <h1 className="text-3xl font-bold text-white text-center mb-2">
@@ -67,7 +67,7 @@ export function Login({ onSuccess, onSwitchToRegister }: LoginProps) {
                 type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400"
                 required
                 disabled={loading}
               />
@@ -81,7 +81,7 @@ export function Login({ onSuccess, onSwitchToRegister }: LoginProps) {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400"
                 required
                 disabled={loading}
               />
@@ -90,7 +90,7 @@ export function Login({ onSuccess, onSwitchToRegister }: LoginProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-white hover:bg-gray-200 text-black font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Вход...' : 'Войти'}
             </button>
@@ -99,7 +99,7 @@ export function Login({ onSuccess, onSwitchToRegister }: LoginProps) {
           <div className="mt-6 text-center">
             <button
               onClick={onSwitchToRegister}
-              className="text-cyan-400 hover:text-cyan-300 text-sm"
+              className="text-white hover:text-gray-300 text-sm"
             >
               Нет аккаунта? Зарегистрироваться
             </button>

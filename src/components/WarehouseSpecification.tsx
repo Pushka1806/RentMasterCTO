@@ -592,7 +592,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
         <div className="flex justify-between items-center px-4 py-3 border-b border-gray-800">
           <div>
             <h2 className="text-lg font-bold text-white flex items-center gap-2 leading-tight">
-              <Package className="w-5 h-5 text-cyan-500" />
+              <Package className="w-5 h-5 text-gray-400" />
               Спецификация
             </h2>
             <div className="flex items-center gap-3 mt-0.5">
@@ -628,7 +628,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                 onClick={() => setActiveTab(tab)}
                 className={`py-2 px-3 text-xs font-medium border-b-2 transition-colors ${
                   activeTab === tab
-                    ? 'border-cyan-500 text-cyan-400'
+                    ? 'border-gray-400 text-white'
                     : 'border-transparent text-gray-500 hover:text-gray-300'
                 }`}
               >
@@ -645,7 +645,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                 {!isWarehouseUser && (
                   <button
                     onClick={() => setShowEquipmentSelector(true)}
-                    className="px-3 py-1.5 bg-cyan-600 text-white text-xs rounded hover:bg-cyan-700 flex items-center gap-1.5 transition-colors"
+                    className="px-3 py-1.5 bg-white text-black text-xs rounded hover:bg-gray-200 flex items-center gap-1.5 transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     Добавить оборудование
@@ -682,13 +682,13 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                       </thead>
                       <tbody className="divide-y divide-gray-800">
                         {items.map((item, index) => (
-                          <tr key={`${item.budgetItemId}-${index}`} className={`${item.isFromComposition ? 'bg-cyan-900/10' : 'bg-gray-900'} hover:bg-gray-800 transition-colors`}>
+                          <tr key={`${item.budgetItemId}-${index}`} className={`${item.isFromComposition ? 'bg-gray-900/10' : 'bg-gray-900'} hover:bg-gray-800 transition-colors`}>
                             <td className="px-3 py-1.5 text-center">
                               <input
                                 type="checkbox"
                                 checked={item.picked}
                                 onChange={(e) => handlePickedChange(item.budgetItemId, e.target.checked)}
-                                className="w-4 h-4 cursor-pointer rounded border-gray-700 bg-gray-800 text-cyan-600 focus:ring-offset-gray-900"
+                                className="w-4 h-4 cursor-pointer rounded border-gray-700 bg-gray-800 text-white focus:ring-offset-gray-900"
                                 disabled={eventDetails?.specification_confirmed && !isWarehouseUser}
                               />
                             </td>
@@ -696,7 +696,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                             <td className="px-3 py-1.5">
                               <div className="text-xs text-white font-medium">{item.name}</div>
                               {item.parentName && (
-                                <div className="text-[10px] text-cyan-500 mt-0.5">
+                                <div className="text-[10px] text-gray-400 mt-0.5">
                                   ↳ {item.parentName}
                                 </div>
                               )}
@@ -710,7 +710,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                                   type="text"
                                   value={item.notes}
                                   onChange={(e) => handleNotesChange(item.budgetItemId, e.target.value)}
-                                  className="w-full px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-[11px] text-gray-300 focus:outline-none focus:border-cyan-500"
+                                  className="w-full px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-[11px] text-gray-300 focus:outline-none focus:border-gray-400"
                                   placeholder="..."
                                 />
                               </td>
@@ -790,7 +790,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                                         type="checkbox"
                                         checked={picked}
                                         onChange={(e) => handleCablePickedChange(cableId, e.target.checked)}
-                                        className="w-4 h-4 cursor-pointer rounded border-gray-700 bg-gray-800 text-cyan-600"
+                                        className="w-4 h-4 cursor-pointer rounded border-gray-700 bg-gray-800 text-white"
                                         disabled={eventDetails?.specification_confirmed && !isWarehouseUser}
                                       />
                                     )}
@@ -837,7 +837,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                                           </button>
                                           <button
                                             onClick={() => handleAddCableFromTemplate(template.type, length)}
-                                            className="p-1 text-cyan-500/50 hover:text-cyan-400 transition-colors"
+                                            className="p-1 text-gray-400/50 hover:text-white transition-colors"
                                           >
                                             <Plus className="w-3.5 h-3.5" />
                                           </button>
@@ -916,7 +916,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                                         type="checkbox"
                                         checked={picked}
                                         onChange={(e) => handleConnectorPickedChange(connector.id, e.target.checked)}
-                                        className="w-4 h-4 cursor-pointer rounded border-gray-700 bg-gray-800 text-cyan-600"
+                                        className="w-4 h-4 cursor-pointer rounded border-gray-700 bg-gray-800 text-white"
                                         disabled={eventDetails?.specification_confirmed && !isWarehouseUser}
                                       />
                                     )}
@@ -963,7 +963,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                                           </button>
                                           <button
                                             onClick={() => handleAddConnectorFromTemplate(itemType)}
-                                            className="p-1 text-cyan-500/50 hover:text-cyan-400 transition-colors"
+                                            className="p-1 text-gray-400/50 hover:text-white transition-colors"
                                           >
                                             <Plus className="w-3.5 h-3.5" />
                                           </button>
@@ -1042,7 +1042,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                                         type="checkbox"
                                         checked={picked}
                                         onChange={(e) => handleOtherPickedChange(otherId, e.target.checked)}
-                                        className="w-4 h-4 cursor-pointer rounded border-gray-700 bg-gray-800 text-cyan-600"
+                                        className="w-4 h-4 cursor-pointer rounded border-gray-700 bg-gray-800 text-white"
                                         disabled={eventDetails?.specification_confirmed && !isWarehouseUser}
                                       />
                                     )}
@@ -1089,7 +1089,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                                           </button>
                                           <button
                                             onClick={() => handleAddOtherFromTemplate(template.category, itemType)}
-                                            className="p-1 text-cyan-500/50 hover:text-cyan-400 transition-colors"
+                                            className="p-1 text-gray-400/50 hover:text-white transition-colors"
                                           >
                                             <Plus className="w-3.5 h-3.5" />
                                           </button>

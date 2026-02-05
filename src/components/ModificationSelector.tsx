@@ -52,7 +52,7 @@ export function ModificationSelector({
               min="1"
               value={quantity}
               onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400"
             />
           </div>
 
@@ -66,7 +66,7 @@ export function ModificationSelector({
                   onClick={() => setSelectedModification(null)}
                   className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
                     selectedModification === null
-                      ? 'bg-cyan-600 border-cyan-500 text-white'
+                      ? 'bg-white border-gray-400 text-black'
                       : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-750'
                   }`}
                 >
@@ -78,7 +78,7 @@ export function ModificationSelector({
                     onClick={() => setSelectedModification(mod.id)}
                     className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
                       selectedModification === mod.id
-                        ? 'bg-cyan-600 border-cyan-500 text-white'
+                        ? 'bg-white border-gray-400 text-black'
                         : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-750'
                     }`}
                   >
@@ -102,7 +102,7 @@ export function ModificationSelector({
           </button>
           <button
             onClick={handleConfirm}
-            className="flex-1 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
+            className="flex-1 px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors"
           >
             Добавить
           </button>

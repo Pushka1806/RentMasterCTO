@@ -74,7 +74,7 @@ export default function PersonnelPaymentsReport() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <FileText className="w-6 h-6 text-cyan-500" />
+          <FileText className="w-6 h-6 text-gray-400" />
           <h1 className="text-2xl font-bold text-white">Отчет по выплатам</h1>
         </div>
       </div>
@@ -87,7 +87,7 @@ export default function PersonnelPaymentsReport() {
           <select
             value={selectedPersonnelId}
             onChange={(e) => setSelectedPersonnelId(e.target.value)}
-            className="w-full px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-cyan-500"
+            className="w-full px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-gray-400"
           >
             <option value="">— Все сотрудники —</option>
             {personnel.map((person) => (
@@ -110,7 +110,7 @@ export default function PersonnelPaymentsReport() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-gray-400">Запланировано:</span>
-              <span className="font-bold text-blue-400">{plannedAmount.toLocaleString('ru-RU')} ₽</span>
+              <span className="font-bold text-white">{plannedAmount.toLocaleString('ru-RU')} ₽</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-gray-400">Просрочено:</span>
@@ -126,7 +126,7 @@ export default function PersonnelPaymentsReport() {
           </div>
         ) : loading ? (
           <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-500"></div>
+            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400"></div>
             <p className="mt-2 text-sm text-gray-400">Загрузка...</p>
           </div>
         ) : payments.length === 0 ? (
@@ -181,7 +181,7 @@ export default function PersonnelPaymentsReport() {
                                 payment.status === 'Выплачено'
                                   ? 'bg-green-900/30 text-green-400 border-green-600/30'
                                   : payment.status === 'Запланировано'
-                                  ? 'bg-blue-900/30 text-blue-400 border-blue-600/30'
+                                  ? 'bg-gray-900/30 text-white border-white/30'
                                   : 'bg-red-900/30 text-red-400 border-red-600/30'
                               }`}>
                                 {payment.status}

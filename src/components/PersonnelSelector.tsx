@@ -74,7 +74,7 @@ export function PersonnelSelector({ selectedIds, onConfirm, onClose }: Personnel
                     type="checkbox"
                     checked={selected.has(person.id)}
                     onChange={() => toggleSelection(person.id)}
-                    className="w-5 h-5 rounded border-gray-600 text-cyan-600 focus:ring-cyan-500 focus:ring-offset-gray-900"
+                    className="w-5 h-5 rounded border-gray-600 text-white focus:ring-gray-400 focus:ring-offset-gray-900"
                   />
                   <div className="flex-1">
                     <div className="text-white font-medium">{person.full_name}</div>
@@ -86,7 +86,7 @@ export function PersonnelSelector({ selectedIds, onConfirm, onClose }: Personnel
                     </div>
                   </div>
                   {selected.has(person.id) && (
-                    <Check className="w-5 h-5 text-cyan-500" />
+                    <Check className="w-5 h-5 text-gray-400" />
                   )}
                 </label>
               ))}
@@ -103,7 +103,7 @@ export function PersonnelSelector({ selectedIds, onConfirm, onClose }: Personnel
           </button>
           <button
             onClick={handleConfirm}
-            className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors"
+            className="px-4 py-2 bg-white hover:bg-gray-200 text-black rounded-lg transition-colors"
           >
             Подтвердить ({selected.size})
           </button>

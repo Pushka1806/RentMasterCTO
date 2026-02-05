@@ -450,7 +450,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
         <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center flex-shrink-0 bg-gray-900/50">
           <div>
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <FileText className="w-5 h-5 text-cyan-400" />
+              <FileText className="w-5 h-5 text-white" />
               Смета: {eventName}
             </h2>
           </div>
@@ -472,7 +472,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                    className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium rounded-lg transition-all shadow-lg shadow-cyan-900/20"
+                    className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-200 text-black text-sm font-medium rounded-lg transition-all shadow-lg shadow-gray-900/20"
                   >
                     <Plus className="w-4 h-4" />
                     Добавить категорию
@@ -522,7 +522,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                             step="0.01"
                             value={exchangeRate}
                             onChange={(e) => setExchangeRate(parseFloat(e.target.value) || 1)}
-                            className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
+                            className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-gray-400 outline-none"
                           />
                         </div>
                         <label className="flex items-center gap-3 cursor-pointer group">
@@ -530,7 +530,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                             type="checkbox"
                             checked={showInBYN}
                             onChange={(e) => setShowInBYN(e.target.checked)}
-                            className="w-5 h-5 rounded border-gray-700 bg-gray-900 text-cyan-600 focus:ring-cyan-600"
+                            className="w-5 h-5 rounded border-gray-700 bg-gray-900 text-white focus:ring-white"
                           />
                           <span className="text-sm text-gray-300 group-hover:text-white">Режим BYN (с наценкой)</span>
                         </label>
@@ -560,7 +560,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                     return (
                       <div
                         key={category.id}
-                        className={`transition-all duration-200 ${dragOverTarget === category.id ? 'ring-2 ring-cyan-500 bg-cyan-500/5 rounded-xl p-1' : ''}`}
+                        className={`transition-all duration-200 ${dragOverTarget === category.id ? 'ring-2 ring-gray-400 bg-gray-400/5 rounded-xl p-1' : ''}`}
                       >
                         <CategoryBlock
                           categoryId={category.id}
@@ -597,18 +597,18 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Поиск по названию или категории..."
-                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
+                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:ring-2 focus:ring-gray-400 outline-none transition-all"
               />
               <div className="flex bg-gray-800 p-1 rounded-lg">
                 <button
                   onClick={() => setSelectedItemType('Оборудование')}
-                  className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all ${selectedItemType === 'Оборудование' ? 'bg-gray-700 text-cyan-400 shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
+                  className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all ${selectedItemType === 'Оборудование' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
                 >
                   Оборудование
                 </button>
                 <button
                   onClick={() => setSelectedItemType('Работа')}
-                  className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all ${selectedItemType === 'Работа' ? 'bg-gray-700 text-cyan-400 shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
+                  className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all ${selectedItemType === 'Работа' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
                 >
                   Работа / Персонал
                 </button>
@@ -617,7 +617,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                 <select
                   value={selectedEquipmentCategory}
                   onChange={(e) => setSelectedEquipmentCategory(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-300 focus:ring-1 focus:ring-cyan-500 outline-none"
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-300 focus:ring-1 focus:ring-gray-400 outline-none"
                 >
                   {equipmentCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
@@ -631,15 +631,15 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                     <div
                       key={item.id}
                       onClick={() => handleEquipmentClick(item)}
-                      className="group flex items-center justify-between p-4 hover:bg-cyan-500/5 transition-colors cursor-pointer"
+                      className="group flex items-center justify-between p-4 hover:bg-gray-400/5 transition-colors cursor-pointer"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-gray-200 truncate group-hover:text-white">{item.name}</p>
                         <p className="text-xs text-gray-500">{item.category}</p>
                       </div>
                       <div className="flex items-center gap-4 ml-4">
-                        <span className="text-sm font-mono text-cyan-500 font-bold">${item.rental_price}</span>
-                        <div className="p-1.5 bg-gray-800 rounded-md group-hover:bg-cyan-600 group-hover:text-white text-gray-500 transition-all">
+                        <span className="text-sm font-mono text-gray-400 font-bold">${item.rental_price}</span>
+                        <div className="p-1.5 bg-gray-800 rounded-md group-hover:bg-white group-hover:text-black text-gray-500 transition-all">
                           <Plus className="w-4 h-4" />
                         </div>
                       </div>
@@ -652,13 +652,13 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                     <div
                       key={item.id}
                       onClick={() => handleAddWorkItem(item)}
-                      className="group flex items-center justify-between p-4 hover:bg-cyan-500/5 transition-colors cursor-pointer"
+                      className="group flex items-center justify-between p-4 hover:bg-gray-400/5 transition-colors cursor-pointer"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-gray-200 truncate group-hover:text-white">{item.name}</p>
                         <p className="text-xs text-gray-500">{item.unit}</p>
                       </div>
-                      <div className="p-1.5 bg-gray-800 rounded-md group-hover:bg-cyan-600 group-hover:text-white text-gray-500 transition-all">
+                      <div className="p-1.5 bg-gray-800 rounded-md group-hover:bg-white group-hover:text-black text-gray-500 transition-all">
                         <Plus className="w-4 h-4" />
                       </div>
                     </div>
@@ -676,9 +676,9 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
               <span className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Итоговая сумма</span>
               <span className="text-2xl font-black text-white">
                 {showInBYN ? (
-                  <><span className="text-cyan-400">{totalBYN.toLocaleString()}</span> <span className="text-sm font-normal text-gray-400 ml-1">BYN</span></>
+                  <><span className="text-white">{totalBYN.toLocaleString()}</span> <span className="text-sm font-normal text-gray-400 ml-1">BYN</span></>
                 ) : (
-                  <><span className="text-cyan-400">${totalUSD.toLocaleString()}</span> <span className="text-sm font-normal text-gray-400 ml-1">USD</span></>
+                  <><span className="text-white">${totalUSD.toLocaleString()}</span> <span className="text-sm font-normal text-gray-400 ml-1">USD</span></>
                 )}
               </span>
             </div>

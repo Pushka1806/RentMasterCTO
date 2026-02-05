@@ -59,7 +59,7 @@ export function Events({ onEventFormOpen, onSpecificationOpen }: EventsProps) {
   const getStatusColor = (status: string) => {
     const colors = {
       'Запрос': 'bg-yellow-900/30 text-yellow-400 border-yellow-600',
-      'На рассмотрении': 'bg-blue-900/30 text-blue-400 border-blue-600',
+      'На рассмотрении': 'bg-gray-900/30 text-white border-white',
       'Подтверждено': 'bg-green-900/30 text-green-400 border-green-600'
     };
     return colors[status as keyof typeof colors] || colors['Запрос'];
@@ -83,13 +83,13 @@ export function Events({ onEventFormOpen, onSpecificationOpen }: EventsProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Calendar className="w-6 h-6 text-cyan-500" />
+          <Calendar className="w-6 h-6 text-gray-400" />
           <h1 className="text-2xl font-bold text-white">Мероприятия</h1>
         </div>
         {canEditDelete && (
           <button
             onClick={() => onEventFormOpen?.()}
-            className="flex items-center gap-2 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors text-sm"
+            className="flex items-center gap-2 px-3 py-1.5 bg-white hover:bg-gray-200 text-black rounded-lg transition-colors text-sm"
           >
             <Plus className="w-4 h-4" />
             Добавить
@@ -106,7 +106,7 @@ export function Events({ onEventFormOpen, onSpecificationOpen }: EventsProps) {
               placeholder="Поиск..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-cyan-500"
+              className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-gray-400"
             />
           </div>
 
@@ -115,7 +115,7 @@ export function Events({ onEventFormOpen, onSpecificationOpen }: EventsProps) {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-cyan-500 appearance-none"
+              className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-gray-400 appearance-none"
             >
               <option value="all">Все типы</option>
               {EVENT_TYPES.map(type => (
@@ -129,7 +129,7 @@ export function Events({ onEventFormOpen, onSpecificationOpen }: EventsProps) {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-cyan-500 appearance-none"
+              className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-gray-400 appearance-none"
             >
               <option value="all">Все статусы</option>
               {EVENT_STATUSES.map(status => (
@@ -153,7 +153,7 @@ export function Events({ onEventFormOpen, onSpecificationOpen }: EventsProps) {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-gray-400">Рассмотрение:</span>
-          <span className="font-bold text-blue-400">
+          <span className="font-bold text-white">
             {events.filter(e => e.status === 'На рассмотрении').length}
           </span>
         </div>
@@ -204,7 +204,7 @@ export function Events({ onEventFormOpen, onSpecificationOpen }: EventsProps) {
                 filteredEvents.map((event) => (
                   <tr key={event.id} className="hover:bg-gray-800/50 transition-colors group">
                     <td className="px-4 py-2">
-                      <div className="text-cyan-400 font-medium text-sm">{formatDate(event.event_date)}</div>
+                      <div className="text-white font-medium text-sm">{formatDate(event.event_date)}</div>
                     </td>
                     <td className="px-4 py-2">
                       <div className="text-white font-medium text-sm leading-tight">{event.name || '-'}</div>
@@ -251,7 +251,7 @@ export function Events({ onEventFormOpen, onSpecificationOpen }: EventsProps) {
                           <>
                             <button
                               onClick={() => onEventFormOpen?.(event)}
-                              className="p-1.5 text-cyan-400 hover:bg-cyan-900/30 rounded transition-colors"
+                              className="p-1.5 text-white hover:bg-gray-900/30 rounded transition-colors"
                               title="Редактировать"
                             >
                               <Pencil className="w-3.5 h-3.5" />
@@ -267,7 +267,7 @@ export function Events({ onEventFormOpen, onSpecificationOpen }: EventsProps) {
                         ) : (
                           <button
                             onClick={() => onSpecificationOpen?.(event.id)}
-                            className="p-1.5 text-cyan-400 hover:bg-cyan-900/30 rounded transition-colors"
+                            className="p-1.5 text-white hover:bg-gray-900/30 rounded transition-colors"
                             title="Спецификация"
                           >
                             <FileText className="w-3.5 h-3.5" />

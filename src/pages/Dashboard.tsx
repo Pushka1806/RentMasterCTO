@@ -10,8 +10,8 @@ export function Dashboard() {
       label: 'Активные мероприятия',
       value: '12',
       icon: Calendar,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-900/30',
+      color: 'text-gray-400',
+      bgColor: 'bg-gray-900/30',
     },
     {
       label: 'Единиц оборудования',
@@ -31,8 +31,8 @@ export function Dashboard() {
       label: 'Отчётов на рассмотрении',
       value: '5',
       icon: DollarSign,
-      color: 'text-cyan-500',
-      bgColor: 'bg-cyan-900/30',
+      color: 'text-gray-400',
+      bgColor: 'bg-gray-900/30',
     },
   ];
 

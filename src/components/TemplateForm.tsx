@@ -212,7 +212,7 @@ export function TemplateForm({ template: initialTemplate, onClose, onSave }: Tem
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Например: Звуковая система"
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-gray-400"
                 />
               </div>
 
@@ -225,7 +225,7 @@ export function TemplateForm({ template: initialTemplate, onClose, onSave }: Tem
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Описание шаблона..."
                   rows={3}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 resize-none"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-gray-400 resize-none"
                 />
               </div>
 
@@ -237,7 +237,7 @@ export function TemplateForm({ template: initialTemplate, onClose, onSave }: Tem
                   <button
                     type="button"
                     onClick={() => setShowEquipmentSelector(true)}
-                    className="flex items-center gap-2 px-3 py-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm transition-colors"
+                    className="flex items-center gap-2 px-3 py-1 bg-white hover:bg-gray-200 text-black rounded-lg text-sm transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     Добавить
@@ -282,7 +282,7 @@ export function TemplateForm({ template: initialTemplate, onClose, onSave }: Tem
                                   min="1"
                                   value={item.quantity}
                                   onChange={(e) => handleUpdateQuantity(index, Math.max(1, parseInt(e.target.value) || 1))}
-                                  className="w-12 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-cyan-500"
+                                  className="w-12 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-gray-400"
                                 />
                                 <span className="text-gray-400">шт.</span>
                               </div>
@@ -296,7 +296,7 @@ export function TemplateForm({ template: initialTemplate, onClose, onSave }: Tem
                                 step="0.01"
                                 value={item.price}
                                 onChange={(e) => handleUpdatePrice(index, parseFloat(e.target.value) || 0)}
-                                className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-cyan-500"
+                                className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-gray-400"
                               />
                             </div>
                           </div>
@@ -319,7 +319,7 @@ export function TemplateForm({ template: initialTemplate, onClose, onSave }: Tem
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
               >
                 {saving ? 'Сохранение...' : 'Сохранить'}
               </button>

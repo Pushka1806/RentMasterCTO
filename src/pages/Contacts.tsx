@@ -102,7 +102,7 @@ export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpe
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Users className="w-6 h-6 text-cyan-500" />
+          <Users className="w-6 h-6 text-gray-400" />
           <h1 className="text-2xl font-bold text-white">Контакты</h1>
         </div>
       </div>
@@ -114,7 +114,7 @@ export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpe
               onClick={() => { setActiveTab('clients'); setSearchTerm(''); }}
               className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
                 activeTab === 'clients'
-                  ? 'border-cyan-500 text-cyan-400'
+                  ? 'border-gray-400 text-white'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
               }`}
             >
@@ -125,7 +125,7 @@ export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpe
               onClick={() => { setActiveTab('venues'); setSearchTerm(''); }}
               className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
                 activeTab === 'venues'
-                  ? 'border-cyan-500 text-cyan-400'
+                  ? 'border-gray-400 text-white'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
               }`}
             >
@@ -136,7 +136,7 @@ export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpe
               onClick={() => { setActiveTab('organizers'); setSearchTerm(''); }}
               className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
                 activeTab === 'organizers'
-                  ? 'border-cyan-500 text-cyan-400'
+                  ? 'border-gray-400 text-white'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
               }`}
             >
@@ -155,7 +155,7 @@ export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpe
                 placeholder="Поиск..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-cyan-500"
+                className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-gray-400"
               />
             </div>
             <button
@@ -164,7 +164,7 @@ export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpe
                 if (activeTab === 'venues') onVenueFormOpen?.();
                 if (activeTab === 'organizers') onOrganizerFormOpen?.();
               }}
-              className="flex items-center gap-2 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors text-sm"
+              className="flex items-center gap-2 px-3 py-1.5 bg-white hover:bg-gray-200 text-black rounded-lg transition-colors text-sm"
             >
               <Plus className="w-4 h-4" />
               Добавить
@@ -197,13 +197,13 @@ export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpe
                         <td className="px-3 py-2 text-white font-medium text-sm">{client.organization}</td>
                         <td className="px-3 py-2 text-white text-sm">{client.full_name || '-'}</td>
                         <td className="px-3 py-2 text-gray-400 text-sm">{client.position || '-'}</td>
-                        <td className="px-3 py-2 text-cyan-400 text-sm">{client.phone || '-'}</td>
+                        <td className="px-3 py-2 text-white text-sm">{client.phone || '-'}</td>
                         <td className="px-3 py-2 text-gray-400 text-sm">{client.email || '-'}</td>
                         <td className="px-3 py-2 text-right">
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => onClientFormOpen?.(client)}
-                              className="p-1.5 text-cyan-400 hover:bg-cyan-900/30 rounded transition-colors"
+                              className="p-1.5 text-white hover:bg-gray-900/30 rounded transition-colors"
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
@@ -250,12 +250,12 @@ export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpe
                         <td className="px-3 py-2 text-gray-400 text-sm">{venue.address || '-'}</td>
                         <td className="px-3 py-2 text-gray-400 text-sm">{venue.city || '-'}</td>
                         <td className="px-3 py-2 text-white text-sm">{venue.capacity || '-'}</td>
-                        <td className="px-3 py-2 text-cyan-400 text-sm">{venue.contact || '-'}</td>
+                        <td className="px-3 py-2 text-white text-sm">{venue.contact || '-'}</td>
                         <td className="px-3 py-2 text-right">
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => onVenueFormOpen?.(venue)}
-                              className="p-1.5 text-cyan-400 hover:bg-cyan-900/30 rounded transition-colors"
+                              className="p-1.5 text-white hover:bg-gray-900/30 rounded transition-colors"
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
@@ -300,14 +300,14 @@ export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpe
                       <tr key={organizer.id} className="hover:bg-gray-800/50 transition-colors">
                         <td className="px-3 py-2 text-white font-medium text-sm">{organizer.full_name}</td>
                         <td className="px-3 py-2 text-gray-400 text-sm">{organizer.position || '-'}</td>
-                        <td className="px-3 py-2 text-cyan-400 text-sm">{organizer.phone || '-'}</td>
+                        <td className="px-3 py-2 text-white text-sm">{organizer.phone || '-'}</td>
                         <td className="px-3 py-2 text-gray-400 text-sm">{organizer.email || '-'}</td>
                         <td className="px-3 py-2 text-gray-400 text-sm">{organizer.notes || '-'}</td>
                         <td className="px-3 py-2 text-right">
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => onOrganizerFormOpen?.(organizer)}
-                              className="p-1.5 text-cyan-400 hover:bg-cyan-900/30 rounded transition-colors"
+                              className="p-1.5 text-white hover:bg-gray-900/30 rounded transition-colors"
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </button>

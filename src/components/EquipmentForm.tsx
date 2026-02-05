@@ -95,7 +95,7 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400"
                   required
                 >
                   <option value="">Выберите категорию</option>
@@ -115,7 +115,7 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
                   value={formData.type}
                   onChange={handleChange}
                   placeholder="Оборудование, Крепление, Стойка..."
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400"
                   required
                 />
               </div>
@@ -130,7 +130,7 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
                   value={formData.subtype}
                   onChange={handleChange}
                   placeholder="Микрофон, Колонка, Рама..."
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400"
                 />
               </div>
 
@@ -143,7 +143,7 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400"
                   required
                 />
               </div>
@@ -157,7 +157,7 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
                   value={formData.note}
                   onChange={handleChange}
                   rows={2}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 resize-none"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400 resize-none"
                 />
               </div>
             </div>
@@ -175,7 +175,7 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
                   value={formData.attribute}
                   onChange={handleChange}
                   placeholder="Короткое название/код"
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400"
                 />
               </div>
 
@@ -189,7 +189,7 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
                   value={formData.sku}
                   onChange={handleChange}
                   placeholder="VI_FIX_FRM"
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 font-mono"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400 font-mono"
                   required
                 />
               </div>
@@ -204,7 +204,7 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
                   value={formData.quantity}
                   onChange={handleChange}
                   min="0"
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400"
                   required
                 />
               </div>
@@ -220,7 +220,7 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
                   onChange={handleChange}
                   min="0"
                   step="0.01"
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400"
                 />
               </div>
 
@@ -234,7 +234,7 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
                   value={formData.power}
                   onChange={handleChange}
                   placeholder="Для электрооборудования"
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gray-400"
                 />
               </div>
             </div>
@@ -254,14 +254,14 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
                     onClick={() => handleRadioChange('object_type', 'physical')}
                     className={`p-4 rounded-lg border-2 transition-all text-left ${
                       formData.object_type === 'physical'
-                        ? 'border-cyan-500 bg-cyan-900/20'
+                        ? 'border-gray-400 bg-gray-900/20'
                         : 'border-gray-700 bg-gray-800 hover:border-gray-600'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
                         formData.object_type === 'physical'
-                          ? 'border-cyan-500 bg-cyan-500'
+                          ? 'border-gray-400 bg-gray-400'
                           : 'border-gray-600'
                       }`}>
                         {formData.object_type === 'physical' && (
@@ -282,14 +282,14 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
                     onClick={() => handleRadioChange('object_type', 'virtual')}
                     className={`p-4 rounded-lg border-2 transition-all text-left ${
                       formData.object_type === 'virtual'
-                        ? 'border-cyan-500 bg-cyan-900/20'
+                        ? 'border-gray-400 bg-gray-900/20'
                         : 'border-gray-700 bg-gray-800 hover:border-gray-600'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
                         formData.object_type === 'virtual'
-                          ? 'border-cyan-500 bg-cyan-500'
+                          ? 'border-gray-400 bg-gray-400'
                           : 'border-gray-600'
                       }`}>
                         {formData.object_type === 'virtual' && (
@@ -317,14 +317,14 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
                     onClick={() => handleRadioChange('rental_type', 'rental')}
                     className={`p-4 rounded-lg border-2 transition-all text-left ${
                       formData.rental_type === 'rental'
-                        ? 'border-cyan-500 bg-cyan-900/20'
+                        ? 'border-gray-400 bg-gray-900/20'
                         : 'border-gray-700 bg-gray-800 hover:border-gray-600'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
                         formData.rental_type === 'rental'
-                          ? 'border-cyan-500 bg-cyan-500'
+                          ? 'border-gray-400 bg-gray-400'
                           : 'border-gray-600'
                       }`}>
                         {formData.rental_type === 'rental' && (
@@ -345,14 +345,14 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
                     onClick={() => handleRadioChange('rental_type', 'sublease')}
                     className={`p-4 rounded-lg border-2 transition-all text-left ${
                       formData.rental_type === 'sublease'
-                        ? 'border-cyan-500 bg-cyan-900/20'
+                        ? 'border-gray-400 bg-gray-900/20'
                         : 'border-gray-700 bg-gray-800 hover:border-gray-600'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
                         formData.rental_type === 'sublease'
-                          ? 'border-cyan-500 bg-cyan-500'
+                          ? 'border-gray-400 bg-gray-400'
                           : 'border-gray-600'
                       }`}>
                         {formData.rental_type === 'sublease' && (
@@ -380,14 +380,14 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
                     onClick={() => handleRadioChange('has_composition', false)}
                     className={`p-4 rounded-lg border-2 transition-all text-left ${
                       formData.has_composition === false
-                        ? 'border-cyan-500 bg-cyan-900/20'
+                        ? 'border-gray-400 bg-gray-900/20'
                         : 'border-gray-700 bg-gray-800 hover:border-gray-600'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
                         formData.has_composition === false
-                          ? 'border-cyan-500 bg-cyan-500'
+                          ? 'border-gray-400 bg-gray-400'
                           : 'border-gray-600'
                       }`}>
                         {formData.has_composition === false && (
@@ -408,14 +408,14 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
                     onClick={() => handleRadioChange('has_composition', true)}
                     className={`p-4 rounded-lg border-2 transition-all text-left ${
                       formData.has_composition === true
-                        ? 'border-cyan-500 bg-cyan-900/20'
+                        ? 'border-gray-400 bg-gray-900/20'
                         : 'border-gray-700 bg-gray-800 hover:border-gray-600'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
                         formData.has_composition === true
-                          ? 'border-cyan-500 bg-cyan-500'
+                          ? 'border-gray-400 bg-gray-400'
                           : 'border-gray-600'
                       }`}>
                         {formData.has_composition === true && (
@@ -446,7 +446,7 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors disabled:opacity-50"
+              className="px-6 py-2 bg-white hover:bg-gray-200 text-black rounded-lg transition-colors disabled:opacity-50"
             >
               {loading ? 'Сохранение...' : item ? 'Сохранить' : 'Создать'}
             </button>

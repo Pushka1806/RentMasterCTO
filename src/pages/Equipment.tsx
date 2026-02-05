@@ -106,7 +106,7 @@ export function Equipment() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Package className="w-6 h-6 text-cyan-500" />
+          <Package className="w-6 h-6 text-gray-400" />
           <h1 className="text-2xl font-bold text-white">Оборудование</h1>
         </div>
         <div className="flex gap-2">
@@ -136,7 +136,7 @@ export function Equipment() {
           </label>
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors text-sm"
+            className="flex items-center gap-2 px-3 py-1.5 bg-white hover:bg-gray-200 text-black rounded-lg transition-colors text-sm"
           >
             <Plus className="w-4 h-4" />
             Добавить
@@ -153,7 +153,7 @@ export function Equipment() {
               placeholder="Поиск..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-cyan-500"
+              className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-gray-400"
             />
           </div>
 
@@ -162,7 +162,7 @@ export function Equipment() {
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-cyan-500 appearance-none"
+              className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-gray-400 appearance-none"
             >
               <option value="all">Все категории</option>
               {categories.map(cat => (
@@ -176,7 +176,7 @@ export function Equipment() {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-cyan-500 appearance-none"
+              className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-gray-400 appearance-none"
             >
               <option value="all">Все типы</option>
               {types.map(type => (
@@ -196,7 +196,7 @@ export function Equipment() {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-gray-400">Позиций:</span>
-          <span className="font-bold text-cyan-400">{items.length}</span>
+          <span className="font-bold text-white">{items.length}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-gray-400">Категорий:</span>
@@ -267,7 +267,7 @@ export function Equipment() {
                         </button>
                         <button
                           onClick={() => handleEdit(item)}
-                          className="p-1.5 text-cyan-400 hover:bg-cyan-900/30 rounded transition-colors"
+                          className="p-1.5 text-white hover:bg-gray-900/30 rounded transition-colors"
                           title="Редактировать"
                         >
                           <Pencil className="w-3.5 h-3.5" />

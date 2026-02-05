@@ -210,7 +210,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
       <div className="bg-gray-900 rounded-lg border border-gray-800 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Package className="w-6 h-6 text-cyan-500" />
+            <Package className="w-6 h-6 text-gray-400" />
             <div>
               <h2 className="text-xl font-bold text-white">{item.name}</h2>
               <p className="text-sm text-gray-400">{item.sku}</p>
@@ -230,49 +230,49 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
               onClick={() => setActiveTab('details')}
               className={`px-4 py-3 font-medium transition-colors relative ${
                 activeTab === 'details'
-                  ? 'text-cyan-400'
+                  ? 'text-white'
                   : 'text-gray-400 hover:text-gray-300'
               }`}
             >
               Детали
               {activeTab === 'details' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
               )}
             </button>
             <button
               onClick={() => setActiveTab('composition')}
               className={`px-4 py-3 font-medium transition-colors relative ${
                 activeTab === 'composition'
-                  ? 'text-cyan-400'
+                  ? 'text-white'
                   : 'text-gray-400 hover:text-gray-300'
               }`}
             >
               Содержимое
               {compositions.length > 0 && (
-                <span className="ml-2 px-2 py-0.5 bg-cyan-600 text-white text-xs rounded-full">
+                <span className="ml-2 px-2 py-0.5 bg-white text-black text-xs rounded-full">
                   {compositions.length}
                 </span>
               )}
               {activeTab === 'composition' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
               )}
             </button>
             <button
               onClick={() => setActiveTab('modifications')}
               className={`px-4 py-3 font-medium transition-colors relative ${
                 activeTab === 'modifications'
-                  ? 'text-cyan-400'
+                  ? 'text-white'
                   : 'text-gray-400 hover:text-gray-300'
               }`}
             >
               Модификации
               {modifications.length > 0 && (
-                <span className="ml-2 px-2 py-0.5 bg-cyan-600 text-white text-xs rounded-full">
+                <span className="ml-2 px-2 py-0.5 bg-white text-black text-xs rounded-full">
                   {modifications.length}
                 </span>
               )}
               {activeTab === 'modifications' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></div>
               )}
             </button>
           </div>
@@ -376,7 +376,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                     </p>
                     <button
                       onClick={() => setShowAddComposition(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors text-sm"
+                      className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-200 text-black rounded-lg transition-colors text-sm"
                     >
                       <Plus className="w-4 h-4" />
                       Добавить элемент
@@ -393,7 +393,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                           <select
                             value={selectedEquipmentId}
                             onChange={(e) => setSelectedEquipmentId(e.target.value)}
-                            className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white focus:outline-none focus:border-cyan-500"
+                            className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white focus:outline-none focus:border-gray-400"
                           >
                             <option value="">-- Выберите --</option>
                             {availableEquipment.map(eq => (
@@ -412,7 +412,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                             min="1"
                             value={quantity}
                             onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                            className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white focus:outline-none focus:border-cyan-500"
+                            className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white focus:outline-none focus:border-gray-400"
                           />
                         </div>
                       </div>
@@ -430,7 +430,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                         <button
                           onClick={handleAddComposition}
                           disabled={loading || !selectedEquipmentId}
-                          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded transition-colors disabled:opacity-50"
+                          className="px-4 py-2 bg-white hover:bg-gray-200 text-black rounded transition-colors disabled:opacity-50"
                         >
                           {loading ? 'Добавление...' : 'Добавить'}
                         </button>
@@ -452,7 +452,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                         >
                           <div className="flex-1">
                             <div className="flex items-center gap-3">
-                              <div className="text-cyan-400 font-mono text-sm">{comp.child_sku}</div>
+                              <div className="text-white font-mono text-sm">{comp.child_sku}</div>
                               <div className="text-white font-medium">{comp.child_name}</div>
                             </div>
                             <div className="text-sm text-gray-400 mt-1">
@@ -497,7 +497,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                 </p>
                 <button
                   onClick={() => setShowAddModification(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors text-sm"
+                  className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-200 text-black rounded-lg transition-colors text-sm"
                 >
                   <Plus className="w-4 h-4" />
                   Добавить модификацию
@@ -516,7 +516,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                         value={newModificationName}
                         onChange={(e) => setNewModificationName(e.target.value)}
                         placeholder="Например: Базовая, Расширенная, Премиум"
-                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white focus:outline-none focus:border-cyan-500"
+                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white focus:outline-none focus:border-gray-400"
                       />
                     </div>
                     <div>
@@ -528,7 +528,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                         onChange={(e) => setNewModificationDescription(e.target.value)}
                         placeholder="Краткое описание модификации"
                         rows={2}
-                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white focus:outline-none focus:border-cyan-500"
+                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white focus:outline-none focus:border-gray-400"
                       />
                     </div>
                   </div>
@@ -546,7 +546,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                     <button
                       onClick={handleAddModification}
                       disabled={loading || !newModificationName.trim()}
-                      className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded transition-colors disabled:opacity-50"
+                      className="px-4 py-2 bg-white hover:bg-gray-200 text-black rounded transition-colors disabled:opacity-50"
                     >
                       {loading ? 'Создание...' : 'Создать'}
                     </button>
@@ -574,7 +574,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                           <div className="flex items-center gap-3 flex-1">
                             <button
                               onClick={() => handleToggleModification(mod.id)}
-                              className="text-gray-400 hover:text-cyan-400 transition-colors"
+                              className="text-gray-400 hover:text-white transition-colors"
                             >
                               {isExpanded ? (
                                 <ChevronDown className="w-5 h-5" />
@@ -584,7 +584,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                             </button>
                             <div className="flex-1">
                               <div className="flex items-center gap-3">
-                                <Settings className="w-5 h-5 text-cyan-400" />
+                                <Settings className="w-5 h-5 text-white" />
                                 <div>
                                   <div className="text-white font-medium">{mod.name}</div>
                                   {mod.description && (
@@ -594,7 +594,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                               </div>
                             </div>
                             {components.length > 0 && (
-                              <span className="px-3 py-1 bg-cyan-600/20 text-cyan-400 text-xs rounded-full">
+                              <span className="px-3 py-1 bg-white/20 text-black text-xs rounded-full">
                                 {components.length} компонентов
                               </span>
                             )}
@@ -615,7 +615,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                                 <h4 className="text-sm font-medium text-gray-300">Компоненты модификации</h4>
                                 <button
                                   onClick={() => setShowAddComponentForMod(mod.id)}
-                                  className="flex items-center gap-2 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-xs transition-colors"
+                                  className="flex items-center gap-2 px-3 py-1.5 bg-white hover:bg-gray-200 text-black rounded text-xs transition-colors"
                                 >
                                   <Plus className="w-3 h-3" />
                                   Добавить компонент
@@ -632,7 +632,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                                       <select
                                         value={selectedComponentEquipmentId}
                                         onChange={(e) => setSelectedComponentEquipmentId(e.target.value)}
-                                        className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-cyan-500"
+                                        className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-gray-400"
                                       >
                                         <option value="">-- Выберите --</option>
                                         {availableEquipment.map(eq => (
@@ -651,7 +651,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                                         min="1"
                                         value={componentQuantity}
                                         onChange={(e) => setComponentQuantity(parseInt(e.target.value) || 1)}
-                                        className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-cyan-500"
+                                        className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-gray-400"
                                       />
                                     </div>
                                   </div>
@@ -669,7 +669,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                                     <button
                                       onClick={() => handleAddModificationComponent(mod.id)}
                                       disabled={loading || !selectedComponentEquipmentId}
-                                      className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-sm transition-colors disabled:opacity-50"
+                                      className="px-3 py-1.5 bg-white hover:bg-gray-200 text-black rounded text-sm transition-colors disabled:opacity-50"
                                     >
                                       {loading ? 'Добавление...' : 'Добавить'}
                                     </button>
@@ -691,7 +691,7 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                                     >
                                       <div className="flex-1">
                                         <div className="flex items-center gap-2">
-                                          <div className="text-cyan-400 font-mono text-xs">{comp.component?.sku}</div>
+                                          <div className="text-white font-mono text-xs">{comp.component?.sku}</div>
                                           <div className="text-white text-sm font-medium">{comp.component?.name}</div>
                                         </div>
                                         <div className="text-xs text-gray-400 mt-1">

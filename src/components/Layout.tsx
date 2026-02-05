@@ -124,7 +124,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                     transition-colors
                     ${
                       isActive
-                        ? 'bg-cyan-600 text-white'
+                        ? 'bg-white text-black'
                         : 'text-gray-400 hover:text-white hover:bg-gray-800'
                     }
                   `}

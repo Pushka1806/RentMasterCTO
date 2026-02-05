@@ -179,7 +179,7 @@ export function EventForm({ event, onClose, onSave }: EventFormProps) {
                   required
                   value={formData.event_date}
                   onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700/50 rounded text-sm text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 [color-scheme:dark]"
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700/50 rounded text-sm text-white focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 [color-scheme:dark]"
                 />
               </div>
 
@@ -191,7 +191,7 @@ export function EventForm({ event, onClose, onSave }: EventFormProps) {
                   required
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700/50 rounded text-sm text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700/50 rounded text-sm text-white focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400"
                 >
                   {EVENT_STATUSES.map(status => (
                     <option key={status} value={status}>{status}</option>
@@ -208,7 +208,7 @@ export function EventForm({ event, onClose, onSave }: EventFormProps) {
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700/50 rounded text-sm text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700/50 rounded text-sm text-white focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400"
                 placeholder="Название"
               />
             </div>
@@ -222,7 +222,7 @@ export function EventForm({ event, onClose, onSave }: EventFormProps) {
                   required
                   value={formData.event_type}
                   onChange={(e) => setFormData({ ...formData, event_type: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700/50 rounded text-sm text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700/50 rounded text-sm text-white focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400"
                 >
                   {EVENT_TYPES.map(type => (
                     <option key={type} value={type}>{type}</option>
@@ -237,7 +237,7 @@ export function EventForm({ event, onClose, onSave }: EventFormProps) {
                 <select
                   value={formData.client_id || ''}
                   onChange={(e) => setFormData({ ...formData, client_id: e.target.value || null })}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700/50 rounded text-sm text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700/50 rounded text-sm text-white focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400"
                 >
                   <option value="">Не выбран</option>
                   {clients.map(client => (
@@ -255,7 +255,7 @@ export function EventForm({ event, onClose, onSave }: EventFormProps) {
                 <select
                   value={formData.venue_id || ''}
                   onChange={(e) => setFormData({ ...formData, venue_id: e.target.value || null })}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700/50 rounded text-sm text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700/50 rounded text-sm text-white focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400"
                 >
                   <option value="">Не выбрана</option>
                   {venues.map(venue => (
@@ -271,7 +271,7 @@ export function EventForm({ event, onClose, onSave }: EventFormProps) {
                 <select
                   value={formData.organizer_id || ''}
                   onChange={(e) => setFormData({ ...formData, organizer_id: e.target.value || null })}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700/50 rounded text-sm text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700/50 rounded text-sm text-white focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400"
                 >
                   <option value="">Не выбран</option>
                   {organizers.map(organizer => (
@@ -291,7 +291,7 @@ export function EventForm({ event, onClose, onSave }: EventFormProps) {
                     type="checkbox"
                     checked={formData.progress_budget_done}
                     onChange={(e) => setFormData({ ...formData, progress_budget_done: e.target.checked })}
-                    className="w-4 h-4 bg-gray-800 border-gray-700 rounded text-cyan-600 focus:ring-cyan-500 focus:ring-offset-gray-900"
+                    className="w-4 h-4 bg-gray-800 border-gray-700 rounded text-white focus:ring-gray-400 focus:ring-offset-gray-900"
                   />
                   <span className="text-gray-300 text-sm">Смета составлена</span>
                 </label>
@@ -301,7 +301,7 @@ export function EventForm({ event, onClose, onSave }: EventFormProps) {
                     type="checkbox"
                     checked={formData.progress_equipment_reserved}
                     onChange={(e) => setFormData({ ...formData, progress_equipment_reserved: e.target.checked })}
-                    className="w-4 h-4 bg-gray-800 border-gray-700 rounded text-cyan-600 focus:ring-cyan-500 focus:ring-offset-gray-900"
+                    className="w-4 h-4 bg-gray-800 border-gray-700 rounded text-white focus:ring-gray-400 focus:ring-offset-gray-900"
                   />
                   <span className="text-gray-300 text-sm">Оборудование зарезервировано</span>
                 </label>
@@ -311,7 +311,7 @@ export function EventForm({ event, onClose, onSave }: EventFormProps) {
                     type="checkbox"
                     checked={formData.progress_project_completed}
                     onChange={(e) => setFormData({ ...formData, progress_project_completed: e.target.checked })}
-                    className="w-4 h-4 bg-gray-800 border-gray-700 rounded text-cyan-600 focus:ring-cyan-500 focus:ring-offset-gray-900"
+                    className="w-4 h-4 bg-gray-800 border-gray-700 rounded text-white focus:ring-gray-400 focus:ring-offset-gray-900"
                   />
                   <span className="text-gray-300 text-sm">Проект выполнен</span>
                 </label>
@@ -321,7 +321,7 @@ export function EventForm({ event, onClose, onSave }: EventFormProps) {
                     type="checkbox"
                     checked={formData.progress_paid}
                     onChange={(e) => setFormData({ ...formData, progress_paid: e.target.checked })}
-                    className="w-4 h-4 bg-gray-800 border-gray-700 rounded text-cyan-600 focus:ring-cyan-500 focus:ring-offset-gray-900"
+                    className="w-4 h-4 bg-gray-800 border-gray-700 rounded text-white focus:ring-gray-400 focus:ring-offset-gray-900"
                   />
                   <span className="text-gray-300 text-sm">Оплачен</span>
                 </label>
@@ -336,7 +336,7 @@ export function EventForm({ event, onClose, onSave }: EventFormProps) {
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={2}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700/50 rounded text-sm text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 resize-none"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700/50 rounded text-sm text-white focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 resize-none"
                 placeholder="Дополнительная информация..."
               />
             </div>
@@ -348,9 +348,9 @@ export function EventForm({ event, onClose, onSave }: EventFormProps) {
                 <button
                   type="button"
                   onClick={() => setShowBudgetEditor(true)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-sm text-white rounded transition-colors ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-sm text-black rounded transition-colors ${
                     hasBudgetItems
-                      ? 'bg-cyan-600 hover:bg-cyan-700'
+                      ? 'bg-white hover:bg-gray-200'
                       : 'bg-green-600 hover:bg-green-700'
                   }`}
                 >
@@ -370,7 +370,7 @@ export function EventForm({ event, onClose, onSave }: EventFormProps) {
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-1.5 text-sm bg-cyan-600 hover:bg-cyan-700 text-white rounded transition-colors disabled:opacity-50"
+                className="px-4 py-1.5 text-sm bg-white hover:bg-gray-200 text-black rounded transition-colors disabled:opacity-50"
               >
                 {saving ? 'Сохранение...' : 'Сохранить'}
               </button>

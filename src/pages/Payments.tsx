@@ -81,7 +81,7 @@ export default function Payments() {
       case 'Выплачено':
         return 'bg-green-100 text-green-800 border-green-200';
       case 'Запланировано':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-gray-100 text-gray-800 border-gray-200';
       case 'Просрочено':
         return 'bg-red-100 text-red-800 border-red-200';
       default:
@@ -156,7 +156,7 @@ export default function Payments() {
         <h1 className="text-2xl font-bold text-white">Выплаты</h1>
         <button
           onClick={() => setShowForm(true)}
-          className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+          className="px-3 py-1.5 bg-white text-black text-sm rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Добавить
@@ -204,7 +204,7 @@ export default function Payments() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-gray-400">Запланировано:</span>
-            <span className="font-bold text-blue-400">{plannedAmount.toLocaleString('ru-RU')} ₽</span>
+            <span className="font-bold text-white">{plannedAmount.toLocaleString('ru-RU')} ₽</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-gray-400">Просрочено:</span>
@@ -214,7 +214,7 @@ export default function Payments() {
 
         {loading ? (
           <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400"></div>
             <p className="mt-2 text-sm text-gray-400">Загрузка...</p>
           </div>
         ) : payments.length === 0 ? (
@@ -267,7 +267,7 @@ export default function Payments() {
                       <div className="flex justify-end gap-1">
                         <button
                           onClick={() => handleEdit(payment)}
-                          className="p-1.5 text-blue-400 hover:bg-blue-900/30 rounded transition-colors"
+                          className="p-1.5 text-white hover:bg-gray-900/30 rounded transition-colors"
                           title="Редактировать"
                         >
                           <Pencil className="w-3.5 h-3.5" />
@@ -343,7 +343,7 @@ function PaymentFormModal({ payment, personnelList, eventsList, onSave, onClose 
               required
               value={formData.personnel_id}
               onChange={(e) => setFormData({ ...formData, personnel_id: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent"
             >
               <option value="">Выберите сотрудника</option>
               {personnelList.map((person) => (
@@ -361,7 +361,7 @@ function PaymentFormModal({ payment, personnelList, eventsList, onSave, onClose 
             <select
               value={formData.event_id}
               onChange={(e) => setFormData({ ...formData, event_id: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent"
             >
               <option value="">Не привязано к мероприятию</option>
               {eventsList.map((event) => (
@@ -383,7 +383,7 @@ function PaymentFormModal({ payment, personnelList, eventsList, onSave, onClose 
               step="0.01"
               value={formData.amount}
               onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent"
             />
           </div>
 
@@ -395,7 +395,7 @@ function PaymentFormModal({ payment, personnelList, eventsList, onSave, onClose 
               required
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent"
             >
               <option value="Запланировано">Запланировано</option>
               <option value="Выплачено">Выплачено</option>
@@ -411,7 +411,7 @@ function PaymentFormModal({ payment, personnelList, eventsList, onSave, onClose 
               type="date"
               value={formData.payment_date}
               onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent"
             />
           </div>
 
@@ -423,7 +423,7 @@ function PaymentFormModal({ payment, personnelList, eventsList, onSave, onClose 
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent"
             />
           </div>
 
@@ -437,7 +437,7 @@ function PaymentFormModal({ payment, personnelList, eventsList, onSave, onClose 
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors"
             >
               Сохранить
             </button>

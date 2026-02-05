@@ -110,12 +110,12 @@ export default function PersonnelPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Users className="w-6 h-6 text-cyan-500" />
+          <Users className="w-6 h-6 text-gray-400" />
           <h1 className="text-2xl font-bold text-white">Персонал</h1>
         </div>
         <button
           onClick={() => openForm()}
-          className="flex items-center gap-2 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors text-sm"
+          className="flex items-center gap-2 px-3 py-1.5 bg-white hover:bg-gray-200 text-black rounded-lg transition-colors text-sm"
         >
           <Plus className="w-4 h-4" />
           Добавить
@@ -182,7 +182,7 @@ export default function PersonnelPage() {
                       <div className="flex justify-end gap-1">
                         <button
                           onClick={() => openForm(person)}
-                          className="p-1.5 text-cyan-400 hover:bg-cyan-900/30 rounded transition-colors"
+                          className="p-1.5 text-white hover:bg-gray-900/30 rounded transition-colors"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
@@ -219,7 +219,7 @@ export default function PersonnelPage() {
                     required
                     value={formData.full_name}
                     onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-gray-400 focus:border-transparent"
                   />
                 </div>
 
@@ -232,7 +232,7 @@ export default function PersonnelPage() {
                     step="0.01"
                     value={formData.salary}
                     onChange={(e) => setFormData({ ...formData, salary: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-gray-400 focus:border-transparent"
                   />
                 </div>
 
@@ -247,7 +247,7 @@ export default function PersonnelPage() {
                     max="100"
                     value={formData.rate_percentage}
                     onChange={(e) => setFormData({ ...formData, rate_percentage: parseFloat(e.target.value) || 100 })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-gray-400 focus:border-transparent"
                   />
                 </div>
 
@@ -259,7 +259,7 @@ export default function PersonnelPage() {
                     type="text"
                     value={formData.drivers_license}
                     onChange={(e) => setFormData({ ...formData, drivers_license: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-gray-400 focus:border-transparent"
                   />
                 </div>
 
@@ -271,7 +271,7 @@ export default function PersonnelPage() {
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-gray-400 focus:border-transparent"
                   />
                 </div>
 
@@ -283,7 +283,7 @@ export default function PersonnelPage() {
                     type="text"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-gray-400 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -298,7 +298,7 @@ export default function PersonnelPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
+                  className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   {editingPerson ? 'Сохранить' : 'Добавить'}
                 </button>

@@ -80,7 +80,7 @@ export function CategoryBlock({
       {/* Category header - compact, sticky */}
       <div
         className={`flex items-center gap-1.5 px-2 py-1.5 transition-colors cursor-pointer sticky top-0 z-10 ${
-          isSelected ? 'bg-cyan-900/20' : 'bg-gray-900 hover:bg-gray-800'
+          isSelected ? 'bg-gray-900/20' : 'bg-gray-900 hover:bg-gray-800'
         }`}
         onClick={onSelect}
       >
@@ -121,7 +121,7 @@ export function CategoryBlock({
                 if (e.key === 'Enter') handleSaveName();
                 if (e.key === 'Escape') handleCancelEdit();
               }}
-              className="flex-1 px-2 py-0.5 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-cyan-500"
+              className="flex-1 px-2 py-0.5 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-gray-400"
               autoFocus
             />
             <button
@@ -155,7 +155,7 @@ export function CategoryBlock({
                   e.stopPropagation();
                   onManagePersonnel(categoryId);
                 }}
-                className="text-blue-500 hover:text-blue-400 transition-colors"
+                className="text-gray-400 hover:text-white transition-colors"
                 title="Управление персоналом"
               >
                 <Users className="w-3.5 h-3.5" />
@@ -174,7 +174,7 @@ export function CategoryBlock({
           </>
         )}
 
-        <div className="text-xs font-medium text-cyan-400 ml-1" onClick={(e) => e.stopPropagation()}>
+        <div className="text-xs font-medium text-white ml-1" onClick={(e) => e.stopPropagation()}>
           {showInBYN ? `${categoryTotal.toFixed(2)} BYN` : `$${categoryTotal.toFixed(2)}`}
         </div>
 
@@ -255,7 +255,7 @@ export function CategoryBlock({
                     />
                   </div>
 
-                  <div className="col-span-3 text-right text-cyan-400 font-medium text-sm">
+                  <div className="col-span-3 text-right text-white font-medium text-sm">
                     {showInBYN
                       ? `${calculateBYN(item.price, item.quantity).toFixed(2)} BYN`
                       : `$${(item.price * item.quantity).toFixed(2)}`}
