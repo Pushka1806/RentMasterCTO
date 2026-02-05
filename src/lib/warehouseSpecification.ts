@@ -7,6 +7,7 @@ export interface CableItem {
   cable_length: string;
   quantity: number;
   notes: string;
+  picked: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -140,7 +141,10 @@ export async function getCables(eventId: string): Promise<CableItem[]> {
 export async function createCable(cable: Omit<CableItem, 'id' | 'created_at' | 'updated_at'>): Promise<CableItem> {
   const { data, error } = await supabase
     .from('warehouse_specification_cables')
-    .insert(cable)
+    .insert({
+      ...cable,
+      picked: cable.picked || false
+    })
     .select()
     .single();
 
