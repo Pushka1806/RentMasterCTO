@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Minus, Package, Download, ChevronDown, ChevronRight, CheckCircle } from 'lucide-react';
-import { BudgetItem, getBudgetItems, getEvent, updateBudgetItem, confirmSpecification, createBudgetItem } from '../lib/events';
+import { BudgetItem, getBudgetItems, getEvent, updateBudgetItemPicked, confirmSpecification, createBudgetItem } from '../lib/events';
 import { EquipmentItem, getEquipmentItems } from '../lib/equipment';
 import { getEquipmentCompositions } from '../lib/equipmentCompositions';
 import { Category, getCategories } from '../lib/categories';
@@ -226,7 +226,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
 
   const handlePickedChange = async (budgetItemId: string, picked: boolean) => {
     try {
-      await updateBudgetItem(budgetItemId, { picked });
+      await updateBudgetItemPicked(budgetItemId, picked);
       setExpandedItems(expandedItems.map(item =>
         item.budgetItemId === budgetItemId ? { ...item, picked } : item
       ));
