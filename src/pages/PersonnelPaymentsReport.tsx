@@ -71,21 +71,23 @@ export default function PersonnelPaymentsReport() {
     .reduce((sum, p) => sum + Number(p.amount), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Отчет по выплатам сотрудников</h1>
-        <FileText className="w-8 h-8 text-gray-400" />
+        <div className="flex items-center gap-2">
+          <FileText className="w-6 h-6 text-cyan-500" />
+          <h1 className="text-2xl font-bold text-white">Отчет по выплатам</h1>
+        </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+      <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
+        <div className="mb-4 max-w-md">
+          <label className="block text-sm font-medium text-gray-400 mb-2">
             Выберите сотрудника
           </label>
           <select
             value={selectedPersonnelId}
             onChange={(e) => setSelectedPersonnelId(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-cyan-500"
           >
             <option value="">— Все сотрудники —</option>
             {personnel.map((person) => (
@@ -97,66 +99,43 @@ export default function PersonnelPaymentsReport() {
         </div>
 
         {selectedPerson && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center gap-2 text-gray-600 mb-2">
-                <DollarSign className="w-5 h-5" />
-                <span className="text-sm font-medium">Всего</span>
-              </div>
-              <p className="text-2xl font-bold text-gray-900">
-                {totalAmount.toLocaleString('ru-RU')} ₽
-              </p>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-2 bg-gray-800/50 rounded-lg border border-gray-700 text-sm mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400">Всего:</span>
+              <span className="font-bold text-white">{totalAmount.toLocaleString('ru-RU')} ₽</span>
             </div>
-
-            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-              <div className="flex items-center gap-2 text-green-700 mb-2">
-                <DollarSign className="w-5 h-5" />
-                <span className="text-sm font-medium">Выплачено</span>
-              </div>
-              <p className="text-2xl font-bold text-green-900">
-                {paidAmount.toLocaleString('ru-RU')} ₽
-              </p>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400">Выплачено:</span>
+              <span className="font-bold text-green-400">{paidAmount.toLocaleString('ru-RU')} ₽</span>
             </div>
-
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-              <div className="flex items-center gap-2 text-blue-700 mb-2">
-                <Calendar className="w-5 h-5" />
-                <span className="text-sm font-medium">Запланировано</span>
-              </div>
-              <p className="text-2xl font-bold text-blue-900">
-                {plannedAmount.toLocaleString('ru-RU')} ₽
-              </p>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400">Запланировано:</span>
+              <span className="font-bold text-blue-400">{plannedAmount.toLocaleString('ru-RU')} ₽</span>
             </div>
-
-            <div className="bg-red-50 rounded-lg p-4 border border-red-200">
-              <div className="flex items-center gap-2 text-red-700 mb-2">
-                <DollarSign className="w-5 h-5" />
-                <span className="text-sm font-medium">Просрочено</span>
-              </div>
-              <p className="text-2xl font-bold text-red-900">
-                {overdueAmount.toLocaleString('ru-RU')} ₽
-              </p>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400">Просрочено:</span>
+              <span className="font-bold text-red-400">{overdueAmount.toLocaleString('ru-RU')} ₽</span>
             </div>
           </div>
         )}
 
         {!selectedPersonnelId ? (
-          <div className="text-center py-12">
-            <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">Выберите сотрудника для просмотра отчета</p>
+          <div className="text-center py-8">
+            <FileText className="w-10 h-10 text-gray-600 mx-auto mb-2" />
+            <p className="text-sm text-gray-400">Выберите сотрудника для просмотра отчета</p>
           </div>
         ) : loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-2 text-gray-600">Загрузка...</p>
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-500"></div>
+            <p className="mt-2 text-sm text-gray-400">Загрузка...</p>
           </div>
         ) : payments.length === 0 ? (
-          <div className="text-center py-12">
-            <DollarSign className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">Нет выплат для выбранного сотрудника</p>
+          <div className="text-center py-8">
+            <DollarSign className="w-10 h-10 text-gray-600 mx-auto mb-2" />
+            <p className="text-sm text-gray-400">Нет выплат для выбранного сотрудника</p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {sortedMonths.map((month) => {
               const monthPayments = paymentsByMonth[month];
               const monthTotal = calculateMonthTotal(monthPayments);
@@ -164,11 +143,11 @@ export default function PersonnelPaymentsReport() {
               const monthName = monthDate.toLocaleDateString('ru-RU', { year: 'numeric', month: 'long' });
 
               return (
-                <div key={month} className="border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
+                <div key={month} className="border border-gray-800 rounded-lg overflow-hidden">
+                  <div className="bg-gray-800/50 px-4 py-2 border-b border-gray-800">
                     <div className="flex justify-between items-center">
-                      <h3 className="font-semibold text-gray-900">{monthName}</h3>
-                      <p className="font-bold text-lg text-gray-900">
+                      <h3 className="font-semibold text-white text-sm uppercase tracking-wider">{monthName}</h3>
+                      <p className="font-bold text-white">
                         {monthTotal.toLocaleString('ru-RU')} ₽
                       </p>
                     </div>
@@ -177,38 +156,38 @@ export default function PersonnelPaymentsReport() {
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-gray-200 bg-gray-50">
-                          <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Мероприятие</th>
-                          <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Работа</th>
-                          <th className="px-6 py-3 text-right text-sm font-medium text-gray-900">Сумма</th>
-                          <th className="px-6 py-3 text-center text-sm font-medium text-gray-900">Статус</th>
-                          <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Дата выплаты</th>
+                        <tr className="border-b border-gray-800 bg-gray-900/50">
+                          <th className="px-4 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">Мероприятие</th>
+                          <th className="px-4 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">Работа</th>
+                          <th className="px-4 py-2 text-right text-[11px] font-medium text-gray-400 tracking-wider">Сумма</th>
+                          <th className="px-4 py-2 text-center text-[11px] font-medium text-gray-400 tracking-wider">Статус</th>
+                          <th className="px-4 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">Дата</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-200">
+                      <tbody className="divide-y divide-gray-800">
                         {monthPayments.map((payment) => (
-                          <tr key={payment.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-3 text-sm text-gray-900">
+                          <tr key={payment.id} className="hover:bg-gray-800/30 transition-colors text-sm">
+                            <td className="px-4 py-2 text-white">
                               {payment.event?.name || '—'}
                             </td>
-                            <td className="px-6 py-3 text-sm text-gray-600">
+                            <td className="px-4 py-2 text-gray-400 text-xs">
                               {payment.work_item?.name || '—'}
                             </td>
-                            <td className="px-6 py-3 text-sm text-right font-medium text-gray-900">
+                            <td className="px-4 py-2 text-right font-medium text-white">
                               {Number(payment.amount).toLocaleString('ru-RU')} ₽
                             </td>
-                            <td className="px-6 py-3 text-sm text-center">
-                              <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                            <td className="px-4 py-2 text-center">
+                              <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium border ${
                                 payment.status === 'Выплачено'
-                                  ? 'bg-green-100 text-green-800'
+                                  ? 'bg-green-900/30 text-green-400 border-green-600/30'
                                   : payment.status === 'Запланировано'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-red-100 text-red-800'
+                                  ? 'bg-blue-900/30 text-blue-400 border-blue-600/30'
+                                  : 'bg-red-900/30 text-red-400 border-red-600/30'
                               }`}>
                                 {payment.status}
                               </span>
                             </td>
-                            <td className="px-6 py-3 text-sm text-gray-600">
+                            <td className="px-4 py-2 text-gray-400 text-xs">
                               {payment.payment_date
                                 ? new Date(payment.payment_date).toLocaleDateString('ru-RU')
                                 : '—'}

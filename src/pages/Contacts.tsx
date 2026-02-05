@@ -99,11 +99,11 @@ export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpe
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Users className="w-8 h-8 text-cyan-500" />
-          <h1 className="text-3xl font-bold text-white">Контакты</h1>
+        <div className="flex items-center gap-2">
+          <Users className="w-6 h-6 text-cyan-500" />
+          <h1 className="text-2xl font-bold text-white">Контакты</h1>
         </div>
       </div>
 
@@ -112,50 +112,50 @@ export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpe
           <nav className="flex">
             <button
               onClick={() => { setActiveTab('clients'); setSearchTerm(''); }}
-              className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors border-b-2 ${
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
                 activeTab === 'clients'
                   ? 'border-cyan-500 text-cyan-400'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
               }`}
             >
-              <Building2 className="w-5 h-5" />
+              <Building2 className="w-4 h-4" />
               Заказчики ({clients.length})
             </button>
             <button
               onClick={() => { setActiveTab('venues'); setSearchTerm(''); }}
-              className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors border-b-2 ${
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
                 activeTab === 'venues'
                   ? 'border-cyan-500 text-cyan-400'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
               }`}
             >
-              <Building2 className="w-5 h-5" />
+              <Building2 className="w-4 h-4" />
               Площадки ({venues.length})
             </button>
             <button
               onClick={() => { setActiveTab('organizers'); setSearchTerm(''); }}
-              className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors border-b-2 ${
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
                 activeTab === 'organizers'
                   ? 'border-cyan-500 text-cyan-400'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
               }`}
             >
-              <UserCircle className="w-5 h-5" />
+              <UserCircle className="w-4 h-4" />
               Организаторы ({organizers.length})
             </button>
           </nav>
         </div>
 
-        <div className="p-6 space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+        <div className="p-3 space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="relative flex-1 max-w-xs">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
               <input
                 type="text"
                 placeholder="Поиск..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-cyan-500"
               />
             </div>
             <button
@@ -164,9 +164,9 @@ export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpe
                 if (activeTab === 'venues') onVenueFormOpen?.();
                 if (activeTab === 'organizers') onOrganizerFormOpen?.();
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors text-sm"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4" />
               Добавить
             </button>
           </div>
@@ -176,42 +176,42 @@ export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpe
               <table className="w-full">
                 <thead className="bg-gray-800 border-b border-gray-700">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Организация</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">ФИО</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Должность</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Телефон</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Email</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">Действия</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">Организация</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">ФИО</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">Должность</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">Телефон</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">Email</th>
+                    <th className="px-3 py-2 text-right text-[11px] font-medium text-gray-400 tracking-wider">Действия</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800">
                   {filteredClients.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan={6} className="px-3 py-8 text-center text-gray-500 text-sm">
                         Заказчики не найдены
                       </td>
                     </tr>
                   ) : (
                     filteredClients.map((client) => (
                       <tr key={client.id} className="hover:bg-gray-800/50 transition-colors">
-                        <td className="px-4 py-3 text-white font-medium">{client.organization}</td>
-                        <td className="px-4 py-3 text-white">{client.full_name || '-'}</td>
-                        <td className="px-4 py-3 text-gray-400">{client.position || '-'}</td>
-                        <td className="px-4 py-3 text-cyan-400">{client.phone || '-'}</td>
-                        <td className="px-4 py-3 text-gray-400">{client.email || '-'}</td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                        <td className="px-3 py-2 text-white font-medium text-sm">{client.organization}</td>
+                        <td className="px-3 py-2 text-white text-sm">{client.full_name || '-'}</td>
+                        <td className="px-3 py-2 text-gray-400 text-sm">{client.position || '-'}</td>
+                        <td className="px-3 py-2 text-cyan-400 text-sm">{client.phone || '-'}</td>
+                        <td className="px-3 py-2 text-gray-400 text-sm">{client.email || '-'}</td>
+                        <td className="px-3 py-2 text-right">
+                          <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => onClientFormOpen?.(client)}
-                              className="p-2 text-cyan-400 hover:bg-cyan-900/30 rounded transition-colors"
+                              className="p-1.5 text-cyan-400 hover:bg-cyan-900/30 rounded transition-colors"
                             >
-                              <Pencil className="w-4 h-4" />
+                              <Pencil className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleDeleteClient(client.id)}
-                              className="p-2 text-red-400 hover:bg-red-900/30 rounded transition-colors"
+                              className="p-1.5 text-red-400 hover:bg-red-900/30 rounded transition-colors"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </td>
@@ -228,42 +228,42 @@ export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpe
               <table className="w-full">
                 <thead className="bg-gray-800 border-b border-gray-700">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Название</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Адрес</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Город</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Вместимость</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Контакт</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">Действия</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">Название</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">Адрес</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">Город</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">Вместимость</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">Контакт</th>
+                    <th className="px-3 py-2 text-right text-[11px] font-medium text-gray-400 tracking-wider">Действия</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800">
                   {filteredVenues.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan={6} className="px-3 py-8 text-center text-gray-500 text-sm">
                         Площадки не найдены
                       </td>
                     </tr>
                   ) : (
                     filteredVenues.map((venue) => (
                       <tr key={venue.id} className="hover:bg-gray-800/50 transition-colors">
-                        <td className="px-4 py-3 text-white font-medium">{venue.name}</td>
-                        <td className="px-4 py-3 text-gray-400">{venue.address || '-'}</td>
-                        <td className="px-4 py-3 text-gray-400">{venue.city || '-'}</td>
-                        <td className="px-4 py-3 text-white">{venue.capacity || '-'}</td>
-                        <td className="px-4 py-3 text-cyan-400">{venue.contact || '-'}</td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                        <td className="px-3 py-2 text-white font-medium text-sm">{venue.name}</td>
+                        <td className="px-3 py-2 text-gray-400 text-sm">{venue.address || '-'}</td>
+                        <td className="px-3 py-2 text-gray-400 text-sm">{venue.city || '-'}</td>
+                        <td className="px-3 py-2 text-white text-sm">{venue.capacity || '-'}</td>
+                        <td className="px-3 py-2 text-cyan-400 text-sm">{venue.contact || '-'}</td>
+                        <td className="px-3 py-2 text-right">
+                          <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => onVenueFormOpen?.(venue)}
-                              className="p-2 text-cyan-400 hover:bg-cyan-900/30 rounded transition-colors"
+                              className="p-1.5 text-cyan-400 hover:bg-cyan-900/30 rounded transition-colors"
                             >
-                              <Pencil className="w-4 h-4" />
+                              <Pencil className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleDeleteVenue(venue.id)}
-                              className="p-2 text-red-400 hover:bg-red-900/30 rounded transition-colors"
+                              className="p-1.5 text-red-400 hover:bg-red-900/30 rounded transition-colors"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </td>
@@ -280,42 +280,42 @@ export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpe
               <table className="w-full">
                 <thead className="bg-gray-800 border-b border-gray-700">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">ФИО</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Должность</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Телефон</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Email</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Примечания</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">Действия</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">ФИО</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">Должность</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">Телефон</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">Email</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">Примечания</th>
+                    <th className="px-3 py-2 text-right text-[11px] font-medium text-gray-400 tracking-wider">Действия</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800">
                   {filteredOrganizers.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan={6} className="px-3 py-8 text-center text-gray-500 text-sm">
                         Организаторы не найдены
                       </td>
                     </tr>
                   ) : (
                     filteredOrganizers.map((organizer) => (
                       <tr key={organizer.id} className="hover:bg-gray-800/50 transition-colors">
-                        <td className="px-4 py-3 text-white font-medium">{organizer.full_name}</td>
-                        <td className="px-4 py-3 text-gray-400">{organizer.position || '-'}</td>
-                        <td className="px-4 py-3 text-cyan-400">{organizer.phone || '-'}</td>
-                        <td className="px-4 py-3 text-gray-400">{organizer.email || '-'}</td>
-                        <td className="px-4 py-3 text-gray-400">{organizer.notes || '-'}</td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                        <td className="px-3 py-2 text-white font-medium text-sm">{organizer.full_name}</td>
+                        <td className="px-3 py-2 text-gray-400 text-sm">{organizer.position || '-'}</td>
+                        <td className="px-3 py-2 text-cyan-400 text-sm">{organizer.phone || '-'}</td>
+                        <td className="px-3 py-2 text-gray-400 text-sm">{organizer.email || '-'}</td>
+                        <td className="px-3 py-2 text-gray-400 text-sm">{organizer.notes || '-'}</td>
+                        <td className="px-3 py-2 text-right">
+                          <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => onOrganizerFormOpen?.(organizer)}
-                              className="p-2 text-cyan-400 hover:bg-cyan-900/30 rounded transition-colors"
+                              className="p-1.5 text-cyan-400 hover:bg-cyan-900/30 rounded transition-colors"
                             >
-                              <Pencil className="w-4 h-4" />
+                              <Pencil className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleDeleteOrganizer(organizer.id)}
-                              className="p-2 text-red-400 hover:bg-red-900/30 rounded transition-colors"
+                              className="p-1.5 text-red-400 hover:bg-red-900/30 rounded transition-colors"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </td>

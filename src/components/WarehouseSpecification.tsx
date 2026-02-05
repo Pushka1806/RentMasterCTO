@@ -98,127 +98,75 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
       const items: ExpandedItem[] = [];
 
       console.log('Loading warehouse specification for event:', eventId);
-      console.log('Budget items count:', budgetData.length);
 
-      for (const budgetItem of budgetData) {
-        console.log('Processing budget item:', {
-          id: budgetItem.id,
-          item_type: budgetItem.item_type,
-          equipment_name: budgetItem.equipment?.name,
-          modification_id: budgetItem.modification_id,
-          quantity: budgetItem.quantity
+      for (const item of budgetData) {
+        if (item.item_type !== 'equipment') continue;
+
+        // Add parent item
+        items.push({
+          budgetItemId: item.id,
+          name: item.equipment?.name || 'Unknown',
+          sku: item.equipment?.sku || '',
+          quantity: item.quantity,
+          unit: item.equipment?.unit || 'шт.',
+          category: item.equipment?.category || 'Other',
+          notes: item.notes || '',
+          picked: item.picked_in_warehouse || false,
+          isFromComposition: false
         });
 
-        if (budgetItem.item_type === 'equipment' && budgetItem.equipment) {
-          const equipment = budgetItem.equipment;
-
-          if (budgetItem.modification_id) {
-            console.log('Loading modification components for modification_id:', budgetItem.modification_id);
-
-            if (equipment.object_type === 'virtual' && equipment.has_composition) {
-              const compositions = await getEquipmentCompositions(equipment.id);
-              for (const comp of compositions) {
-                items.push({
-                  budgetItemId: budgetItem.id,
-                  name: comp.child_name,
-                  sku: comp.child_sku,
-                  quantity: budgetItem.quantity * comp.quantity,
-                  unit: 'шт.',
-                  category: comp.child_category,
-                  notes: `Из комплекта: ${equipment.name}`,
-                  picked: budgetItem.picked || false,
-                  isFromComposition: true,
-                  parentName: equipment.name
-                });
-              }
-            } else {
-              items.push({
-                budgetItemId: budgetItem.id,
-                name: equipment.name,
-                sku: equipment.sku,
-                quantity: budgetItem.quantity,
-                unit: 'шт.',
-                category: equipment.category,
-                notes: `Основное оборудование`,
-                picked: budgetItem.picked || false,
-                isFromComposition: false
-              });
-            }
-
-            const modComponents = await getModificationComponents(budgetItem.modification_id);
-            console.log('Loaded modification components:', modComponents.length, modComponents);
-
-            for (const modComp of modComponents) {
-              if (modComp.component) {
-                items.push({
-                  budgetItemId: budgetItem.id,
-                  name: modComp.component.name,
-                  sku: modComp.component.sku || '',
-                  quantity: budgetItem.quantity * modComp.quantity,
-                  unit: 'шт.',
-                  category: modComp.component.category,
-                  notes: `Модификация: ${equipment.name}`,
-                  picked: budgetItem.picked || false,
-                  isFromComposition: true,
-                  parentName: equipment.name
-                });
-              }
-            }
-          } else if (equipment.object_type === 'virtual' && equipment.has_composition) {
-            const compositions = await getEquipmentCompositions(equipment.id);
-
+        // Check for composition
+        if (item.equipment_id) {
+          try {
+            const compositions = await getEquipmentCompositions(item.equipment_id);
+            console.log('Found compositions for', item.equipment?.name, ':', compositions);
+            
             for (const comp of compositions) {
               items.push({
-                budgetItemId: budgetItem.id,
-                name: comp.child_name,
-                sku: comp.child_sku,
-                quantity: budgetItem.quantity * comp.quantity,
-                unit: 'шт.',
-                category: comp.child_category,
-                notes: `Из комплекта: ${equipment.name}`,
-                picked: budgetItem.picked || false,
+                budgetItemId: `${item.id}-comp-${comp.id}`,
+                name: comp.component_equipment?.name || 'Unknown',
+                sku: comp.component_equipment?.sku || '',
+                quantity: item.quantity * comp.quantity,
+                unit: comp.component_equipment?.unit || 'шт.',
+                category: comp.component_equipment?.category || 'Components',
+                notes: '',
+                picked: item.picked_in_warehouse || false,
                 isFromComposition: true,
-                parentName: equipment.name
+                parentName: item.equipment?.name
               });
             }
-          } else {
-            items.push({
-              budgetItemId: budgetItem.id,
-              name: equipment.name,
-              sku: equipment.sku,
-              quantity: budgetItem.quantity,
-              unit: 'шт.',
-              category: equipment.category,
-              notes: budgetItem.notes || '',
-              picked: budgetItem.picked || false,
-              isFromComposition: false
-            });
+          } catch (error) {
+            console.error('Error loading composition for', item.equipment?.name, ':', error);
+          }
+        }
+
+        // Check for modifications
+        if (item.modification_id) {
+          try {
+            const components = await getModificationComponents(item.modification_id);
+            for (const component of components) {
+              items.push({
+                budgetItemId: `${item.id}-mod-${component.id}`,
+                name: component.equipment?.name || 'Unknown',
+                sku: component.equipment?.sku || '',
+                quantity: item.quantity * component.quantity,
+                unit: component.equipment?.unit || 'шт.',
+                category: component.equipment?.category || 'Modification Components',
+                notes: '',
+                picked: item.picked_in_warehouse || false,
+                isFromComposition: true,
+                parentName: item.equipment?.name
+              });
+            }
+          } catch (error) {
+            console.error('Error loading modification components:', error);
           }
         }
       }
 
       setExpandedItems(items);
-
-      const initialCableExpanded: Record<string, boolean> = {};
-      CABLE_TEMPLATES.forEach(template => {
-        initialCableExpanded[template.type] = true;
-      });
-      setExpandedCableTypes(initialCableExpanded);
-
-      const initialConnectorExpanded: Record<string, boolean> = {};
-      CONNECTOR_TEMPLATES.forEach(template => {
-        initialConnectorExpanded[template.category] = true;
-      });
-      setExpandedConnectorCategories(initialConnectorExpanded);
-
-      const initialOtherExpanded: Record<string, boolean> = {};
-      OTHER_TEMPLATES.forEach(template => {
-        initialOtherExpanded[template.category] = true;
-      });
-      setExpandedOtherCategories(initialOtherExpanded);
     } catch (error) {
-      console.error('Error loading specification:', error);
-      alert('Ошибка при загрузке спецификации');
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
@@ -226,12 +174,13 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
 
   const handlePickedChange = async (budgetItemId: string, picked: boolean) => {
     try {
-      await updateBudgetItemPicked(budgetItemId, picked);
+      // Find the real budget item ID (ignoring composition suffixes)
+      const realId = budgetItemId.split('-')[0];
+      await updateBudgetItemPicked(realId, picked);
+      
+      // Update all items sharing this budget item ID
       setExpandedItems(expandedItems.map(item =>
-        item.budgetItemId === budgetItemId ? { ...item, picked } : item
-      ));
-      setBudgetItems(budgetItems.map(item =>
-        item.id === budgetItemId ? { ...item, picked } : item
+        item.budgetItemId.startsWith(realId) ? { ...item, picked } : item
       ));
     } catch (error) {
       console.error('Error updating picked status:', error);
@@ -241,8 +190,8 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
 
   const handleCablePickedChange = async (id: string, picked: boolean) => {
     try {
-      const updated = await updateCable(id, { picked });
-      setCables(cables.map(c => c.id === updated.id ? updated : c));
+      await updateCable(id, { picked });
+      setCables(cables.map(c => c.id === id ? { ...c, picked } : c));
     } catch (error) {
       console.error('Error updating cable picked status:', error);
       alert('Ошибка при обновлении статуса');
@@ -251,8 +200,8 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
 
   const handleConnectorPickedChange = async (id: string, picked: boolean) => {
     try {
-      const updated = await updateConnector(id, { picked });
-      setConnectors(connectors.map(c => c.id === updated.id ? updated : c));
+      await updateConnector(id, { picked });
+      setConnectors(connectors.map(c => c.id === id ? { ...c, picked } : c));
     } catch (error) {
       console.error('Error updating connector picked status:', error);
       alert('Ошибка при обновлении статуса');
@@ -260,25 +209,13 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
   };
 
   const handleConfirmSpecification = async () => {
-    if (!user) return;
-
-    const allBudgetPicked = expandedItems.every(item => item.picked);
-    const allCablesPicked = cables.length === 0 || cables.every(c => c.picked);
-    const allConnectorsPicked = connectors.length === 0 || connectors.every(c => c.picked);
-    const allOtherPicked = otherItems.length === 0 || otherItems.every(i => i.picked);
-
-    if (!allBudgetPicked || !allCablesPicked || !allConnectorsPicked || !allOtherPicked) {
-      const confirmMessage = 'Не все элементы отмечены как взятые. Вы уверены, что хотите подтвердить сборку спецификации?';
-      if (!confirm(confirmMessage)) {
-        return;
-      }
-    }
+    if (!confirm('Подтвердить сборку спецификации? Это отметит прогресс подготовки оборудования.')) return;
 
     try {
       setConfirming(true);
-      await confirmSpecification(eventId, user.id);
+      await confirmSpecification(eventId);
+      setEventDetails({ ...eventDetails, specification_confirmed: true });
       alert('Спецификация подтверждена');
-      onClose();
     } catch (error) {
       console.error('Error confirming specification:', error);
       alert('Ошибка при подтверждении спецификации');
@@ -289,12 +226,10 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
 
   const handleAddEquipment = async (equipment: EquipmentItem, quantity: number, modificationId?: string) => {
     try {
-      console.log('Adding equipment:', equipment.name, 'quantity:', quantity, 'modificationId:', modificationId);
-
       const newItem = await createBudgetItem({
         event_id: eventId,
         equipment_id: equipment.id,
-        modification_id: modificationId || null,
+        modification_id: modificationId,
         item_type: 'equipment',
         quantity,
         price: equipment.rental_price,
@@ -643,165 +578,140 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-8">
-          <div className="text-center">Загрузка спецификации...</div>
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+          <div className="text-center text-gray-400">Загрузка спецификации...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-[95vw] max-w-[1600px] max-h-[90vh] flex flex-col">
-        <div className="flex justify-between items-center p-6 border-b">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 border border-gray-800 rounded-lg shadow-xl w-[95vw] max-w-[1400px] max-h-[90vh] flex flex-col">
+        <div className="flex justify-between items-center px-4 py-3 border-b border-gray-800">
           <div>
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <Package className="w-6 h-6" />
-              Спецификация для кладовщика
+            <h2 className="text-lg font-bold text-white flex items-center gap-2 leading-tight">
+              <Package className="w-5 h-5 text-cyan-500" />
+              Спецификация
             </h2>
-            <p className="text-gray-600 mt-1">{eventName}</p>
-            {eventDetails && (
-              <div className="flex items-center gap-4 mt-2">
-                <p className="text-sm text-gray-500">
-                  {eventDetails.venues?.name} • {new Date(eventDetails.event_date).toLocaleDateString('ru-RU')}
-                </p>
-                {eventDetails.specification_confirmed && (
-                  <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium flex items-center gap-1">
-                    <CheckCircle className="w-3 h-3" />
-                    Подтверждено
-                  </span>
-                )}
-              </div>
-            )}
+            <div className="flex items-center gap-3 mt-0.5">
+              <p className="text-xs text-gray-400 font-medium truncate max-w-[300px]">{eventName}</p>
+              {eventDetails && (
+                <>
+                  <p className="text-[10px] text-gray-500">
+                    {eventDetails.venues?.name} • {new Date(eventDetails.event_date).toLocaleDateString('ru-RU')}
+                  </p>
+                  {eventDetails.specification_confirmed && (
+                    <span className="px-1.5 py-0.5 bg-green-900/30 text-green-400 border border-green-600/30 rounded text-[10px] font-medium flex items-center gap-1">
+                      <CheckCircle className="w-3 h-3" />
+                      Подтверждено
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded"
+            className="p-1.5 hover:bg-gray-800 text-gray-400 hover:text-white rounded transition-colors"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="border-b">
-          <div className="flex gap-4 px-6">
-            <button
-              onClick={() => setActiveTab('budget')}
-              className={`py-3 px-4 font-medium border-b-2 transition-colors ${
-                activeTab === 'budget'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Смета
-            </button>
-            <button
-              onClick={() => setActiveTab('cables')}
-              className={`py-3 px-4 font-medium border-b-2 transition-colors ${
-                activeTab === 'cables'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Кабели
-            </button>
-            <button
-              onClick={() => setActiveTab('connectors')}
-              className={`py-3 px-4 font-medium border-b-2 transition-colors ${
-                activeTab === 'connectors'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Коннекторы
-            </button>
-            <button
-              onClick={() => setActiveTab('other')}
-              className={`py-3 px-4 font-medium border-b-2 transition-colors ${
-                activeTab === 'other'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Прочее
-            </button>
+        <div className="border-b border-gray-800 bg-gray-900/50">
+          <div className="flex gap-2 px-4">
+            {(['budget', 'cables', 'connectors', 'other'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`py-2 px-3 text-xs font-medium border-b-2 transition-colors ${
+                  activeTab === tab
+                    ? 'border-cyan-500 text-cyan-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                {tab === 'budget' ? 'Смета' : tab === 'cables' ? 'Кабели' : tab === 'connectors' ? 'Коннекторы' : 'Прочее'}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
           {activeTab === 'budget' && (
             <>
-              <div className="mb-4 flex justify-between items-center">
+              <div className="mb-3 flex justify-between items-center">
                 {!isWarehouseUser && (
                   <button
                     onClick={() => setShowEquipmentSelector(true)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2"
+                    className="px-3 py-1.5 bg-cyan-600 text-white text-xs rounded hover:bg-cyan-700 flex items-center gap-1.5 transition-colors"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-3.5 h-3.5" />
                     Добавить оборудование
                   </button>
                 )}
                 <button
                   onClick={handleExportBudget}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2 ml-auto"
+                  className="px-3 py-1.5 bg-gray-800 text-gray-300 border border-gray-700 text-xs rounded hover:bg-gray-700 flex items-center gap-1.5 ml-auto transition-colors"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-3.5 h-3.5" />
                   Экспорт CSV
                 </button>
               </div>
 
               {Object.entries(groupedByCategory).map(([category, items]) => (
-                <div key={category} className="mb-6">
-                  <h3 className="text-lg font-bold mb-3 bg-gray-100 px-4 py-2 rounded">
+                <div key={category} className="mb-4">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">
                     {category}
                   </h3>
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto rounded border border-gray-800">
                     <table className="w-full border-collapse">
                       <thead>
-                        <tr className="bg-gray-50">
-                          <th className="border border-gray-300 px-4 py-2 text-center w-12">✓</th>
-                          <th className="border border-gray-300 px-4 py-2 text-left w-12">№</th>
-                          <th className="border border-gray-300 px-4 py-2 text-left">Наименование</th>
-                          <th className="border border-gray-300 px-4 py-2 text-left w-32">Артикул</th>
-                          <th className="border border-gray-300 px-4 py-2 text-center w-24">Кол-во</th>
-                          <th className="border border-gray-300 px-4 py-2 text-left w-24">Ед. изм.</th>
+                        <tr className="bg-gray-800/50 border-b border-gray-800">
+                          <th className="px-3 py-1.5 text-center w-10 text-[10px] text-gray-500 uppercase tracking-wider">✓</th>
+                          <th className="px-3 py-1.5 text-left w-10 text-[10px] text-gray-500 uppercase tracking-wider">№</th>
+                          <th className="px-3 py-1.5 text-left text-[10px] text-gray-500 uppercase tracking-wider">Наименование</th>
+                          <th className="px-3 py-1.5 text-left w-24 text-[10px] text-gray-500 uppercase tracking-wider">Артикул</th>
+                          <th className="px-3 py-1.5 text-center w-20 text-[10px] text-gray-500 uppercase tracking-wider">Кол-во</th>
+                          <th className="px-3 py-1.5 text-left w-20 text-[10px] text-gray-500 uppercase tracking-wider">Ед. изм.</th>
                           {!isWarehouseUser && (
-                            <th className="border border-gray-300 px-4 py-2 text-left">Примечания</th>
+                            <th className="px-3 py-1.5 text-left text-[10px] text-gray-500 uppercase tracking-wider">Примечания</th>
                           )}
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="divide-y divide-gray-800">
                         {items.map((item, index) => (
-                          <tr key={`${item.budgetItemId}-${index}`} className={item.isFromComposition ? 'bg-blue-50' : ''}>
-                            <td className="border border-gray-300 px-4 py-2 text-center">
+                          <tr key={`${item.budgetItemId}-${index}`} className={`${item.isFromComposition ? 'bg-cyan-900/10' : 'bg-gray-900'} hover:bg-gray-800 transition-colors`}>
+                            <td className="px-3 py-1.5 text-center">
                               <input
                                 type="checkbox"
                                 checked={item.picked}
                                 onChange={(e) => handlePickedChange(item.budgetItemId, e.target.checked)}
-                                className="w-5 h-5 cursor-pointer"
+                                className="w-4 h-4 cursor-pointer rounded border-gray-700 bg-gray-800 text-cyan-600 focus:ring-offset-gray-900"
                                 disabled={eventDetails?.specification_confirmed && !isWarehouseUser}
                               />
                             </td>
-                            <td className="border border-gray-300 px-4 py-2 text-center">{index + 1}</td>
-                            <td className="border border-gray-300 px-4 py-2">
-                              {item.name}
+                            <td className="px-3 py-1.5 text-center text-xs text-gray-500">{index + 1}</td>
+                            <td className="px-3 py-1.5">
+                              <div className="text-xs text-white font-medium">{item.name}</div>
                               {item.parentName && (
-                                <div className="text-xs text-blue-600 mt-1">
+                                <div className="text-[10px] text-cyan-500 mt-0.5">
                                   ↳ {item.parentName}
                                 </div>
                               )}
                             </td>
-                            <td className="border border-gray-300 px-4 py-2">{item.sku}</td>
-                            <td className="border border-gray-300 px-4 py-2 text-center">{item.quantity}</td>
-                            <td className="border border-gray-300 px-4 py-2">{item.unit}</td>
+                            <td className="px-3 py-1.5 text-xs text-gray-400">{item.sku}</td>
+                            <td className="px-3 py-1.5 text-center text-xs text-white font-bold">{item.quantity}</td>
+                            <td className="px-3 py-1.5 text-xs text-gray-500">{item.unit}</td>
                             {!isWarehouseUser && (
-                              <td className="border border-gray-300 px-4 py-2">
+                              <td className="px-3 py-1.5">
                                 <input
                                   type="text"
                                   value={item.notes}
                                   onChange={(e) => handleNotesChange(item.budgetItemId, e.target.value)}
-                                  className="w-full px-2 py-1 border rounded"
-                                  placeholder="Примечания"
+                                  className="w-full px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-[11px] text-gray-300 focus:outline-none focus:border-cyan-500"
+                                  placeholder="..."
                                 />
                               </td>
                             )}
@@ -814,10 +724,9 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
               ))}
 
               {expandedItems.length === 0 && (
-                <div className="text-center py-12 text-gray-500">
-                  <Package className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p>Спецификация пуста</p>
-                  <p className="text-sm mt-2">Добавьте оборудование или создайте смету для мероприятия</p>
+                <div className="text-center py-12 text-gray-600 border-2 border-dashed border-gray-800 rounded-lg">
+                  <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                  <p className="text-sm">Спецификация пуста</p>
                 </div>
               )}
             </>
@@ -825,48 +734,48 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
 
           {activeTab === 'cables' && (
             <>
-              <div className="mb-4 flex justify-end">
+              <div className="mb-3 flex justify-end">
                 <button
                   onClick={handleExportCables}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2"
+                  className="px-3 py-1.5 bg-gray-800 text-gray-300 border border-gray-700 text-xs rounded hover:bg-gray-700 flex items-center gap-1.5 transition-colors"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-3.5 h-3.5" />
                   Экспорт CSV
                 </button>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {CABLE_TEMPLATES.map((template) => (
-                  <div key={template.type} className="border rounded-lg">
+                  <div key={template.type} className="border border-gray-800 rounded">
                     <button
                       onClick={() => toggleCableType(template.type)}
-                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                      className="w-full flex items-center justify-between px-3 py-2 bg-gray-800/50 hover:bg-gray-800 transition-colors"
                     >
-                      <h3 className="text-lg font-bold">{template.type}</h3>
+                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">{template.type}</h3>
                       {expandedCableTypes[template.type] ? (
-                        <ChevronDown className="w-5 h-5" />
+                        <ChevronDown className="w-4 h-4 text-gray-500" />
                       ) : (
-                        <ChevronRight className="w-5 h-5" />
+                        <ChevronRight className="w-4 h-4 text-gray-500" />
                       )}
                     </button>
 
                     {expandedCableTypes[template.type] && (
-                      <div className="p-4">
+                      <div className="p-2">
                         <table className="w-full border-collapse">
                           <thead>
-                            <tr className="bg-gray-50">
-                              <th className="border border-gray-300 px-4 py-2 text-center w-12">✓</th>
-                              <th className="border border-gray-300 px-4 py-2 text-left">Длина</th>
-                              <th className="border border-gray-300 px-4 py-2 text-center w-32">Кол-во</th>
+                            <tr className="border-b border-gray-800">
+                              <th className="px-3 py-1.5 text-center w-10 text-[10px] text-gray-500">✓</th>
+                              <th className="px-3 py-1.5 text-left text-[10px] text-gray-500">Длина</th>
+                              <th className="px-3 py-1.5 text-center w-24 text-[10px] text-gray-500">Кол-во</th>
                               {!isWarehouseUser && (
                                 <>
-                                  <th className="border border-gray-300 px-4 py-2 text-left">Примечания</th>
-                                  <th className="border border-gray-300 px-4 py-2 text-center w-24"></th>
+                                  <th className="px-3 py-1.5 text-left text-[10px] text-gray-500">Примечания</th>
+                                  <th className="px-3 py-1.5 text-center w-20 text-[10px] text-gray-500"></th>
                                 </>
                               )}
                             </tr>
                           </thead>
-                          <tbody>
+                          <tbody className="divide-y divide-gray-800">
                             {template.lengths.map((length) => {
                               const quantity = getCableQuantity(template.type, length);
                               const cableId = getCableId(template.type, length);
@@ -874,65 +783,65 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                               const picked = getCablePicked(template.type, length);
 
                               return (
-                                <tr key={length}>
-                                  <td className="border border-gray-300 px-4 py-2 text-center">
+                                <tr key={length} className="hover:bg-gray-800 transition-colors">
+                                  <td className="px-3 py-1.5 text-center">
                                     {cableId && (
                                       <input
                                         type="checkbox"
                                         checked={picked}
                                         onChange={(e) => handleCablePickedChange(cableId, e.target.checked)}
-                                        className="w-5 h-5 cursor-pointer"
+                                        className="w-4 h-4 cursor-pointer rounded border-gray-700 bg-gray-800 text-cyan-600"
                                         disabled={eventDetails?.specification_confirmed && !isWarehouseUser}
                                       />
                                     )}
                                   </td>
-                                  <td className="border border-gray-300 px-4 py-2">{length}</td>
-                                  <td className="border border-gray-300 px-4 py-2 text-center">
+                                  <td className="px-3 py-1.5 text-xs text-white">{length}</td>
+                                  <td className="px-3 py-1.5 text-center">
                                     {cableId ? (
                                       isWarehouseUser ? (
-                                        <div className="text-center">{quantity}</div>
+                                        <div className="text-xs text-white font-bold">{quantity}</div>
                                       ) : (
                                         <input
                                           type="number"
                                           value={quantity}
                                           onChange={(e) => handleCableQuantityChange(cableId, parseInt(e.target.value) || 0)}
-                                          className="w-full px-2 py-1 border rounded text-center"
+                                          className="w-16 px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-center text-xs text-white"
                                           min="0"
                                         />
                                       )
                                     ) : (
-                                      <div className="text-center text-gray-400">0</div>
+                                      <div className="text-center text-gray-600 text-xs">0</div>
                                     )}
                                   </td>
                                   {!isWarehouseUser && (
                                     <>
-                                      <td className="border border-gray-300 px-4 py-2">
+                                      <td className="px-3 py-1.5">
                                         {cableId && (
                                           <input
                                             type="text"
                                             value={notes}
                                             onChange={(e) => handleCableNotesChange(cableId, e.target.value)}
-                                            className="w-full px-2 py-1 border rounded"
-                                            placeholder="Примечания"
+                                            className="w-full px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-[11px] text-gray-300"
+                                            placeholder="..."
                                           />
                                         )}
                                       </td>
-                                      <td className="border border-gray-300 px-4 py-2 text-center flex justify-center gap-2">
-                                        <button
-                                          onClick={() => cableId && handleCableQuantityChange(cableId, Math.max(0, quantity - 1))}
-                                          disabled={!cableId || quantity === 0}
-                                          className="text-red-600 hover:text-red-700 disabled:text-gray-300 disabled:cursor-not-allowed"
-                                          title="Уменьшить"
-                                        >
-                                          <Minus className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                          onClick={() => handleAddCableFromTemplate(template.type, length)}
-                                          className="text-blue-600 hover:text-blue-700"
-                                          title="Добавить"
-                                        >
-                                          <Plus className="w-4 h-4" />
-                                        </button>
+                                      <td className="px-3 py-1.5 text-center">
+                                        <div className="flex justify-center gap-1.5">
+                                          <button
+                                            onClick={() => cableId && handleCableQuantityChange(cableId, Math.max(0, quantity - 1))}
+                                            disabled={!cableId || quantity === 0}
+                                            className="p-1 text-red-500/50 hover:text-red-400 disabled:text-gray-700 transition-colors"
+                                          >
+                                            <Minus className="w-3.5 h-3.5" />
+                                          </button>
+                                          <button
+                                            onClick={() => handleAddCableFromTemplate(template.type, length)}
+                                            className="p-1 text-cyan-500/50 hover:text-cyan-400 transition-colors"
+                                          >
+                                            <Plus className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
                                       </td>
                                     </>
                                   )}
@@ -951,48 +860,48 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
 
           {activeTab === 'connectors' && (
             <>
-              <div className="mb-4 flex justify-end">
+              <div className="mb-3 flex justify-end">
                 <button
                   onClick={handleExportConnectors}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2"
+                  className="px-3 py-1.5 bg-gray-800 text-gray-300 border border-gray-700 text-xs rounded hover:bg-gray-700 flex items-center gap-1.5 transition-colors"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-3.5 h-3.5" />
                   Экспорт CSV
                 </button>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {CONNECTOR_TEMPLATES.map((template) => (
-                  <div key={template.category} className="border rounded-lg">
+                  <div key={template.category} className="border border-gray-800 rounded">
                     <button
                       onClick={() => toggleConnectorCategory(template.category)}
-                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                      className="w-full flex items-center justify-between px-3 py-2 bg-gray-800/50 hover:bg-gray-800 transition-colors"
                     >
-                      <h3 className="text-lg font-bold">{template.category}</h3>
+                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">{template.category}</h3>
                       {expandedConnectorCategories[template.category] ? (
-                        <ChevronDown className="w-5 h-5" />
+                        <ChevronDown className="w-4 h-4 text-gray-500" />
                       ) : (
-                        <ChevronRight className="w-5 h-5" />
+                        <ChevronRight className="w-4 h-4 text-gray-500" />
                       )}
                     </button>
 
                     {expandedConnectorCategories[template.category] && (
-                      <div className="p-4">
+                      <div className="p-2">
                         <table className="w-full border-collapse">
                           <thead>
-                            <tr className="bg-gray-50">
-                              <th className="border border-gray-300 px-4 py-2 text-center w-12">✓</th>
-                              <th className="border border-gray-300 px-4 py-2 text-left">Тип</th>
-                              <th className="border border-gray-300 px-4 py-2 text-center w-32">Кол-во</th>
+                            <tr className="border-b border-gray-800">
+                              <th className="px-3 py-1.5 text-center w-10 text-[10px] text-gray-500">✓</th>
+                              <th className="px-3 py-1.5 text-left text-[10px] text-gray-500">Тип</th>
+                              <th className="px-3 py-1.5 text-center w-24 text-[10px] text-gray-500">Кол-во</th>
                               {!isWarehouseUser && (
                                 <>
-                                  <th className="border border-gray-300 px-4 py-2 text-left">Примечания</th>
-                                  <th className="border border-gray-300 px-4 py-2 text-center w-24"></th>
+                                  <th className="px-3 py-1.5 text-left text-[10px] text-gray-500">Примечания</th>
+                                  <th className="px-3 py-1.5 text-center w-20 text-[10px] text-gray-500"></th>
                                 </>
                               )}
                             </tr>
                           </thead>
-                          <tbody>
+                          <tbody className="divide-y divide-gray-800">
                             {template.items.map((itemType) => {
                               const connector = connectors.find(c => c.connector_type === itemType);
                               const quantity = connector?.quantity || 0;
@@ -1000,65 +909,65 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                               const picked = connector?.picked || false;
 
                               return (
-                                <tr key={itemType}>
-                                  <td className="border border-gray-300 px-4 py-2 text-center">
+                                <tr key={itemType} className="hover:bg-gray-800 transition-colors">
+                                  <td className="px-3 py-1.5 text-center">
                                     {connector && (
                                       <input
                                         type="checkbox"
                                         checked={picked}
                                         onChange={(e) => handleConnectorPickedChange(connector.id, e.target.checked)}
-                                        className="w-5 h-5 cursor-pointer"
+                                        className="w-4 h-4 cursor-pointer rounded border-gray-700 bg-gray-800 text-cyan-600"
                                         disabled={eventDetails?.specification_confirmed && !isWarehouseUser}
                                       />
                                     )}
                                   </td>
-                                  <td className="border border-gray-300 px-4 py-2">{itemType}</td>
-                                  <td className="border border-gray-300 px-4 py-2 text-center">
+                                  <td className="px-3 py-1.5 text-xs text-white">{itemType}</td>
+                                  <td className="px-3 py-1.5 text-center">
                                     {connector ? (
                                       isWarehouseUser ? (
-                                        <div className="text-center">{quantity}</div>
+                                        <div className="text-xs text-white font-bold">{quantity}</div>
                                       ) : (
                                         <input
                                           type="number"
                                           value={quantity}
                                           onChange={(e) => handleConnectorQuantityChange(connector.id, parseInt(e.target.value) || 0)}
-                                          className="w-full px-2 py-1 border rounded text-center"
+                                          className="w-16 px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-center text-xs text-white"
                                           min="0"
                                         />
                                       )
                                     ) : (
-                                      <div className="text-center text-gray-400">0</div>
+                                      <div className="text-center text-gray-600 text-xs">0</div>
                                     )}
                                   </td>
                                   {!isWarehouseUser && (
                                     <>
-                                      <td className="border border-gray-300 px-4 py-2">
+                                      <td className="px-3 py-1.5">
                                         {connector && (
                                           <input
                                             type="text"
                                             value={notes}
                                             onChange={(e) => handleConnectorNotesChange(connector.id, e.target.value)}
-                                            className="w-full px-2 py-1 border rounded"
-                                            placeholder="Примечания"
+                                            className="w-full px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-[11px] text-gray-300"
+                                            placeholder="..."
                                           />
                                         )}
                                       </td>
-                                      <td className="border border-gray-300 px-4 py-2 text-center flex justify-center gap-2">
-                                        <button
-                                          onClick={() => connector && handleConnectorQuantityChange(connector.id, Math.max(0, quantity - 1))}
-                                          disabled={!connector || quantity === 0}
-                                          className="text-red-600 hover:text-red-700 disabled:text-gray-300 disabled:cursor-not-allowed"
-                                          title="Уменьшить"
-                                        >
-                                          <Minus className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                          onClick={() => handleAddConnectorFromTemplate(itemType)}
-                                          className="text-blue-600 hover:text-blue-700"
-                                          title="Добавить"
-                                        >
-                                          <Plus className="w-4 h-4" />
-                                        </button>
+                                      <td className="px-3 py-1.5 text-center">
+                                        <div className="flex justify-center gap-1.5">
+                                          <button
+                                            onClick={() => connector && handleConnectorQuantityChange(connector.id, Math.max(0, quantity - 1))}
+                                            disabled={!connector || quantity === 0}
+                                            className="p-1 text-red-500/50 hover:text-red-400 disabled:text-gray-700 transition-colors"
+                                          >
+                                            <Minus className="w-3.5 h-3.5" />
+                                          </button>
+                                          <button
+                                            onClick={() => handleAddConnectorFromTemplate(itemType)}
+                                            className="p-1 text-cyan-500/50 hover:text-cyan-400 transition-colors"
+                                          >
+                                            <Plus className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
                                       </td>
                                     </>
                                   )}
@@ -1077,48 +986,48 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
 
           {activeTab === 'other' && (
             <>
-              <div className="mb-4 flex justify-end">
+              <div className="mb-3 flex justify-end">
                 <button
                   onClick={handleExportOther}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2"
+                  className="px-3 py-1.5 bg-gray-800 text-gray-300 border border-gray-700 text-xs rounded hover:bg-gray-700 flex items-center gap-1.5 transition-colors"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-3.5 h-3.5" />
                   Экспорт CSV
                 </button>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {OTHER_TEMPLATES.map((template) => (
-                  <div key={template.category} className="border rounded-lg">
+                  <div key={template.category} className="border border-gray-800 rounded">
                     <button
                       onClick={() => toggleOtherCategory(template.category)}
-                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                      className="w-full flex items-center justify-between px-3 py-2 bg-gray-800/50 hover:bg-gray-800 transition-colors"
                     >
-                      <h3 className="text-lg font-bold">{template.category}</h3>
+                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">{template.category}</h3>
                       {expandedOtherCategories[template.category] ? (
-                        <ChevronDown className="w-5 h-5" />
+                        <ChevronDown className="w-4 h-4 text-gray-500" />
                       ) : (
-                        <ChevronRight className="w-5 h-5" />
+                        <ChevronRight className="w-4 h-4 text-gray-500" />
                       )}
                     </button>
 
                     {expandedOtherCategories[template.category] && (
-                      <div className="p-4">
+                      <div className="p-2">
                         <table className="w-full border-collapse">
                           <thead>
-                            <tr className="bg-gray-50">
-                              <th className="border border-gray-300 px-4 py-2 text-center w-12">✓</th>
-                              <th className="border border-gray-300 px-4 py-2 text-left">Предмет</th>
-                              <th className="border border-gray-300 px-4 py-2 text-center w-32">Кол-во</th>
+                            <tr className="border-b border-gray-800">
+                              <th className="px-3 py-1.5 text-center w-10 text-[10px] text-gray-500">✓</th>
+                              <th className="px-3 py-1.5 text-left text-[10px] text-gray-500">Предмет</th>
+                              <th className="px-3 py-1.5 text-center w-24 text-[10px] text-gray-500">Кол-во</th>
                               {!isWarehouseUser && (
                                 <>
-                                  <th className="border border-gray-300 px-4 py-2 text-left">Примечания</th>
-                                  <th className="border border-gray-300 px-4 py-2 text-center w-24"></th>
+                                  <th className="px-3 py-1.5 text-left text-[10px] text-gray-500">Примечания</th>
+                                  <th className="px-3 py-1.5 text-center w-20 text-[10px] text-gray-500"></th>
                                 </>
                               )}
                             </tr>
                           </thead>
-                          <tbody>
+                          <tbody className="divide-y divide-gray-800">
                             {template.items.map((itemType) => {
                               const otherId = getOtherId(template.category, itemType);
                               const quantity = getOtherQuantity(template.category, itemType);
@@ -1126,65 +1035,65 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                               const picked = getOtherPicked(template.category, itemType);
 
                               return (
-                                <tr key={itemType}>
-                                  <td className="border border-gray-300 px-4 py-2 text-center">
+                                <tr key={itemType} className="hover:bg-gray-800 transition-colors">
+                                  <td className="px-3 py-1.5 text-center">
                                     {otherId && (
                                       <input
                                         type="checkbox"
                                         checked={picked}
                                         onChange={(e) => handleOtherPickedChange(otherId, e.target.checked)}
-                                        className="w-5 h-5 cursor-pointer"
+                                        className="w-4 h-4 cursor-pointer rounded border-gray-700 bg-gray-800 text-cyan-600"
                                         disabled={eventDetails?.specification_confirmed && !isWarehouseUser}
                                       />
                                     )}
                                   </td>
-                                  <td className="border border-gray-300 px-4 py-2">{itemType}</td>
-                                  <td className="border border-gray-300 px-4 py-2 text-center">
+                                  <td className="px-3 py-1.5 text-xs text-white">{itemType}</td>
+                                  <td className="px-3 py-1.5 text-center">
                                     {otherId ? (
                                       isWarehouseUser ? (
-                                        <div className="text-center">{quantity}</div>
+                                        <div className="text-xs text-white font-bold">{quantity}</div>
                                       ) : (
                                         <input
                                           type="number"
                                           value={quantity}
                                           onChange={(e) => handleOtherQuantityChange(otherId, parseInt(e.target.value) || 0)}
-                                          className="w-full px-2 py-1 border rounded text-center"
+                                          className="w-16 px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-center text-xs text-white"
                                           min="0"
                                         />
                                       )
                                     ) : (
-                                      <div className="text-center text-gray-400">0</div>
+                                      <div className="text-center text-gray-600 text-xs">0</div>
                                     )}
                                   </td>
                                   {!isWarehouseUser && (
                                     <>
-                                      <td className="border border-gray-300 px-4 py-2">
+                                      <td className="px-3 py-1.5">
                                         {otherId && (
                                           <input
                                             type="text"
                                             value={notes}
                                             onChange={(e) => handleOtherNotesChange(otherId, e.target.value)}
-                                            className="w-full px-2 py-1 border rounded"
-                                            placeholder="Примечания"
+                                            className="w-full px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-[11px] text-gray-300"
+                                            placeholder="..."
                                           />
                                         )}
                                       </td>
-                                      <td className="border border-gray-300 px-4 py-2 text-center flex justify-center gap-2">
-                                        <button
-                                          onClick={() => otherId && handleOtherQuantityChange(otherId, Math.max(0, quantity - 1))}
-                                          disabled={!otherId || quantity === 0}
-                                          className="text-red-600 hover:text-red-700 disabled:text-gray-300 disabled:cursor-not-allowed"
-                                          title="Уменьшить"
-                                        >
-                                          <Minus className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                          onClick={() => handleAddOtherFromTemplate(template.category, itemType)}
-                                          className="text-blue-600 hover:text-blue-700"
-                                          title="Добавить"
-                                        >
-                                          <Plus className="w-4 h-4" />
-                                        </button>
+                                      <td className="px-3 py-1.5 text-center">
+                                        <div className="flex justify-center gap-1.5">
+                                          <button
+                                            onClick={() => otherId && handleOtherQuantityChange(otherId, Math.max(0, quantity - 1))}
+                                            disabled={!otherId || quantity === 0}
+                                            className="p-1 text-red-500/50 hover:text-red-400 disabled:text-gray-700 transition-colors"
+                                          >
+                                            <Minus className="w-3.5 h-3.5" />
+                                          </button>
+                                          <button
+                                            onClick={() => handleAddOtherFromTemplate(template.category, itemType)}
+                                            className="p-1 text-cyan-500/50 hover:text-cyan-400 transition-colors"
+                                          >
+                                            <Plus className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
                                       </td>
                                     </>
                                   )}
@@ -1202,16 +1111,16 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
           )}
         </div>
 
-        <div className="border-t p-4 bg-gray-50 flex justify-between items-center">
-          <div className="text-sm text-gray-600">
+        <div className="border-t border-gray-800 p-3 bg-gray-900/80 flex justify-between items-center">
+          <div className="text-[10px] text-gray-500 font-medium">
             {isWarehouseUser && (
-              <p>Отметьте все взятые элементы и подтвердите сборку спецификации</p>
+              <p>Отметьте элементы и подтвердите сборку</p>
             )}
           </div>
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
+              className="px-3 py-1.5 text-xs text-gray-400 border border-gray-700 rounded hover:bg-gray-800 transition-colors"
             >
               Закрыть
             </button>
@@ -1219,13 +1128,13 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
               <button
                 onClick={handleConfirmSpecification}
                 disabled={confirming || eventDetails?.specification_confirmed}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-3 py-1.5 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:bg-gray-800 disabled:text-gray-600 disabled:border-gray-700 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
               >
                 {confirming ? (
-                  <>Подтверждение...</>
+                  <>...</>
                 ) : (
                   <>
-                    <CheckCircle className="w-4 h-4" />
+                    <CheckCircle className="w-3.5 h-3.5" />
                     Подтвердить сборку
                   </>
                 )}
@@ -1236,15 +1145,15 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
       </div>
 
       {showEquipmentSelector && !isWarehouseUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60]">
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">Добавить оборудование</h3>
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Добавить оборудование</h3>
               <button
                 onClick={() => setShowEquipmentSelector(false)}
-                className="p-2 hover:bg-gray-100 rounded"
+                className="p-1 hover:bg-gray-800 text-gray-400 rounded"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             </div>
             <EquipmentSelector
