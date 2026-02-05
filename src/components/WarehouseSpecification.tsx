@@ -174,8 +174,10 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
 
   const handlePickedChange = async (budgetItemId: string, picked: boolean) => {
     try {
-      // Find the real budget item ID (ignoring composition suffixes)
-      const realId = budgetItemId.split('-')[0];
+      // Find the real budget item ID (ignoring composition suffixes like -comp- or -mod-)
+      // UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      // We need to extract the full UUID before any suffix
+      const realId = budgetItemId.replace(/(-comp-.*|-mod-.*)$/, '');
       await updateBudgetItemPicked(realId, picked);
       
       // Update all items sharing this budget item ID
@@ -669,10 +671,10 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                     <table className="w-full border-collapse">
                       <thead>
                         <tr className="bg-gray-800/50 border-b border-gray-800">
-                          <th className="px-3 py-1.5 text-center w-10 text-[10px] text-gray-500 uppercase tracking-wider">✓</th>
-                          <th className="px-3 py-1.5 text-left w-10 text-[10px] text-gray-500 uppercase tracking-wider">№</th>
+                          <th className="px-3 py-1.5 text-center w-12 text-[10px] text-gray-500 uppercase tracking-wider">✓</th>
+                          <th className="px-3 py-1.5 text-left w-12 text-[10px] text-gray-500 uppercase tracking-wider">№</th>
                           <th className="px-3 py-1.5 text-left text-[10px] text-gray-500 uppercase tracking-wider">Наименование</th>
-                          <th className="px-3 py-1.5 text-left w-24 text-[10px] text-gray-500 uppercase tracking-wider">Артикул</th>
+                          <th className="px-3 py-1.5 text-left w-28 text-[10px] text-gray-500 uppercase tracking-wider">Артикул</th>
                           <th className="px-3 py-1.5 text-center w-20 text-[10px] text-gray-500 uppercase tracking-wider">Кол-во</th>
                           <th className="px-3 py-1.5 text-left w-20 text-[10px] text-gray-500 uppercase tracking-wider">Ед. изм.</th>
                           {!isWarehouseUser && (
@@ -764,9 +766,9 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                         <table className="w-full border-collapse">
                           <thead>
                             <tr className="border-b border-gray-800">
-                              <th className="px-3 py-1.5 text-center w-10 text-[10px] text-gray-500">✓</th>
+                              <th className="px-3 py-1.5 text-center w-12 text-[10px] text-gray-500">✓</th>
                               <th className="px-3 py-1.5 text-left text-[10px] text-gray-500">Длина</th>
-                              <th className="px-3 py-1.5 text-center w-24 text-[10px] text-gray-500">Кол-во</th>
+                              <th className="px-3 py-1.5 text-center w-20 text-[10px] text-gray-500">Кол-во</th>
                               {!isWarehouseUser && (
                                 <>
                                   <th className="px-3 py-1.5 text-left text-[10px] text-gray-500">Примечания</th>
@@ -890,9 +892,9 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                         <table className="w-full border-collapse">
                           <thead>
                             <tr className="border-b border-gray-800">
-                              <th className="px-3 py-1.5 text-center w-10 text-[10px] text-gray-500">✓</th>
+                              <th className="px-3 py-1.5 text-center w-12 text-[10px] text-gray-500">✓</th>
                               <th className="px-3 py-1.5 text-left text-[10px] text-gray-500">Тип</th>
-                              <th className="px-3 py-1.5 text-center w-24 text-[10px] text-gray-500">Кол-во</th>
+                              <th className="px-3 py-1.5 text-center w-20 text-[10px] text-gray-500">Кол-во</th>
                               {!isWarehouseUser && (
                                 <>
                                   <th className="px-3 py-1.5 text-left text-[10px] text-gray-500">Примечания</th>
@@ -1016,9 +1018,9 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                         <table className="w-full border-collapse">
                           <thead>
                             <tr className="border-b border-gray-800">
-                              <th className="px-3 py-1.5 text-center w-10 text-[10px] text-gray-500">✓</th>
+                              <th className="px-3 py-1.5 text-center w-12 text-[10px] text-gray-500">✓</th>
                               <th className="px-3 py-1.5 text-left text-[10px] text-gray-500">Предмет</th>
-                              <th className="px-3 py-1.5 text-center w-24 text-[10px] text-gray-500">Кол-во</th>
+                              <th className="px-3 py-1.5 text-center w-20 text-[10px] text-gray-500">Кол-во</th>
                               {!isWarehouseUser && (
                                 <>
                                   <th className="px-3 py-1.5 text-left text-[10px] text-gray-500">Примечания</th>
