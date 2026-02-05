@@ -107,7 +107,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
             absolute lg:relative z-10 flex-shrink-0
           `}
         >
-          <nav className="p-4 space-y-1">
+          <nav className="p-3 space-y-0.5">
             {availableMenuItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.id;
@@ -120,7 +120,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                     setMobileMenuOpen(false);
                   }}
                   className={`
-                    w-full flex items-center space-x-3 px-4 py-3 rounded-lg
+                    w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg
                     transition-colors
                     ${
                       isActive
@@ -129,15 +129,15 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                     }
                   `}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
+                  <Icon className="w-4 h-4" />
+                  <span className="text-sm font-medium">{item.label}</span>
                 </button>
               );
             })}
           </nav>
         </aside>
 
-        <main className="flex-1 p-6 lg:p-8 overflow-x-hidden">
+        <main className="flex-1 p-4 lg:p-6 overflow-x-hidden">
           {children}
         </main>
       </div>

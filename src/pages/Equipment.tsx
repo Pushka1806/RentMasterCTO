@@ -103,16 +103,17 @@ export function Equipment() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Package className="w-8 h-8 text-cyan-500" />
-          <h1 className="text-3xl font-bold text-white">Оборудование</h1>
+        <div className="flex items-center gap-2">
+          <Package className="w-6 h-6 text-cyan-500" />
+          <h1 className="text-2xl font-bold text-white">Оборудование</h1>
         </div>
         <div className="flex gap-2">
-          <label className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors cursor-pointer">
-            <Upload className="w-5 h-5" />
-            {importing ? 'Импорт...' : 'Импорт оборудования'}
+          <label className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors cursor-pointer text-sm">
+            <Upload className="w-4 h-4" />
+            <span className="hidden sm:inline">{importing ? 'Импорт...' : 'Импорт оборудования'}</span>
+            <span className="sm:hidden">Обор.</span>
             <input
               type="file"
               accept=".csv"
@@ -121,9 +122,10 @@ export function Equipment() {
               className="hidden"
             />
           </label>
-          <label className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors cursor-pointer">
-            <Upload className="w-5 h-5" />
-            {importing ? 'Импорт...' : 'Импорт работ'}
+          <label className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors cursor-pointer text-sm">
+            <Upload className="w-4 h-4" />
+            <span className="hidden sm:inline">{importing ? 'Импорт...' : 'Импорт работ'}</span>
+            <span className="sm:hidden">Раб.</span>
             <input
               type="file"
               accept=".csv"
@@ -134,33 +136,33 @@ export function Equipment() {
           </label>
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors text-sm"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4" />
             Добавить
           </button>
         </div>
       </div>
 
-      <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-gray-900 rounded-lg border border-gray-800 p-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
               type="text"
-              placeholder="Поиск по названию..."
+              placeholder="Поиск..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+              className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-cyan-500"
             />
           </div>
 
           <div className="relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 appearance-none"
+              className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-cyan-500 appearance-none"
             >
               <option value="all">Все категории</option>
               {categories.map(cat => (
@@ -170,11 +172,11 @@ export function Equipment() {
           </div>
 
           <div className="relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 appearance-none"
+              className="w-full pl-9 pr-4 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-cyan-500 appearance-none"
             >
               <option value="all">Все типы</option>
               {types.map(type => (
@@ -185,24 +187,24 @@ export function Equipment() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-          <div className="text-gray-400 text-sm mb-1">Всего единиц</div>
-          <div className="text-2xl font-bold text-white">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-2 bg-gray-900/50 rounded-lg border border-gray-800 text-sm">
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400">Всего единиц:</span>
+          <span className="font-bold text-white">
             {items.reduce((sum, item) => sum + item.quantity, 0)}
-          </div>
+          </span>
         </div>
-        <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-          <div className="text-gray-400 text-sm mb-1">Позиций</div>
-          <div className="text-2xl font-bold text-cyan-400">{items.length}</div>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400">Позиций:</span>
+          <span className="font-bold text-cyan-400">{items.length}</span>
         </div>
-        <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-          <div className="text-gray-400 text-sm mb-1">Категорий</div>
-          <div className="text-2xl font-bold text-green-400">{categories.length}</div>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400">Категорий:</span>
+          <span className="font-bold text-green-400">{categories.length}</span>
         </div>
-        <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-          <div className="text-gray-400 text-sm mb-1">Найдено</div>
-          <div className="text-2xl font-bold text-yellow-400">{filteredItems.length}</div>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400">Найдено:</span>
+          <span className="font-bold text-yellow-400">{filteredItems.length}</span>
         </div>
       </div>
 
@@ -211,19 +213,19 @@ export function Equipment() {
           <table className="w-full">
             <thead className="bg-gray-800 border-b border-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">
                   Наименование
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">
                   Категория / Тип
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">
                   Кол-во
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-2 text-left text-[11px] font-medium text-gray-400 tracking-wider">
                   Цена $
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-2 text-right text-[11px] font-medium text-gray-400 tracking-wider">
                   Действия
                 </th>
               </tr>
@@ -231,51 +233,51 @@ export function Equipment() {
             <tbody className="divide-y divide-gray-800">
               {filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-500 text-sm">
                     Оборудование не найдено
                   </td>
                 </tr>
               ) : (
                 filteredItems.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-800/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="text-white font-medium">{item.name}</div>
+                  <tr key={item.id} className="hover:bg-gray-800/50 transition-colors group">
+                    <td className="px-4 py-2">
+                      <div className="text-white font-medium text-sm leading-tight">{item.name}</div>
                       {item.note && (
-                        <div className="text-sm text-gray-400 mt-1">{item.note}</div>
+                        <div className="text-xs text-gray-400 mt-0.5 leading-tight">{item.note}</div>
                       )}
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-white">{item.category}</div>
-                      <div className="text-sm text-gray-400">{item.type} {item.subtype && `/ ${item.subtype}`}</div>
+                    <td className="px-4 py-2">
+                      <div className="text-white text-sm leading-tight">{item.category}</div>
+                      <div className="text-xs text-gray-400 leading-tight">{item.type} {item.subtype && `/ ${item.subtype}`}</div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-white font-medium">{item.quantity}</div>
+                    <td className="px-4 py-2">
+                      <div className="text-white font-medium text-sm">{item.quantity}</div>
                     </td>
-                    <td className="px-6 py-4 text-white">
+                    <td className="px-4 py-2 text-white text-sm">
                       {item.rental_price > 0 ? `${item.rental_price}` : '-'}
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="px-4 py-2 text-right">
+                      <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => setViewingItem(item)}
-                          className="p-2 text-gray-400 hover:bg-gray-700 rounded transition-colors"
+                          className="p-1.5 text-gray-400 hover:bg-gray-700 rounded transition-colors"
                           title="Просмотр деталей"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleEdit(item)}
-                          className="p-2 text-cyan-400 hover:bg-cyan-900/30 rounded transition-colors"
+                          className="p-1.5 text-cyan-400 hover:bg-cyan-900/30 rounded transition-colors"
                           title="Редактировать"
                         >
-                          <Pencil className="w-4 h-4" />
+                          <Pencil className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="p-2 text-red-400 hover:bg-red-900/30 rounded transition-colors"
+                          className="p-1.5 text-red-400 hover:bg-red-900/30 rounded transition-colors"
                           title="Удалить"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </td>
