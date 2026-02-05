@@ -187,9 +187,10 @@ export async function getConnectors(eventId: string): Promise<ConnectorItem[]> {
 }
 
 export async function createConnector(connector: Omit<ConnectorItem, 'id' | 'created_at' | 'updated_at'>): Promise<ConnectorItem> {
+  const { picked, ...insertConnector } = connector;
   const { data, error } = await supabase
     .from('warehouse_specification_connectors')
-    .insert(connector)
+    .insert(insertConnector)
     .select()
     .single();
 
