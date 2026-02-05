@@ -387,6 +387,18 @@ export async function updateBudgetItem(id: string, item: Partial<BudgetItem>): P
   return data;
 }
 
+export async function updateBudgetItemPicked(id: string, picked: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('budget_items')
+    .update({
+      picked,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', id);
+
+  if (error) throw error;
+}
+
 export async function deleteBudgetItem(id: string): Promise<void> {
   const { error } = await supabase
     .from('budget_items')
