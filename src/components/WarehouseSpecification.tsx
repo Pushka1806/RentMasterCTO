@@ -37,6 +37,7 @@ interface WarehouseSpecificationProps {
 
 interface ExpandedItem {
   budgetItemId: string;
+  categoryId: string | null;
   name: string;
   sku: string;
   quantity: number;
@@ -70,6 +71,18 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
   const [expandedOtherCategories, setExpandedOtherCategories] = useState<Record<string, boolean>>({});
   const [confirming, setConfirming] = useState(false);
 
+  const groups = categories
+    .map(cat => ({
+      name: cat.name,
+      items: expandedItems.filter(item => item.categoryId === cat.id)
+    }))
+    .filter(g => g.items.length > 0);
+
+  const uncategorizedItemsForGroups = expandedItems.filter(item => !item.categoryId);
+  if (uncategorizedItemsForGroups.length > 0) {
+    groups.push({ name: 'Без категории', items: uncategorizedItemsForGroups });
+  }
+
   useEffect(() => {
     loadData();
   }, [eventId]);
@@ -102,64 +115,70 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
       for (const item of budgetData) {
         if (item.item_type !== 'equipment') continue;
 
-        // Add parent item
-        items.push({
-          budgetItemId: item.id,
-          name: item.equipment?.name || 'Unknown',
-          sku: item.equipment?.sku || '',
-          quantity: item.quantity,
-          unit: item.equipment?.unit || 'шт.',
-          category: item.equipment?.category || 'Other',
-          notes: item.notes || '',
-          picked: item.picked_in_warehouse || false,
-          isFromComposition: false
-        });
+        const isVirtual = item.equipment?.object_type === 'virtual';
 
-        // Check for composition
-        if (item.equipment_id) {
-          try {
-            const compositions = await getEquipmentCompositions(item.equipment_id);
-            console.log('Found compositions for', item.equipment?.name, ':', compositions);
-            
-            for (const comp of compositions) {
-              items.push({
-                budgetItemId: `${item.id}-comp-${comp.id}`,
-                name: comp.component_equipment?.name || 'Unknown',
-                sku: comp.component_equipment?.sku || '',
-                quantity: item.quantity * comp.quantity,
-                unit: comp.component_equipment?.unit || 'шт.',
-                category: comp.component_equipment?.category || 'Components',
-                notes: '',
-                picked: item.picked_in_warehouse || false,
-                isFromComposition: true,
-                parentName: item.equipment?.name
-              });
+        if (!isVirtual) {
+          // Add parent item if it's physical
+          items.push({
+            budgetItemId: item.id,
+            categoryId: item.category_id || null,
+            name: item.equipment?.name || 'Unknown',
+            sku: item.equipment?.sku || '',
+            quantity: item.quantity,
+            unit: item.equipment?.unit || 'шт.',
+            category: item.equipment?.category || 'Other',
+            notes: item.notes || '',
+            picked: item.picked_in_warehouse || false,
+            isFromComposition: false
+          });
+        } else {
+          // Virtual item - expand it into its components
+          // Check for composition
+          if (item.equipment_id) {
+            try {
+              const compositions = await getEquipmentCompositions(item.equipment_id);
+              for (const comp of compositions) {
+                items.push({
+                  budgetItemId: `${item.id}-comp-${comp.id}`,
+                  categoryId: item.category_id || null,
+                  name: comp.component_equipment?.name || 'Unknown',
+                  sku: comp.component_equipment?.sku || '',
+                  quantity: item.quantity * comp.quantity,
+                  unit: comp.component_equipment?.unit || 'шт.',
+                  category: comp.component_equipment?.category || 'Components',
+                  notes: item.notes || '',
+                  picked: item.picked_in_warehouse || false,
+                  isFromComposition: true,
+                  parentName: item.equipment?.name
+                });
+              }
+            } catch (error) {
+              console.error('Error loading composition for', item.equipment?.name, ':', error);
             }
-          } catch (error) {
-            console.error('Error loading composition for', item.equipment?.name, ':', error);
           }
-        }
 
-        // Check for modifications
-        if (item.modification_id) {
-          try {
-            const components = await getModificationComponents(item.modification_id);
-            for (const component of components) {
-              items.push({
-                budgetItemId: `${item.id}-mod-${component.id}`,
-                name: component.equipment?.name || 'Unknown',
-                sku: component.equipment?.sku || '',
-                quantity: item.quantity * component.quantity,
-                unit: component.equipment?.unit || 'шт.',
-                category: component.equipment?.category || 'Modification Components',
-                notes: '',
-                picked: item.picked_in_warehouse || false,
-                isFromComposition: true,
-                parentName: item.equipment?.name
-              });
+          // Check for modifications
+          if (item.modification_id) {
+            try {
+              const components = await getModificationComponents(item.modification_id);
+              for (const component of components) {
+                items.push({
+                  budgetItemId: `${item.id}-mod-${component.id}`,
+                  categoryId: item.category_id || null,
+                  name: component.equipment?.name || 'Unknown',
+                  sku: component.equipment?.sku || '',
+                  quantity: item.quantity * component.quantity,
+                  unit: component.equipment?.unit || 'шт.',
+                  category: component.equipment?.category || 'Modification Components',
+                  notes: item.notes || '',
+                  picked: item.picked_in_warehouse || false,
+                  isFromComposition: true,
+                  parentName: item.equipment?.name
+                });
+              }
+            } catch (error) {
+              console.error('Error loading modification components:', error);
             }
-          } catch (error) {
-            console.error('Error loading modification components:', error);
           }
         }
       }
@@ -465,22 +484,25 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
   };
 
   const handleExportBudget = () => {
-    const csvContent = [
-      ['№', 'Наименование', 'Артикул', 'Категория', 'Количество', 'Ед. изм.', 'Взято', 'Примечания'].join(','),
-      ...expandedItems.map((item, index) =>
-        [
-          index + 1,
+    const csvRows = [['№', 'Наименование', 'Артикул', 'Категория', 'Количество', 'Ед. изм.', 'Взято', 'Примечания']];
+    
+    let globalIndex = 1;
+    groups.forEach(group => {
+      group.items.forEach(item => {
+        csvRows.push([
+          globalIndex++,
           `"${item.name}"`,
           item.sku,
-          `"${item.category}"`,
+          `"${group.name}"`,
           item.quantity,
           item.unit,
           item.picked ? 'Да' : 'Нет',
           `"${item.notes}"`
-        ].join(',')
-      )
-    ].join('\n');
+        ]);
+      });
+    });
 
+    const csvContent = csvRows.map(row => row.join(',')).join('\n');
     downloadCSV(csvContent, `Спецификация_Смета_${eventName}_${new Date().toISOString().split('T')[0]}.csv`);
   };
 
@@ -548,15 +570,6 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
     link.click();
     document.body.removeChild(link);
   };
-
-  const groupedByCategory = expandedItems.reduce((acc, item) => {
-    const category = item.category || 'Без категории';
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(item);
-    return acc;
-  }, {} as Record<string, ExpandedItem[]>);
 
   const getCableQuantity = (cableType: string, cableLength: string) => {
     const cable = cables.find(c => c.cable_type === cableType && c.cable_length === cableLength);
@@ -662,10 +675,10 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                 </button>
               </div>
 
-              {Object.entries(groupedByCategory).map(([category, items]) => (
-                <div key={category} className="mb-4">
+              {groups.map((group) => (
+                <div key={group.name} className="mb-4">
                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">
-                    {category}
+                    {group.name}
                   </h3>
                   <div className="overflow-x-auto rounded border border-gray-800">
                     <table className="w-full border-collapse">
@@ -683,7 +696,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-800">
-                        {items.map((item, index) => (
+                        {group.items.map((item, index) => (
                           <tr key={`${item.budgetItemId}-${index}`} className={`${item.isFromComposition ? 'bg-cyan-900/10' : 'bg-gray-900'} hover:bg-gray-800 transition-colors`}>
                             <td className="px-3 py-1.5 text-center">
                               <input
