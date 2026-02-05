@@ -95,6 +95,7 @@ export interface BudgetItem {
   exchange_rate: number;
   category_id?: string | null;
   sort_order: number;
+  picked: boolean;
   created_at: string;
   updated_at: string;
   equipment?: Equipment;
