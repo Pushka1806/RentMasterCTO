@@ -447,18 +447,18 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
 
       <div className="bg-gray-900 rounded-xl w-full max-w-[1600px] h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-gray-800">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center flex-shrink-0 bg-gray-900/50">
+        <div className="px-4 py-2 border-b border-gray-800 flex justify-between items-center flex-shrink-0 bg-gray-900/50">
           <div>
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <FileText className="w-5 h-5 text-cyan-400" />
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <FileText className="w-4 h-4 text-cyan-400" />
               Смета: {eventName}
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white p-2 hover:bg-gray-800 rounded-full transition-all"
+            className="text-gray-400 hover:text-white p-1 hover:bg-gray-800 rounded-full transition-all"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -467,33 +467,33 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
           {/* Left column */}
           <div className="w-3/5 flex flex-col border-r border-gray-800 min-w-0">
             {/* Toolbar */}
-            <div className="bg-gray-900/80 border-b border-gray-800 px-4 py-3 flex-shrink-0">
+            <div className="bg-gray-900/80 border-b border-gray-800 px-3 py-2 flex-shrink-0">
               <div className="flex items-center justify-between relative category-dropdown-container">
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                    className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium rounded-lg transition-all shadow-lg shadow-cyan-900/20"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-medium rounded-lg transition-all shadow-lg shadow-cyan-900/20"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-3.5 h-3.5" />
                     Добавить категорию
                   </button>
 
                   <button
                     onClick={() => setShowTemplates(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 text-sm font-medium rounded-lg transition-all border border-gray-700"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-medium rounded-lg transition-all border border-gray-700"
                   >
-                    <Package className="w-4 h-4" />
+                    <Package className="w-3.5 h-3.5" />
                     Шаблоны
                   </button>
                 </div>
 
                 {showCategoryDropdown && (
-                  <div className="absolute top-full left-0 mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-50 min-w-[240px] max-h-[350px] overflow-y-auto custom-scrollbar p-1">
+                  <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-50 min-w-[200px] max-h-[300px] overflow-y-auto custom-scrollbar p-0.5">
                     {categories.map(category => (
                       <button
                         key={category.id}
                         onClick={() => handleSelectCategory(category.id)}
-                        className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors rounded-lg"
+                        className="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700 hover:text-white transition-colors rounded-lg"
                       >
                         {category.name}
                       </button>
@@ -504,35 +504,35 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                 <div className="relative exchange-rate-container">
                   <button
                     onClick={() => setShowExchangeRatePopover(!showExchangeRatePopover)}
-                    className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg border border-gray-700 transition-all"
+                    className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg border border-gray-700 transition-all"
                   >
-                    <Settings className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm font-medium">{showInBYN ? 'BYN' : 'USD'}</span>
-                    <span className="text-xs text-gray-500 font-mono">({exchangeRate.toFixed(2)})</span>
-                    <ChevronDown className={`w-4 h-4 transition-transform ${showExchangeRatePopover ? 'rotate-180' : ''}`} />
+                    <Settings className="w-3.5 h-3.5 text-gray-500" />
+                    <span className="text-xs font-medium">{showInBYN ? 'BYN' : 'USD'}</span>
+                    <span className="text-[10px] text-gray-500 font-mono">({exchangeRate.toFixed(2)})</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showExchangeRatePopover ? 'rotate-180' : ''}`} />
                   </button>
 
                   {showExchangeRatePopover && (
-                    <div className="absolute top-full right-0 mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-50 p-4 min-w-[200px]">
-                      <div className="space-y-4">
+                    <div className="absolute top-full right-0 mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-50 p-3 min-w-[180px]">
+                      <div className="space-y-3">
                         <div>
-                          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Курс валюты</label>
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Курс валюты</label>
                           <input
                             type="number"
                             step="0.01"
                             value={exchangeRate}
                             onChange={(e) => setExchangeRate(parseFloat(e.target.value) || 1)}
-                            className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
+                            className="w-full px-2.5 py-1.5 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:ring-2 focus:ring-cyan-500 outline-none"
                           />
                         </div>
-                        <label className="flex items-center gap-3 cursor-pointer group">
+                        <label className="flex items-center gap-2 cursor-pointer group">
                           <input
                             type="checkbox"
                             checked={showInBYN}
                             onChange={(e) => setShowInBYN(e.target.checked)}
-                            className="w-5 h-5 rounded border-gray-700 bg-gray-900 text-cyan-600 focus:ring-cyan-600"
+                            className="w-4 h-4 rounded border-gray-700 bg-gray-900 text-cyan-600 focus:ring-cyan-600"
                           />
-                          <span className="text-sm text-gray-300 group-hover:text-white">Режим BYN (с наценкой)</span>
+                          <span className="text-xs text-gray-300 group-hover:text-white">Режим BYN (с наценкой)</span>
                         </label>
                       </div>
                     </div>
@@ -544,7 +544,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
             {/* Budget list */}
             <div
               ref={budgetListRef}
-              className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0 custom-scrollbar"
+              className="flex-1 overflow-y-auto p-2 space-y-1 min-h-0 custom-scrollbar"
             >
               {budgetItems.length === 0 && activeCategoryIds.size === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-gray-500 space-y-4">
@@ -560,7 +560,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                     return (
                       <div
                         key={category.id}
-                        className={`transition-all duration-200 ${dragOverTarget === category.id ? 'ring-2 ring-cyan-500 bg-cyan-500/5 rounded-xl p-1' : ''}`}
+                        className={`transition-all duration-200 ${dragOverTarget === category.id ? 'ring-2 ring-cyan-500 bg-cyan-500/5 rounded-xl p-0.5' : ''}`}
                       >
                         <CategoryBlock
                           categoryId={category.id}
@@ -591,24 +591,24 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
 
           {/* Right column */}
           <div className="w-2/5 flex flex-col bg-gray-900/30 min-w-0">
-            <div className="p-4 border-b border-gray-800 space-y-3 flex-shrink-0">
+            <div className="p-3 border-b border-gray-800 space-y-2 flex-shrink-0">
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Поиск по названию или категории..."
-                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
+                className="w-full px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-xs text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
               />
-              <div className="flex bg-gray-800 p-1 rounded-lg">
+              <div className="flex bg-gray-800 p-0.5 rounded-lg">
                 <button
                   onClick={() => setSelectedItemType('Оборудование')}
-                  className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all ${selectedItemType === 'Оборудование' ? 'bg-gray-700 text-cyan-400 shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
+                  className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${selectedItemType === 'Оборудование' ? 'bg-gray-700 text-cyan-400 shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
                 >
                   Оборудование
                 </button>
                 <button
                   onClick={() => setSelectedItemType('Работа')}
-                  className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all ${selectedItemType === 'Работа' ? 'bg-gray-700 text-cyan-400 shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
+                  className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${selectedItemType === 'Работа' ? 'bg-gray-700 text-cyan-400 shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
                 >
                   Работа / Персонал
                 </button>
@@ -617,7 +617,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                 <select
                   value={selectedEquipmentCategory}
                   onChange={(e) => setSelectedEquipmentCategory(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-300 focus:ring-1 focus:ring-cyan-500 outline-none"
+                  className="w-full px-2.5 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-[10px] text-gray-300 focus:ring-1 focus:ring-cyan-500 outline-none"
                 >
                   {equipmentCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
@@ -631,16 +631,45 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                     <div
                       key={item.id}
                       onClick={() => handleEquipmentClick(item)}
-                      className="group flex items-center justify-between p-4 hover:bg-cyan-500/5 transition-colors cursor-pointer"
+                      className="group flex items-center justify-between px-3 py-2 hover:bg-cyan-500/5 transition-colors cursor-pointer"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-200 truncate group-hover:text-white">{item.name}</p>
-                        <p className="text-xs text-gray-500">{item.category}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-medium text-gray-200 truncate group-hover:text-white">{item.name}</p>
+                          {item.sku && (
+                            <span className="text-[10px] font-mono text-gray-600 bg-gray-800 px-1.5 py-0.5 rounded">{item.sku}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 mt-0.5">
+                          <p className="text-[10px] text-gray-500">{item.category}</p>
+                          {item.subtype && (
+                            <>
+                              <span className="text-gray-700">•</span>
+                              <p className="text-[10px] text-gray-500">{item.subtype}</p>
+                            </>
+                          )}
+                          {item.power && (
+                            <>
+                              <span className="text-gray-700">•</span>
+                              <p className="text-[10px] text-gray-500">{item.power}</p>
+                            </>
+                          )}
+                          <span className="text-gray-700">•</span>
+                          <p className="text-[10px] text-gray-500">В наличии: {item.quantity}</p>
+                        </div>
+                        {item.note && (
+                          <p className="text-[10px] text-gray-600 truncate mt-0.5">{item.note}</p>
+                        )}
                       </div>
-                      <div className="flex items-center gap-4 ml-4">
-                        <span className="text-sm font-mono text-cyan-500 font-bold">${item.rental_price}</span>
-                        <div className="p-1.5 bg-gray-800 rounded-md group-hover:bg-cyan-600 group-hover:text-white text-gray-500 transition-all">
-                          <Plus className="w-4 h-4" />
+                      <div className="flex items-center gap-3 ml-3">
+                        <div className="text-right">
+                          <p className="text-xs font-mono text-cyan-500 font-bold">${item.rental_price}</p>
+                          {item.attribute && (
+                            <p className="text-[9px] text-gray-500">{item.attribute}</p>
+                          )}
+                        </div>
+                        <div className="p-1 bg-gray-800 rounded-md group-hover:bg-cyan-600 group-hover:text-white text-gray-500 transition-all">
+                          <Plus className="w-3.5 h-3.5" />
                         </div>
                       </div>
                     </div>
@@ -652,14 +681,14 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                     <div
                       key={item.id}
                       onClick={() => handleAddWorkItem(item)}
-                      className="group flex items-center justify-between p-4 hover:bg-cyan-500/5 transition-colors cursor-pointer"
+                      className="group flex items-center justify-between px-3 py-2 hover:bg-cyan-500/5 transition-colors cursor-pointer"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-200 truncate group-hover:text-white">{item.name}</p>
-                        <p className="text-xs text-gray-500">{item.unit}</p>
+                        <p className="text-xs font-medium text-gray-200 truncate group-hover:text-white">{item.name}</p>
+                        <p className="text-[10px] text-gray-500">Ед. измерения: {item.unit}</p>
                       </div>
-                      <div className="p-1.5 bg-gray-800 rounded-md group-hover:bg-cyan-600 group-hover:text-white text-gray-500 transition-all">
-                        <Plus className="w-4 h-4" />
+                      <div className="p-1 bg-gray-800 rounded-md group-hover:bg-cyan-600 group-hover:text-white text-gray-500 transition-all">
+                        <Plus className="w-3.5 h-3.5" />
                       </div>
                     </div>
                   ))}
@@ -670,50 +699,50 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-800 bg-gray-900 flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-8">
+        <div className="px-4 py-3 border-t border-gray-800 bg-gray-900 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-6">
             <div className="flex flex-col">
-              <span className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Итоговая сумма</span>
-              <span className="text-2xl font-black text-white">
+              <span className="text-[9px] uppercase font-bold text-gray-500 tracking-widest">Итоговая сумма</span>
+              <span className="text-xl font-black text-white">
                 {showInBYN ? (
-                  <><span className="text-cyan-400">{totalBYN.toLocaleString()}</span> <span className="text-sm font-normal text-gray-400 ml-1">BYN</span></>
+                  <><span className="text-cyan-400">{totalBYN.toLocaleString()}</span> <span className="text-xs font-normal text-gray-400 ml-1">BYN</span></>
                 ) : (
-                  <><span className="text-cyan-400">${totalUSD.toLocaleString()}</span> <span className="text-sm font-normal text-gray-400 ml-1">USD</span></>
+                  <><span className="text-cyan-400">${totalUSD.toLocaleString()}</span> <span className="text-xs font-normal text-gray-400 ml-1">USD</span></>
                 )}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={handleExportPDF}
               disabled={generatingPDF || budgetItems.length === 0}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-all disabled:opacity-30 border border-gray-700"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-all disabled:opacity-30 border border-gray-700"
             >
-              <Download className="w-4 h-4" />
-              <span className="text-sm font-medium">Экспорт PDF</span>
+              <Download className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">PDF</span>
             </button>
             <button
               onClick={() => setShowWarehouseSpec(true)}
               disabled={budgetItems.length === 0}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-all disabled:opacity-30 border border-gray-700"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-all disabled:opacity-30 border border-gray-700"
             >
-              <FileText className="w-4 h-4" />
-              <span className="text-sm font-medium">Спецификация</span>
+              <FileText className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">Спецификация</span>
             </button>
-            <div className="w-px h-8 bg-gray-800 mx-2"></div>
+            <div className="w-px h-6 bg-gray-800 mx-1"></div>
             <button
               onClick={onClose}
-              className="px-6 py-2 text-gray-400 hover:text-white text-sm font-medium transition-colors"
+              className="px-4 py-1.5 text-gray-400 hover:text-white text-xs font-medium transition-colors"
             >
               Отмена
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 px-8 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-green-900/20 disabled:opacity-50"
+              className="flex items-center gap-1.5 px-5 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-green-900/20 disabled:opacity-50"
             >
-              <Save className="w-4 h-4" />
+              <Save className="w-3.5 h-3.5" />
               {saving ? 'Сохранение...' : 'Завершить'}
             </button>
           </div>
