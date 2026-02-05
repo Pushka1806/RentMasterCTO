@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { X, Package, Plus, Trash2, Settings, ChevronDown, ChevronRight } from 'lucide-react';
 import {
   EquipmentItem,
-  getEquipmentItems,
   EquipmentModification,
   ModificationComponent,
   getEquipmentModifications,
@@ -18,6 +17,7 @@ import {
   deleteEquipmentComposition,
   EquipmentComposition
 } from '../lib/equipmentCompositions';
+import { EquipmentSelector } from './EquipmentSelector';
 
 interface EquipmentDetailsProps {
   item: EquipmentItem;
@@ -29,11 +29,8 @@ type Tab = 'details' | 'composition' | 'modifications';
 export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
   const [activeTab, setActiveTab] = useState<Tab>('details');
   const [compositions, setCompositions] = useState<EquipmentComposition[]>([]);
-  const [availableEquipment, setAvailableEquipment] = useState<EquipmentItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddComposition, setShowAddComposition] = useState(false);
-  const [selectedEquipmentId, setSelectedEquipmentId] = useState('');
-  const [quantity, setQuantity] = useState(1);
 
   const [modifications, setModifications] = useState<EquipmentModification[]>([]);
   const [expandedModificationId, setExpandedModificationId] = useState<string | null>(null);
@@ -42,12 +39,9 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
   const [newModificationName, setNewModificationName] = useState('');
   const [newModificationDescription, setNewModificationDescription] = useState('');
   const [showAddComponentForMod, setShowAddComponentForMod] = useState<string | null>(null);
-  const [selectedComponentEquipmentId, setSelectedComponentEquipmentId] = useState('');
-  const [componentQuantity, setComponentQuantity] = useState(1);
 
   useEffect(() => {
     loadCompositions();
-    loadAvailableEquipment();
     loadModifications();
   }, [item.id]);
 
@@ -60,25 +54,12 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
     }
   };
 
-  const loadAvailableEquipment = async () => {
-    try {
-      const data = await getEquipmentItems();
-      setAvailableEquipment(data.filter(eq => eq.id !== item.id));
-    } catch (error) {
-      console.error('Error loading equipment:', error);
-    }
-  };
-
-  const handleAddComposition = async () => {
-    if (!selectedEquipmentId || quantity <= 0) return;
-
+  const handleAddComposition = async (equipment: EquipmentItem, quantity: number) => {
     try {
       setLoading(true);
-      await addEquipmentComposition(item.id, selectedEquipmentId, quantity);
+      await addEquipmentComposition(item.id, equipment.id, quantity);
       await loadCompositions();
       setShowAddComposition(false);
-      setSelectedEquipmentId('');
-      setQuantity(1);
     } catch (error) {
       console.error('Error adding composition:', error);
       alert('Ошибка при добавлении элемента');
@@ -170,21 +151,19 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
     }
   };
 
-  const handleAddModificationComponent = async (modificationId: string) => {
-    if (!selectedComponentEquipmentId || componentQuantity <= 0) return;
+  const handleAddModificationComponent = async (equipment: EquipmentItem, quantity: number) => {
+    if (!showAddComponentForMod) return;
 
-    if (selectedComponentEquipmentId === item.id) {
+    if (equipment.id === item.id) {
       alert('Нельзя добавить оборудование в свою же модификацию');
       return;
     }
 
     try {
       setLoading(true);
-      await addModificationComponent(modificationId, selectedComponentEquipmentId, componentQuantity);
-      await loadModificationComponents(modificationId);
+      await addModificationComponent(showAddComponentForMod, equipment.id, quantity);
+      await loadModificationComponents(showAddComponentForMod);
       setShowAddComponentForMod(null);
-      setSelectedComponentEquipmentId('');
-      setComponentQuantity(1);
     } catch (error) {
       console.error('Error adding modification component:', error);
       alert('Ошибка при добавлении компонента');
@@ -378,58 +357,12 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                   </div>
 
                   {showAddComposition && (
-                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="col-span-2">
-                          <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Выберите оборудование
-                          </label>
-                          <select
-                            value={selectedEquipmentId}
-                            onChange={(e) => setSelectedEquipmentId(e.target.value)}
-                            className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white focus:outline-none focus:border-cyan-500"
-                          >
-                            <option value="">-- Выберите --</option>
-                            {availableEquipment.map(eq => (
-                              <option key={eq.id} value={eq.id}>
-                                {eq.name} ({eq.sku})
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Количество
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            value={quantity}
-                            onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                            className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white focus:outline-none focus:border-cyan-500"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-end gap-2 mt-4">
-                        <button
-                          onClick={() => {
-                            setShowAddComposition(false);
-                            setSelectedEquipmentId('');
-                            setQuantity(1);
-                          }}
-                          className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
-                        >
-                          Отмена
-                        </button>
-                        <button
-                          onClick={handleAddComposition}
-                          disabled={loading || !selectedEquipmentId}
-                          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded transition-colors disabled:opacity-50"
-                        >
-                          {loading ? 'Добавление...' : 'Добавить'}
-                        </button>
-                      </div>
-                    </div>
+                    <EquipmentSelector
+                      onSelect={handleAddComposition}
+                      onClose={() => setShowAddComposition(false)}
+                      selectedIds={[item.id, ...compositions.map(c => c.child_id)]}
+                      showModifications={false}
+                    />
                   )}
 
                   {compositions.length === 0 ? (
@@ -617,58 +550,12 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                               </div>
 
                               {showAddComponentForMod === mod.id && (
-                                <div className="bg-gray-900 border border-gray-700 rounded-lg p-3">
-                                  <div className="grid grid-cols-3 gap-3">
-                                    <div className="col-span-2">
-                                      <label className="block text-xs font-medium text-gray-400 mb-1">
-                                        Выберите оборудование
-                                      </label>
-                                      <select
-                                        value={selectedComponentEquipmentId}
-                                        onChange={(e) => setSelectedComponentEquipmentId(e.target.value)}
-                                        className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-cyan-500"
-                                      >
-                                        <option value="">-- Выберите --</option>
-                                        {availableEquipment.map(eq => (
-                                          <option key={eq.id} value={eq.id}>
-                                            {eq.name} ({eq.sku})
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                    <div>
-                                      <label className="block text-xs font-medium text-gray-400 mb-1">
-                                        Количество
-                                      </label>
-                                      <input
-                                        type="number"
-                                        min="1"
-                                        value={componentQuantity}
-                                        onChange={(e) => setComponentQuantity(parseInt(e.target.value) || 1)}
-                                        className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-cyan-500"
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center justify-end gap-2 mt-3">
-                                    <button
-                                      onClick={() => {
-                                        setShowAddComponentForMod(null);
-                                        setSelectedComponentEquipmentId('');
-                                        setComponentQuantity(1);
-                                      }}
-                                      className="px-3 py-1.5 text-sm text-gray-400 hover:text-white transition-colors"
-                                    >
-                                      Отмена
-                                    </button>
-                                    <button
-                                      onClick={() => handleAddModificationComponent(mod.id)}
-                                      disabled={loading || !selectedComponentEquipmentId}
-                                      className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-sm transition-colors disabled:opacity-50"
-                                    >
-                                      {loading ? 'Добавление...' : 'Добавить'}
-                                    </button>
-                                  </div>
-                                </div>
+                                <EquipmentSelector
+                                  onSelect={handleAddModificationComponent}
+                                  onClose={() => setShowAddComponentForMod(null)}
+                                  selectedIds={[item.id, ...components.map(c => c.component_equipment_id)]}
+                                  showModifications={false}
+                                />
                               )}
 
                               {components.length === 0 ? (

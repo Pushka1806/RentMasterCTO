@@ -6,9 +6,15 @@ interface EquipmentSelectorProps {
   onSelect: (equipment: EquipmentItem, quantity: number, modificationId?: string) => void;
   onClose: () => void;
   selectedIds?: string[];
+  showModifications?: boolean;
 }
 
-export function EquipmentSelector({ onSelect, onClose, selectedIds = [] }: EquipmentSelectorProps) {
+export function EquipmentSelector({
+  onSelect,
+  onClose,
+  selectedIds = [],
+  showModifications = true
+}: EquipmentSelectorProps) {
   const [equipment, setEquipment] = useState<EquipmentItem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,7 +91,7 @@ export function EquipmentSelector({ onSelect, onClose, selectedIds = [] }: Equip
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
         <div className="bg-gray-900 rounded-lg p-8 max-w-md text-center">
           <div className="text-gray-400">Загрузка...</div>
         </div>
@@ -94,7 +100,7 @@ export function EquipmentSelector({ onSelect, onClose, selectedIds = [] }: Equip
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
       <div className="bg-gray-900 rounded-lg border border-gray-700 w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-gray-700">
           <h2 className="text-xl font-bold text-white">Выбрать оборудование</h2>
@@ -169,40 +175,42 @@ export function EquipmentSelector({ onSelect, onClose, selectedIds = [] }: Equip
         <div className="border-t border-gray-700 p-6 bg-gray-800/50">
           {selectedEquipment ? (
             <div className="space-y-4">
-              {loadingModifications ? (
-                <div className="text-center py-3 text-gray-400 text-sm">
-                  Загрузка модификаций...
-                </div>
-              ) : modifications.length > 0 ? (
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Модификация
-                    <span className="ml-2 text-xs text-cyan-400">({modifications.length} доступно)</span>
-                  </label>
-                  <select
-                    value={selectedModification || ''}
-                    onChange={(e) => {
-                      const value = e.target.value || null;
-                      console.log('Selected modification changed:', value);
-                      setSelectedModification(value);
-                    }}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-cyan-500"
-                  >
-                    <option value="">Без модификации (базовая комплектация)</option>
-                    {modifications.map(mod => (
-                      <option key={mod.id} value={mod.id}>
-                        {mod.name}{mod.description ? ` - ${mod.description}` : ''}
-                      </option>
-                    ))}
-                  </select>
-                  {selectedModification && (
-                    <p className="text-xs text-cyan-400 mt-2 flex items-start gap-2">
-                      <span>ℹ️</span>
-                      <span>Компоненты выбранной модификации будут автоматически добавлены в складскую спецификацию</span>
-                    </p>
-                  )}
-                </div>
-              ) : null}
+              {showModifications && (
+                loadingModifications ? (
+                  <div className="text-center py-3 text-gray-400 text-sm">
+                    Загрузка модификаций...
+                  </div>
+                ) : modifications.length > 0 ? (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Модификация
+                      <span className="ml-2 text-xs text-cyan-400">({modifications.length} доступно)</span>
+                    </label>
+                    <select
+                      value={selectedModification || ''}
+                      onChange={(e) => {
+                        const value = e.target.value || null;
+                        console.log('Selected modification changed:', value);
+                        setSelectedModification(value);
+                      }}
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                    >
+                      <option value="">Без модификации (базовая комплектация)</option>
+                      {modifications.map(mod => (
+                        <option key={mod.id} value={mod.id}>
+                          {mod.name}{mod.description ? ` - ${mod.description}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedModification && (
+                      <p className="text-xs text-cyan-400 mt-2 flex items-start gap-2">
+                        <span>ℹ️</span>
+                        <span>Компоненты выбранной модификации будут автоматически добавлены в складскую спецификацию</span>
+                      </p>
+                    )}
+                  </div>
+                ) : null
+              )}
               <div className="flex items-center gap-4">
                 <div className="flex-1">
                   <label className="block text-sm text-gray-300 mb-2">Количество</label>
