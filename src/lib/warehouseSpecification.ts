@@ -234,9 +234,10 @@ export async function getOtherItems(eventId: string): Promise<OtherItem[]> {
 }
 
 export async function createOtherItem(item: Omit<OtherItem, 'id' | 'created_at' | 'updated_at'>): Promise<OtherItem> {
+  const { picked, ...insertItem } = item;
   const { data, error } = await supabase
     .from('warehouse_specification_other')
-    .insert(item)
+    .insert(insertItem)
     .select()
     .single();
 
