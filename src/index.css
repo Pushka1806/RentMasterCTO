@@ -12,29 +12,47 @@
   .custom-scrollbar {
     overflow-y: auto;
     scrollbar-width: thin;
-    scrollbar-color: #4b5563 #1f2937;
+    scrollbar-color: #6b7280 #374151;
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: #1f2937;
-    border-radius: 4px;
+    background: #374151;
+    border-radius: 5px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #4b5563;
-    border-radius: 4px;
+    background: #6b7280;
+    border-radius: 5px;
+    border: 2px solid #374151;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #6b7280;
+    background: #9ca3af;
   }
 
   .custom-scrollbar::-webkit-scrollbar-corner {
-    background: #1f2937;
+    background: #374151;
+  }
+
+  /* Always show scrollbar for webkit browsers */
+  .custom-scrollbar-always::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+    display: block;
+  }
+
+  /* Stable scrollbar gutter to prevent layout shift */
+  .scrollbar-stable {
+    scrollbar-gutter: stable;
+  }
+
+  /* Force visible scrollbar area */
+  .scrollbar-visible::-webkit-scrollbar {
+    display: block !important;
   }
 }
