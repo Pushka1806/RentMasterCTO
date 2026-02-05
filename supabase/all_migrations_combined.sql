@@ -1,4 +1,28 @@
 /*
+  # RentMaster Complete Database Schema
+  
+  This file contains all migrations combined in chronological order.
+  Last updated: 2026-02-05
+  
+  ## Migration History:
+  - 2025-11-24: Core schema, users, equipment
+  - 2025-11-27: Events, budget items
+  - 2025-11-30: Personnel, work items, payments
+  - 2025-12-01: Categories
+  - 2026-01-06: Equipment compositions
+  - 2026-01-07: Payments system
+  - 2026-01-12: Templates
+  - 2026-01-27: Warehouse specification, equipment modifications
+  - 2026-02-03: Warehouse other items
+  - 2026-02-04: Picked field for warehouse specification
+  - 2026-02-05: Picked field for budget items, specification confirmation
+*/
+
+-- ============================================================================
+-- Migration: 20251124164911_create_core_schema.sql
+-- ============================================================================
+
+/*
   # RentMaster Core Schema - Initial Setup
 
   ## Overview
@@ -512,6 +536,12 @@ CREATE INDEX IF NOT EXISTS idx_inventory_rfid ON inventory_units(rfid_tag);
 CREATE INDEX IF NOT EXISTS idx_events_date ON events(event_date);
 CREATE INDEX IF NOT EXISTS idx_estimates_number ON estimates(estimate_number);
 CREATE INDEX IF NOT EXISTS idx_estimates_active ON estimates(is_active);
+
+
+-- ============================================================================
+-- Migration: 20251124172359_fix_users_rls_policy.sql
+-- ============================================================================
+
 /*
   # Исправление политики RLS для регистрации пользователей
 
@@ -560,6 +590,12 @@ CREATE POLICY "Users can update own profile"
   TO authenticated
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
+
+
+-- ============================================================================
+-- Migration: 20251124174505_fix_rls_infinite_recursion.sql
+-- ============================================================================
+
 /*
   # Fix RLS Infinite Recursion in Users Table
 
@@ -592,6 +628,12 @@ DROP POLICY IF EXISTS "Admins can update users" ON users;
 
 -- For admin operations, we'll use service role or edge functions
 -- This avoids the recursion problem entirely
+
+
+-- ============================================================================
+-- Migration: 20251124174734_create_equipment_schema.sql
+-- ============================================================================
+
 /*
   # Create Equipment Management Schema
 
@@ -725,6 +767,12 @@ INSERT INTO equipment_categories (name, description) VALUES
   ('Сцена', 'Сценические конструкции: подиумы, декорации'),
   ('Прочее', 'Другое оборудование')
 ON CONFLICT DO NOTHING;
+
+
+-- ============================================================================
+-- Migration: 20251124222357_update_equipment_schema_for_csv.sql
+-- ============================================================================
+
 /*
   # Update Equipment Schema to Match CSV Structure
 
@@ -810,6 +858,12 @@ CREATE POLICY "Authenticated users can delete equipment"
   ON equipment_items FOR DELETE
   TO authenticated
   USING (true);
+
+
+-- ============================================================================
+-- Migration: 20251127131804_update_events_schema_for_requirements.sql
+-- ============================================================================
+
 /*
   # Update Events Management Schema
 
@@ -997,6 +1051,12 @@ END $$;
 -- Create indexes for events
 CREATE INDEX IF NOT EXISTS idx_events_event_type ON events(event_type);
 CREATE INDEX IF NOT EXISTS idx_events_organizer_id ON events(organizer_id);
+
+
+-- ============================================================================
+-- Migration: 20251127203603_remove_load_dates_from_events.sql
+-- ============================================================================
+
 /*
   # Remove load_in_date and load_out_date from events table
 
@@ -1012,6 +1072,12 @@ CREATE INDEX IF NOT EXISTS idx_events_organizer_id ON events(organizer_id);
 -- Remove the load dates columns
 ALTER TABLE events DROP COLUMN IF EXISTS load_in_date;
 ALTER TABLE events DROP COLUMN IF EXISTS load_out_date;
+
+
+-- ============================================================================
+-- Migration: 20251127204345_update_events_status_to_russian.sql
+-- ============================================================================
+
 /*
   # Update events status constraint to use Russian values
 
@@ -1036,6 +1102,12 @@ ALTER TABLE events ADD CONSTRAINT events_status_check
 -- Add new constraint with Russian event type values
 ALTER TABLE events ADD CONSTRAINT events_event_type_check 
   CHECK (event_type IN ('Концерт', 'Свадьба', 'Семинар', 'Выставка', 'Встреча', 'Фестиваль'));
+
+
+-- ============================================================================
+-- Migration: 20251127205419_create_budget_items_schema.sql
+-- ============================================================================
+
 /*
   # Create budget items schema
 
@@ -1119,6 +1191,12 @@ CREATE POLICY "Users can delete budget items for events"
   ON budget_items FOR DELETE
   TO authenticated
   USING (true);
+
+
+-- ============================================================================
+-- Migration: 20251127205602_fix_budget_items_equipment_reference.sql
+-- ============================================================================
+
 /*
   # Fix budget_items to reference equipment_items table
 
@@ -1139,6 +1217,12 @@ ALTER TABLE budget_items
   FOREIGN KEY (equipment_id) 
   REFERENCES equipment_items(id) 
   ON DELETE RESTRICT;
+
+
+-- ============================================================================
+-- Migration: 20251127214850_add_exchange_rate_to_budget_items.sql
+-- ============================================================================
+
 /*
   # Add exchange rate to budget items
 
@@ -1161,6 +1245,12 @@ BEGIN
     ALTER TABLE budget_items ADD COLUMN exchange_rate decimal(10,2) NOT NULL DEFAULT 3.00 CHECK (exchange_rate > 0);
   END IF;
 END $$;
+
+
+-- ============================================================================
+-- Migration: 20251130201008_create_personnel_schema.sql
+-- ============================================================================
+
 /*
   # Create Personnel Schema
 
@@ -1219,6 +1309,12 @@ CREATE POLICY "Users can delete own personnel"
   USING (auth.uid() = user_id);
 
 CREATE INDEX IF NOT EXISTS idx_personnel_user_id ON personnel(user_id);
+
+
+-- ============================================================================
+-- Migration: 20251130201025_create_work_items_schema.sql
+-- ============================================================================
+
 /*
   # Create Work Items Schema
 
@@ -1267,6 +1363,12 @@ CREATE POLICY "Users can delete own work items"
   USING (auth.uid() = user_id);
 
 CREATE INDEX IF NOT EXISTS idx_work_items_user_id ON work_items(user_id);
+
+
+-- ============================================================================
+-- Migration: 20251130201115_update_budget_items_for_work_and_personnel.sql
+-- ============================================================================
+
 /*
   # Update Budget Items for Work and Personnel
 
@@ -1337,6 +1439,12 @@ CREATE POLICY "Users can delete budget item personnel"
 CREATE INDEX IF NOT EXISTS idx_budget_item_personnel_budget_item ON budget_item_personnel(budget_item_id);
 CREATE INDEX IF NOT EXISTS idx_budget_item_personnel_personnel ON budget_item_personnel(personnel_id);
 CREATE INDEX IF NOT EXISTS idx_budget_items_work_item ON budget_items(work_item_id);
+
+
+-- ============================================================================
+-- Migration: 20251130202632_add_unique_constraint_to_work_items.sql
+-- ============================================================================
+
 /*
   # Add Unique Constraint to Work Items
 
@@ -1354,6 +1462,12 @@ BEGIN
     ALTER TABLE work_items ADD CONSTRAINT work_items_name_user_id_key UNIQUE (name, user_id);
   END IF;
 END $$;
+
+
+-- ============================================================================
+-- Migration: 20251130203151_fix_budget_items_nullable_fields.sql
+-- ============================================================================
+
 /*
   # Fix Budget Items Nullable Fields
 
@@ -1380,6 +1494,12 @@ BEGIN
     );
   END IF;
 END $$;
+
+
+-- ============================================================================
+-- Migration: 20251201115703_create_categories_table.sql
+-- ============================================================================
+
 /*
   # Create Categories Table
 
@@ -1455,6 +1575,12 @@ INSERT INTO categories (name, description) VALUES
   ('Работы', 'Различные виды работ'),
   ('Оборудование для выездной регистрации и вечерней церемонии', 'Оборудование для выездных мероприятий')
 ON CONFLICT (name) DO NOTHING;
+
+
+-- ============================================================================
+-- Migration: 20251201120501_add_category_to_budget_items.sql
+-- ============================================================================
+
 /*
   # Add Category to Budget Items
 
@@ -1490,6 +1616,12 @@ END $$;
 -- Create index for better query performance
 CREATE INDEX IF NOT EXISTS idx_budget_items_category_id ON budget_items(category_id);
 CREATE INDEX IF NOT EXISTS idx_budget_items_sort_order ON budget_items(sort_order);
+
+
+-- ============================================================================
+-- Migration: 20260106151652_add_equipment_type_fields.sql
+-- ============================================================================
+
 /*
   # Add Equipment Type Fields
 
@@ -1544,7 +1676,13 @@ BEGIN
   ) THEN
     ALTER TABLE equipment ADD COLUMN has_composition boolean DEFAULT false;
   END IF;
-END $$;/*
+END $$;
+
+-- ============================================================================
+-- Migration: 20260106153030_add_equipment_items_type_fields.sql
+-- ============================================================================
+
+/*
   # Add Equipment Items Type Fields
 
   1. Changes
@@ -1598,7 +1736,13 @@ BEGIN
   ) THEN
     ALTER TABLE equipment_items ADD COLUMN has_composition boolean DEFAULT false;
   END IF;
-END $$;/*
+END $$;
+
+-- ============================================================================
+-- Migration: 20260106201111_create_equipment_compositions_table.sql
+-- ============================================================================
+
+/*
   # Create Equipment Compositions Table
 
   1. New Tables
@@ -1659,7 +1803,13 @@ CREATE POLICY "Authenticated users can update compositions"
 CREATE POLICY "Authenticated users can delete compositions"
   ON equipment_compositions FOR DELETE
   TO authenticated
-  USING (true);/*
+  USING (true);
+
+-- ============================================================================
+-- Migration: 20260106211732_add_sort_order_to_categories_and_budget_items.sql
+-- ============================================================================
+
+/*
   # Add Sort Order Fields
 
   1. Changes
@@ -1696,7 +1846,13 @@ END $$;
 
 -- Create index for faster sorting
 CREATE INDEX IF NOT EXISTS idx_categories_sort_order ON categories(sort_order);
-CREATE INDEX IF NOT EXISTS idx_budget_items_sort_order ON budget_items(category_id, sort_order);/*
+CREATE INDEX IF NOT EXISTS idx_budget_items_sort_order ON budget_items(category_id, sort_order);
+
+-- ============================================================================
+-- Migration: 20260107090832_create_payments_schema.sql
+-- ============================================================================
+
+/*
   # Создание таблицы выплат
 
   1. Новые таблицы
@@ -1791,7 +1947,13 @@ DROP TRIGGER IF EXISTS payments_updated_at_trigger ON payments;
 CREATE TRIGGER payments_updated_at_trigger
   BEFORE UPDATE ON payments
   FOR EACH ROW
-  EXECUTE FUNCTION update_payments_updated_at();/*
+  EXECUTE FUNCTION update_payments_updated_at();
+
+-- ============================================================================
+-- Migration: 20260107091054_create_payment_trigger_for_budget_items.sql
+-- ============================================================================
+
+/*
   # Создание триггера для автоматического создания выплат
 
   1. Функция триггера
@@ -1851,7 +2013,13 @@ DROP TRIGGER IF EXISTS create_payment_on_budget_item_insert ON budget_items;
 CREATE TRIGGER create_payment_on_budget_item_insert
   AFTER INSERT ON budget_items
   FOR EACH ROW
-  EXECUTE FUNCTION create_payment_from_budget_item();/*
+  EXECUTE FUNCTION create_payment_from_budget_item();
+
+-- ============================================================================
+-- Migration: 20260107100751_fix_payment_trigger_for_personnel.sql
+-- ============================================================================
+
+/*
   # Исправление триггера создания выплат
 
   1. Проблема
@@ -1925,7 +2093,13 @@ DROP TRIGGER IF EXISTS create_payment_on_personnel_assignment ON budget_item_per
 CREATE TRIGGER create_payment_on_personnel_assignment
   AFTER INSERT ON budget_item_personnel
   FOR EACH ROW
-  EXECUTE FUNCTION create_payment_from_personnel_assignment();/*
+  EXECUTE FUNCTION create_payment_from_personnel_assignment();
+
+-- ============================================================================
+-- Migration: 20260107134222_fix_payment_trigger_total_rub.sql
+-- ============================================================================
+
+/*
   # Исправление триггера выплат - расчет total_rub
 
   1. Проблема
@@ -1991,7 +2165,13 @@ BEGIN
   
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;/*
+$$ LANGUAGE plpgsql;
+
+-- ============================================================================
+-- Migration: 20260107135033_fix_payment_trigger_event_date.sql
+-- ============================================================================
+
+/*
   # Исправление триггера выплат - использование правильного поля даты
 
   1. Проблема
@@ -2056,7 +2236,13 @@ BEGIN
   
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;/*
+$$ LANGUAGE plpgsql;
+
+-- ============================================================================
+-- Migration: 20260107194456_fix_personnel_rls_for_payments.sql
+-- ============================================================================
+
+/*
   # Исправление RLS политик для таблицы personnel
   
   1. Изменения
@@ -2078,6 +2264,12 @@ CREATE POLICY "Authenticated users can view all personnel"
   FOR SELECT
   TO authenticated
   USING (true);
+
+
+-- ============================================================================
+-- Migration: 20260107200131_fix_personnel_rls_for_payments.sql
+-- ============================================================================
+
 /*
   # Fix Personnel RLS for Payments Access
 
@@ -2091,6 +2283,12 @@ CREATE POLICY "Authenticated users can view all personnel"
   ON personnel FOR SELECT
   TO authenticated
   USING (true);
+
+
+-- ============================================================================
+-- Migration: 20260108202855_fix_payment_duplication_and_add_work_item_link.sql
+-- ============================================================================
+
 /*
   # Fix Payment Duplication and Add Work Item Link
 
@@ -2191,7 +2389,13 @@ DROP TRIGGER IF EXISTS create_payment_on_personnel_assignment ON budget_item_per
 CREATE TRIGGER create_payment_on_personnel_assignment
   AFTER INSERT ON budget_item_personnel
   FOR EACH ROW
-  EXECUTE FUNCTION create_payment_from_personnel_assignment();/*
+  EXECUTE FUNCTION create_payment_from_personnel_assignment();
+
+-- ============================================================================
+-- Migration: 20260112124516_create_templates_schema.sql
+-- ============================================================================
+
+/*
   # Create Templates Schema
 
   1. New Tables
@@ -2325,6 +2529,12 @@ CREATE POLICY "Users can delete items from their templates"
       AND templates.user_id = auth.uid()
     )
   );
+
+
+-- ============================================================================
+-- Migration: 20260112181320_add_price_to_template_items.sql
+-- ============================================================================
+
 /*
   # Add Price Field to Template Items
 
@@ -2354,6 +2564,12 @@ BEGIN
     ALTER TABLE template_items ADD COLUMN exchange_rate numeric DEFAULT 1;
   END IF;
 END $$;
+
+
+-- ============================================================================
+-- Migration: 20260127005511_create_warehouse_specification_items.sql
+-- ============================================================================
+
 /*
   # Create Warehouse Specification Items Schema
 
@@ -2462,6 +2678,12 @@ CREATE POLICY "Authenticated users can delete connectors"
   ON warehouse_specification_connectors FOR DELETE
   TO authenticated
   USING (true);
+
+
+-- ============================================================================
+-- Migration: 20260127013916_add_warehouse_role_to_users.sql
+-- ============================================================================
+
 /*
   # Add warehouse role to users table
   
@@ -2480,6 +2702,12 @@ ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_role_check;
 -- Add new constraint with warehouse role
 ALTER TABLE public.users ADD CONSTRAINT users_role_check 
   CHECK (role = ANY (ARRAY['superuser'::text, 'admin'::text, 'clerk'::text, 'staff'::text, 'warehouse'::text]));
+
+
+-- ============================================================================
+-- Migration: 20260127160147_20260127_create_equipment_modifications.sql
+-- ============================================================================
+
 /*
   # Create equipment modifications system
 
@@ -2602,6 +2830,12 @@ CREATE POLICY "Admin can delete modification components"
 CREATE INDEX IF NOT EXISTS equipment_modifications_equipment_id_idx ON equipment_modifications(equipment_id);
 CREATE INDEX IF NOT EXISTS modification_components_modification_id_idx ON modification_components(modification_id);
 CREATE INDEX IF NOT EXISTS modification_components_component_id_idx ON modification_components(component_equipment_id);
+
+
+-- ============================================================================
+-- Migration: 20260127160158_20260127_add_modification_to_budget_items.sql
+-- ============================================================================
+
 /*
   # Add modification_id to budget_items
 
@@ -2624,6 +2858,12 @@ BEGIN
     CREATE INDEX budget_items_modification_id_idx ON budget_items(modification_id);
   END IF;
 END $$;
+
+
+-- ============================================================================
+-- Migration: 20260127160436_20260127_create_screen_with_modifications_example.sql
+-- ============================================================================
+
 /*
   # Create example screen equipment with modifications
 
@@ -2669,6 +2909,12 @@ ON CONFLICT DO NOTHING;
 -- If the modifications were created, add their components
 -- This is a simplified example - in reality you would add actual components
 -- For now, we just create the modification structure
+
+
+-- ============================================================================
+-- Migration: 20260127160446_20260127_add_suspension_modification_example.sql
+-- ============================================================================
+
 /*
   # Add suspension modification to screen
 
@@ -2686,6 +2932,12 @@ WHERE NOT EXISTS (
   WHERE equipment_id = screen.id AND name = 'В подвесе'
 )
 ON CONFLICT DO NOTHING;
+
+
+-- ============================================================================
+-- Migration: 20260127161456_20260127_add_screen_stands_components.sql
+-- ============================================================================
+
 /*
   # Add components for stand modification
   
@@ -2711,6 +2963,12 @@ WHERE NOT EXISTS (
   WHERE modification_id = ms.id AND component_equipment_id = ts.id
 )
 ON CONFLICT DO NOTHING;
+
+
+-- ============================================================================
+-- Migration: 20260127161505_20260127_add_screen_suspend_components.sql
+-- ============================================================================
+
 /*
   # Add components for suspension modification
   
@@ -2749,6 +3007,12 @@ WHERE NOT EXISTS (
   SELECT 1 FROM modification_components
   WHERE modification_id = ms.id AND component_equipment_id = r.id
 );
+
+
+-- ============================================================================
+-- Migration: 20260127174846_fix_equipment_modifications_rls.sql
+-- ============================================================================
+
 /*
   # Fix RLS policies for equipment modifications
 
@@ -2815,7 +3079,13 @@ CREATE POLICY "Admin can update modification components"
 CREATE POLICY "Admin can delete modification components"
   ON modification_components FOR DELETE
   TO authenticated
-  USING (is_admin_or_superuser());/*
+  USING (is_admin_or_superuser());
+
+-- ============================================================================
+-- Migration: 20260203110031_20260203_add_warehouse_other_items.sql
+-- ============================================================================
+
+/*
   # Add warehouse specification other items table
 
   1. Create warehouse_specification_other table
@@ -2859,27 +3129,11 @@ CREATE POLICY "Authenticated users can manage other items"
   WITH CHECK (true);
 
 CREATE INDEX IF NOT EXISTS idx_warehouse_other_event_id ON warehouse_specification_other(event_id);
-CREATE INDEX IF NOT EXISTS idx_warehouse_other_category ON warehouse_specification_other(category);/*
-  # Add picked field to warehouse specification cables and connectors
+CREATE INDEX IF NOT EXISTS idx_warehouse_other_category ON warehouse_specification_other(category);
 
-  1. Add picked boolean field to warehouse_specification_cables table
-  2. Add picked boolean field to warehouse_specification_connectors table
-  3. Set default value to false for existing records
-*/
-
--- Add picked field to warehouse_specification_cables table
-ALTER TABLE warehouse_specification_cables 
-ADD COLUMN IF NOT EXISTS picked boolean DEFAULT false;
-
--- Add picked field to warehouse_specification_connectors table  
-ALTER TABLE warehouse_specification_connectors
-ADD COLUMN IF NOT EXISTS picked boolean DEFAULT false;
-
--- Update existing records to have picked = false
-UPDATE warehouse_specification_cables SET picked = false WHERE picked IS NULL;
-UPDATE warehouse_specification_connectors SET picked = false WHERE picked IS NULL;
-/*
-  # Add picked field to warehouse specification cables and connectors
+-- ============================================================================
+-- Migration: 20260204120000_add_picked_field_to_warehouse_specification.sql
+-- ============================================================================
 
 /*
   # Add picked field to warehouse specification cables and connectors
@@ -2900,3 +3154,53 @@ ADD COLUMN IF NOT EXISTS picked boolean DEFAULT false;
 -- Update existing records to have picked = false
 UPDATE warehouse_specification_cables SET picked = false WHERE picked IS NULL;
 UPDATE warehouse_specification_connectors SET picked = false WHERE picked IS NULL;
+
+-- ============================================================================
+-- Migration: 20260205120000_add_picked_to_budget_items.sql
+-- ============================================================================
+
+/*
+  # Add picked field to budget_items
+
+  1. Add picked boolean field to budget_items table
+  2. Set default value to false for existing records
+*/
+
+ALTER TABLE budget_items
+ADD COLUMN IF NOT EXISTS picked boolean DEFAULT false;
+
+UPDATE budget_items SET picked = false WHERE picked IS NULL;
+
+
+-- ============================================================================
+-- Migration: 20260205130000_add_specification_confirmed_to_events.sql
+-- ============================================================================
+
+/*
+  # Add specification confirmation fields to events
+  
+  1. Changes
+    - Add specification_confirmed boolean field (default false)
+    - Add specification_confirmed_at timestamp field
+    - Add specification_confirmed_by uuid field (references auth.users)
+  
+  2. Purpose
+    - Track when warehouse staff confirms they have collected all items
+    - Record who confirmed the specification
+    - Record when the confirmation happened
+*/
+
+-- Add specification confirmation fields to events table
+ALTER TABLE events 
+ADD COLUMN IF NOT EXISTS specification_confirmed boolean DEFAULT false;
+
+ALTER TABLE events 
+ADD COLUMN IF NOT EXISTS specification_confirmed_at timestamptz;
+
+ALTER TABLE events 
+ADD COLUMN IF NOT EXISTS specification_confirmed_by uuid REFERENCES auth.users(id);
+
+-- Update existing records to have specification_confirmed = false
+UPDATE events SET specification_confirmed = false WHERE specification_confirmed IS NULL;
+
+
