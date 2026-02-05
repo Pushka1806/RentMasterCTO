@@ -84,17 +84,19 @@ export function CategoryBlock({
         }`}
         onClick={onSelect}
       >
-        <div
-          draggable
-          onDragStart={(e) => {
-            e.stopPropagation();
-            onDragStart?.(e, 'category', categoryId);
-          }}
-          className="text-gray-500 hover:text-gray-400 cursor-move"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <GripVertical className="w-3 h-3" />
-        </div>
+        {categoryId !== 'uncategorized' && (
+          <div
+            draggable
+            onDragStart={(e) => {
+              e.stopPropagation();
+              onDragStart?.(e, 'category', categoryId);
+            }}
+            className="text-gray-500 hover:text-gray-400 cursor-move"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="w-3 h-3" />
+          </div>
+        )}
 
         <button
           type="button"
@@ -161,16 +163,18 @@ export function CategoryBlock({
                 <Users className="w-3 h-3" />
               </button>
             )}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsEditingName(true);
-              }}
-              className="text-gray-500 hover:text-gray-400 transition-colors"
-            >
-              <Edit2 className="w-2.5 h-2.5" />
-            </button>
+            {categoryId !== 'uncategorized' && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsEditingName(true);
+                }}
+                className="text-gray-500 hover:text-gray-400 transition-colors"
+              >
+                <Edit2 className="w-2.5 h-2.5" />
+              </button>
+            )}
           </>
         )}
 
