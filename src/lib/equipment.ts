@@ -217,7 +217,13 @@ export async function importWorkItemsFromCSV(csvText: string): Promise<number> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const itemsWithUser = items.map(item => ({
+  // Deduplicate items by name, keeping the last occurrence
+  const uniqueItems = new Map<string, { name: string; unit: string }>();
+  for (const item of items) {
+    uniqueItems.set(item.name, item);
+  }
+
+  const itemsWithUser = Array.from(uniqueItems.values()).map(item => ({
     ...item,
     user_id: user.id
   }));
@@ -227,7 +233,7 @@ export async function importWorkItemsFromCSV(csvText: string): Promise<number> {
     .upsert(itemsWithUser, { onConflict: 'name,user_id', ignoreDuplicates: false });
 
   if (error) throw error;
-  return items.length;
+  return itemsWithUser.length;
 }
 
 export async function importEquipmentFromCSV(csvText: string): Promise<number> {
