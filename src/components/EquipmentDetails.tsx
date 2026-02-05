@@ -304,12 +304,6 @@ export function EquipmentDetails({ item, onClose }: EquipmentDetailsProps) {
                 )}
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">
-                    Атрибут
-                  </label>
-                  <div className="text-white">{item.attribute || '-'}</div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">
                     Количество
                   </label>
                   <div className="text-white font-semibold">{item.quantity}</div>
