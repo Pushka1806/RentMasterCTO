@@ -584,6 +584,31 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                       </div>
                     );
                   })}
+                  {/* Uncategorized items block */}
+                  {groupedItems['uncategorized'] && groupedItems['uncategorized'].length > 0 && (
+                    <div
+                      className={`transition-all duration-200 ${dragOverTarget === 'uncategorized' ? 'ring-2 ring-cyan-500 bg-cyan-500/5 rounded-xl p-0.5' : ''}`}
+                    >
+                      <CategoryBlock
+                        categoryId="uncategorized"
+                        categoryName="Без категории"
+                        items={groupedItems['uncategorized']}
+                        isExpanded={expandedCategories['uncategorized'] || false}
+                        isSelected={selectedCategoryId === 'uncategorized'}
+                        onToggleExpand={() => setExpandedCategories(prev => ({ ...prev, ['uncategorized']: !prev['uncategorized'] }))}
+                        onSelect={() => setSelectedCategoryId(selectedCategoryId === 'uncategorized' ? null : 'uncategorized')}
+                        onUpdateCategoryName={() => {}}
+                        onUpdateItem={handleUpdateItem}
+                        onDeleteItem={handleDeleteItem}
+                        onManagePersonnel={handleOpenWorkPersonnelManager}
+                        showInBYN={showInBYN}
+                        exchangeRate={exchangeRate}
+                        onDragStart={handleDragStart}
+                        onDragOver={(e) => handleDragOver(e, 'uncategorized')}
+                        onDrop={(e) => handleDrop(e, 'uncategorized')}
+                      />
+                    </div>
+                  )}
                 </>
               )}
             </div>
