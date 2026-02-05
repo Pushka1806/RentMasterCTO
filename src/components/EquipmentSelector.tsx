@@ -150,9 +150,6 @@ export function EquipmentSelector({ onSelect, onClose, selectedIds = [] }: Equip
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="font-medium text-white">{item.name}</div>
-                      <div className="text-sm text-gray-400">
-                        {item.category} {item.type ? `/ ${item.type}` : ''}
-                      </div>
                       {item.rental_price && (
                         <div className="text-sm text-cyan-400 mt-1">
                           Цена: {item.rental_price} руб.

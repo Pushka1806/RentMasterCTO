@@ -661,37 +661,11 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <p className="text-xs font-medium text-gray-200 truncate group-hover:text-white">{item.name}</p>
-                          {item.sku && (
-                            <span className="text-[10px] font-mono text-gray-600 bg-gray-800 px-1.5 py-0.5 rounded">{item.sku}</span>
-                          )}
                         </div>
-                        <div className="flex items-center gap-3 mt-0.5">
-                          <p className="text-[10px] text-gray-500">{item.category}</p>
-                          {item.subtype && (
-                            <>
-                              <span className="text-gray-700">•</span>
-                              <p className="text-[10px] text-gray-500">{item.subtype}</p>
-                            </>
-                          )}
-                          {item.power && (
-                            <>
-                              <span className="text-gray-700">•</span>
-                              <p className="text-[10px] text-gray-500">{item.power}</p>
-                            </>
-                          )}
-                          <span className="text-gray-700">•</span>
-                          <p className="text-[10px] text-gray-500">В наличии: {item.quantity}</p>
-                        </div>
-                        {item.note && (
-                          <p className="text-[10px] text-gray-600 truncate mt-0.5">{item.note}</p>
-                        )}
                       </div>
                       <div className="flex items-center gap-3 ml-3">
                         <div className="text-right">
                           <p className="text-xs font-mono text-cyan-500 font-bold">${item.rental_price}</p>
-                          {item.attribute && (
-                            <p className="text-[9px] text-gray-500">{item.attribute}</p>
-                          )}
                         </div>
                         <div className="p-1 bg-gray-800 rounded-md group-hover:bg-cyan-600 group-hover:text-white text-gray-500 transition-all">
                           <Plus className="w-3.5 h-3.5" />
