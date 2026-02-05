@@ -519,7 +519,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
               {/* Budget list */}
               <div
                 ref={budgetListRef}
-                className="flex-1 overflow-y-auto p-2 pr-3 space-y-1 min-h-0 custom-scrollbar scrollbar-stable"
+                className="flex-1 overflow-y-scroll p-2 pr-3 space-y-1 min-h-0 custom-scrollbar custom-scrollbar-always scrollbar-stable"
                 style={{ scrollbarGutter: 'stable' }}
               >
                 {budgetItems.length === 0 && activeCategoryIds.size === 0 ? (
@@ -669,7 +669,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
 
               {/* Items list - compact */}
               <div 
-                className="flex-1 overflow-y-auto min-h-0 custom-scrollbar scrollbar-stable pr-1"
+                className="flex-1 overflow-y-scroll min-h-0 custom-scrollbar custom-scrollbar-always scrollbar-stable pr-1"
                 style={{ scrollbarGutter: 'stable' }}
               >
                 {selectedItemType === 'Оборудование' ? (
