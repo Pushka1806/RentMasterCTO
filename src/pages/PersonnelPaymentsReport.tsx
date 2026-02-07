@@ -102,19 +102,19 @@ export default function PersonnelPaymentsReport() {
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-2 bg-gray-800/50 rounded-lg border border-gray-700 text-sm mb-4">
             <div className="flex items-center gap-2">
               <span className="text-gray-400">Всего:</span>
-              <span className="font-bold text-white">{totalAmount.toLocaleString('ru-RU')} ₽</span>
+              <span className="font-bold text-white">{totalAmount.toLocaleString('ru-RU')} BYN</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-gray-400">Выплачено:</span>
-              <span className="font-bold text-green-400">{paidAmount.toLocaleString('ru-RU')} ₽</span>
+              <span className="font-bold text-green-400">{paidAmount.toLocaleString('ru-RU')} BYN</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-gray-400">Запланировано:</span>
-              <span className="font-bold text-blue-400">{plannedAmount.toLocaleString('ru-RU')} ₽</span>
+              <span className="font-bold text-blue-400">{plannedAmount.toLocaleString('ru-RU')} BYN</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-gray-400">Просрочено:</span>
-              <span className="font-bold text-red-400">{overdueAmount.toLocaleString('ru-RU')} ₽</span>
+              <span className="font-bold text-red-400">{overdueAmount.toLocaleString('ru-RU')} BYN</span>
             </div>
           </div>
         )}
@@ -148,7 +148,7 @@ export default function PersonnelPaymentsReport() {
                     <div className="flex justify-between items-center">
                       <h3 className="font-semibold text-white text-sm uppercase tracking-wider">{monthName}</h3>
                       <p className="font-bold text-white">
-                        {monthTotal.toLocaleString('ru-RU')} ₽
+                        {monthTotal.toLocaleString('ru-RU')} BYN
                       </p>
                     </div>
                   </div>
@@ -174,7 +174,7 @@ export default function PersonnelPaymentsReport() {
                               {payment.work_item?.name || '—'}
                             </td>
                             <td className="px-4 py-2 text-right font-medium text-white">
-                              {Number(payment.amount).toLocaleString('ru-RU')} ₽
+                              {Number(payment.amount).toLocaleString('ru-RU')} BYN
                             </td>
                             <td className="px-4 py-2 text-center">
                               <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium border ${
