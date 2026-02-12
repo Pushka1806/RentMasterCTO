@@ -39,6 +39,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [draggedItem, setDraggedItem] = useState<{ type: 'category' | 'item'; id: string } | null>(null);
   const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
+  const [dragOverItemId, setDragOverItemId] = useState<string | null>(null);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [activeCategoryIds, setActiveCategoryIds] = useState<Set<string>>(new Set());
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -338,12 +339,14 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
     setDragOverTarget(targetCategoryId);
+    setDragOverItemId(null);
   };
 
   const handleDrop = async (e: React.DragEvent, targetCategoryId: string) => {
     e.preventDefault();
     e.stopPropagation();
     setDragOverTarget(null);
+    setDragOverItemId(null);
 
     if (!draggedItem) return;
 
@@ -368,6 +371,66 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
           }
         }
       }
+    }
+
+    setDraggedItem(null);
+  };
+
+  const handleDragOverItem = (e: React.DragEvent, itemId: string) => {
+    if (draggedItem?.type === 'item') {
+      setDragOverItemId(itemId);
+    }
+  };
+
+  const handleDropOnItem = async (e: React.DragEvent, targetItemId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverItemId(null);
+
+    if (!draggedItem || draggedItem.type !== 'item') return;
+
+    const sourceItemId = draggedItem.id;
+    if (sourceItemId === targetItemId) return;
+
+    const sourceItem = budgetItems.find(item => item.id === sourceItemId);
+    const targetItem = budgetItems.find(item => item.id === targetItemId);
+
+    if (!sourceItem || !targetItem) return;
+
+    const sourceCategoryId = sourceItem.category_id || 'uncategorized';
+    const targetCategoryId = targetItem.category_id || 'uncategorized';
+
+    // Create a working copy with the source item moved to the target category if needed
+    let workingItems = [...budgetItems];
+    if (sourceCategoryId !== targetCategoryId) {
+      await updateBudgetItem(sourceItemId, { category_id: targetItem.category_id });
+      workingItems = budgetItems.map(item =>
+        item.id === sourceItemId ? { ...item, category_id: targetItem.category_id } : item
+      );
+    }
+
+    const categoryItems = workingItems
+      .filter(item => (item.category_id || 'uncategorized') === targetCategoryId)
+      .sort((a, b) => a.sort_order - b.sort_order);
+
+    const sourceIndex = categoryItems.findIndex(item => item.id === sourceItemId);
+    const targetIndex = categoryItems.findIndex(item => item.id === targetItemId);
+
+    if (sourceIndex !== -1 && targetIndex !== -1 && sourceIndex !== targetIndex) {
+      const newOrder = [...categoryItems];
+      const [movedItem] = newOrder.splice(sourceIndex, 1);
+      newOrder.splice(targetIndex, 0, movedItem);
+
+      for (let i = 0; i < newOrder.length; i++) {
+        await updateBudgetItem(newOrder[i].id, { sort_order: i });
+      }
+
+      // Build the final array with items in correct order
+      const otherCategoryItems = workingItems.filter(
+        item => (item.category_id || 'uncategorized') !== targetCategoryId
+      );
+      const reorderedItems = otherCategoryItems.concat(newOrder);
+      setBudgetItems(reorderedItems);
     }
 
     setDraggedItem(null);
@@ -579,6 +642,9 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                           onDragStart={handleDragStart}
                           onDragOver={(e) => handleDragOver(e, category.id)}
                           onDrop={(e) => handleDrop(e, category.id)}
+                          onDragOverItem={handleDragOverItem}
+                          onDropOnItem={handleDropOnItem}
+                          dragOverItemId={dragOverItemId}
                           categoryRef={(el) => { categoryRefs.current[category.id] = el; }}
                         />
                       </div>
@@ -606,6 +672,9 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                         onDragStart={handleDragStart}
                         onDragOver={(e) => handleDragOver(e, 'uncategorized')}
                         onDrop={(e) => handleDrop(e, 'uncategorized')}
+                        onDragOverItem={handleDragOverItem}
+                        onDropOnItem={handleDropOnItem}
+                        dragOverItemId={dragOverItemId}
                       />
                     </div>
                   )}

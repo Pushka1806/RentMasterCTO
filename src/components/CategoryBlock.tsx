@@ -19,6 +19,9 @@ interface CategoryBlockProps {
   onDragStart?: (e: React.DragEvent, type: 'category' | 'item', id: string) => void;
   onDragOver?: (e: React.DragEvent, categoryId: string) => void;
   onDrop?: (e: React.DragEvent, categoryId: string) => void;
+  onDragOverItem?: (e: React.DragEvent, itemId: string) => void;
+  onDropOnItem?: (e: React.DragEvent, targetItemId: string) => void;
+  dragOverItemId?: string | null;
   categoryRef?: (el: HTMLDivElement | null) => void;
 }
 
@@ -39,6 +42,9 @@ export function CategoryBlock({
   onDragStart,
   onDragOver,
   onDrop,
+  onDragOverItem,
+  onDropOnItem,
+  dragOverItemId,
   categoryRef
 }: CategoryBlockProps) {
   const [isEditingName, setIsEditingName] = useState(false);
@@ -208,8 +214,18 @@ export function CategoryBlock({
               <div
                 key={item.id}
                 className="group"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDragOverItem?.(e, item.id);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDropOnItem?.(e, item.id);
+                }}
               >
-                <div className="flex items-center gap-0.5 px-1.5 py-0.5 hover:bg-gray-800 transition-colors border-b border-gray-800/50 last:border-b-0">
+                <div className={`flex items-center gap-0.5 px-1.5 py-0.5 hover:bg-gray-800 transition-colors border-b border-gray-800/50 last:border-b-0 ${dragOverItemId === item.id ? 'bg-cyan-500/10 border-cyan-500/50' : ''}`}>
                   <div
                     draggable
                     onDragStart={(e) => {
