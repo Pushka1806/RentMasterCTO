@@ -66,9 +66,13 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Update module quantities
+      // Update module quantities (delete if quantity is 0)
       for (const module of modules) {
-        await updateEquipmentComposition(module.id, module.quantity);
+        if (module.quantity <= 0) {
+          await deleteEquipmentComposition(module.id);
+        } else {
+          await updateEquipmentComposition(module.id, module.quantity);
+        }
       }
 
       // Find and add cases for modules
