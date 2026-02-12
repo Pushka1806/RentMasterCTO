@@ -12,6 +12,13 @@ interface LedSpecificationPanelProps {
 
 export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: LedSpecificationPanelProps) {
   const budgetItem = budgetItems.find(b => b.id === budgetItemId);
+  
+  console.log('LedSpecificationPanel props:', {
+    budgetItemId,
+    budgetItem,
+    budgetItemsCount: budgetItems.length
+  });
+  
   const [modules, setModules] = useState<EquipmentComposition[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -19,18 +26,26 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
   const [availableModules, setAvailableModules] = useState<EquipmentModule[]>([]);
   const [loadingModules, setLoadingModules] = useState(false);
   
-  // Determine screen type from equipment name
-  const screenType: 'P2.6' | 'P3.91' = budgetItem?.equipment?.name?.includes('P2') ? 'P2.6' : 'P3.91';
+  // Determine screen type from equipment name or notes
+  const equipmentName = budgetItem?.equipment?.name || '';
+  const notes = budgetItem?.notes || '';
+  const screenType: 'P2.6' | 'P3.91' = 
+    equipmentName.includes('P2,6') || equipmentName.includes('P2.6') || equipmentName.includes('P2') ||
+    notes.includes('P2,6') || notes.includes('P2.6') || notes.includes('P2')
+      ? 'P2.6' 
+      : 'P3.91';
   
   useEffect(() => {
     const loadModules = async () => {
-      if (!budgetItem?.equipmentId) {
+      if (!budgetItem?.equipment_id) {
         setLoading(false);
         return;
       }
       
+      console.log('Loading modules for equipment_id:', budgetItem.equipment_id);
       try {
-        const compositions = await getEquipmentCompositions(budgetItem.equipmentId);
+        const compositions = await getEquipmentCompositions(budgetItem.equipment_id);
+        console.log('Loaded compositions:', compositions);
         setModules(compositions);
       } catch (error) {
         console.error('Error loading modules:', error);
@@ -40,7 +55,7 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
     };
     
     loadModules();
-  }, [budgetItem?.equipmentId]);
+  }, [budgetItem?.equipment_id]);
 
   const handleQuantityChange = (moduleId: string, newQuantity: number) => {
     setModules(prev => prev.map(m => 
@@ -63,12 +78,12 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
   };
 
   const handleAddModule = async (moduleModule: EquipmentModule, quantity: number = 1) => {
-    if (!budgetItem?.equipmentId) return;
+    if (!budgetItem?.equipment_id) return;
     
     try {
-      const newCompositionId = await addEquipmentComposition(budgetItem.equipmentId, moduleModule.id, quantity);
+      const newCompositionId = await addEquipmentComposition(budgetItem.equipment_id, moduleModule.id, quantity);
       // Reload modules to get the new composition
-      const compositions = await getEquipmentCompositions(budgetItem.equipmentId);
+      const compositions = await getEquipmentCompositions(budgetItem.equipment_id);
       setModules(compositions);
       setShowAddModule(false);
     } catch (error) {
@@ -80,7 +95,18 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
     setLoadingModules(true);
     try {
       const modules = await getAvailableLedModules(screenType);
-      setAvailableModules(modules);
+      console.log('Found modules for screen type:', screenType, modules);
+      
+      // If no modules found, try to get all LED modules
+      let finalModules = modules;
+      if (modules.length === 0) {
+        console.log('No modules found, falling back to all LED modules');
+        const { getLedModules } = await import('../lib/equipmentCompositions');
+        finalModules = await getLedModules();
+        console.log('Fallback modules:', finalModules);
+      }
+      
+      setAvailableModules(finalModules);
     } catch (error) {
       console.error('Error loading available modules:', error);
     } finally {

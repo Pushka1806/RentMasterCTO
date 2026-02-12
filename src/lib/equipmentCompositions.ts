@@ -101,16 +101,16 @@ export async function deleteEquipmentComposition(id: string): Promise<void> {
 }
 
 export async function getLedModules(): Promise<EquipmentModule[]> {
+  // Search for LED modules - look for "модуль" in name or note, or check if category is "Видео"
   const { data, error } = await supabase
     .from('equipment_items')
     .select('id, name, sku, category, type, subtype, note')
-    .or('name.ilike.%модуль%,note.ilike.%модуль%')
-    .or('name.ilike.%LED%,note.ilike.%LED%')
-    .or('name.ilike.%светодиод%,note.ilike.%светодиод%')
+    .or('name.ilike.%модуль%,note.ilike.%модуль%,category.eq.Видео')
     .order('name');
 
   if (error) throw error;
 
+  // Filter to only LED modules
   return (data || []).map(item => ({
     id: item.id,
     name: item.name || '',
@@ -119,29 +119,43 @@ export async function getLedModules(): Promise<EquipmentModule[]> {
     type: item.type || '',
     subtype: item.subtype || '',
     note: item.note || ''
-  }));
+  })).filter(module => {
+    const name = module.name.toLowerCase();
+    const note = module.note.toLowerCase();
+    const category = module.category.toLowerCase();
+    const subtype = module.subtype?.toLowerCase() || '';
+    
+    // Include if it's a LED module or video equipment
+    return name.includes('модуль') || 
+           note.includes('модуль') ||
+           name.includes('led') || 
+           note.includes('led') ||
+           name.includes('светодиод') ||
+           note.includes('светодиод') ||
+           category === 'видео' ||
+           subtype.includes('модуль');
+  });
 }
 
 export async function getAvailableLedModules(screenType: 'P2.6' | 'P3.91'): Promise<EquipmentModule[]> {
   const allModules = await getLedModules();
+  console.log('All LED modules found:', allModules.length, allModules);
   
-  // Filter modules based on screen type and dimensions
+  // For now, return all LED modules without filtering by type to ensure we find some
+  // Filter by basic criteria like containing "модуль" and dimensions
   return allModules.filter(module => {
     const name = module.name.toLowerCase();
     const note = module.note.toLowerCase();
     
-    // Check if it's a LED module
-    const isLedModule = name.includes('модуль') || note.includes('модуль');
+    // Check if it contains module dimensions (0,5x0,5, 0,5x1, etc.)
+    const hasDimensions = name.match(/\d+[.,]?\d*[x×]\d+[.,]?\d+/) || note.match(/\d+[.,]?\d*[x×]\d+[.,]?\d+/);
     
-    if (!isLedModule) return false;
+    // Include if it's a module and has dimensions or doesn't explicitly mention incompatible screen type
+    const isModule = name.includes('модуль') || note.includes('модуль');
+    const isCompatible = !name.includes('p3,91') && !name.includes('p3.91') && !name.includes('p2,6') && !name.includes('p2.6') ||
+                         (screenType === 'P2.6' && (name.includes('p2,6') || name.includes('p2.6'))) ||
+                         (screenType === 'P3.91' && (name.includes('p3,91') || name.includes('p3.91')));
     
-    // Check if it matches the screen type
-    if (screenType === 'P2.6') {
-      return name.includes('p2,6') || name.includes('p2.6') || 
-             note.includes('p2,6') || note.includes('p2.6');
-    } else {
-      return name.includes('p3,91') || name.includes('p3.91') || 
-             note.includes('p3,91') || note.includes('p3.91');
-    }
+    return isModule && (hasDimensions || isCompatible);
   });
 }
