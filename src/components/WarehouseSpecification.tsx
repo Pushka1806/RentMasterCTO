@@ -100,6 +100,17 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
            notes.match(/\d+\s*м²/);
   };
 
+  const isLedScreenBudgetItem = (item: BudgetItem) => {
+    const category = item.equipment?.category || '';
+    const name = item.equipment?.name || '';
+    const notes = item.notes || '';
+    
+    return (category === 'Видео' && (name.includes('LED') || name.includes('Светодиодный экран') ||
+             name.includes('P2,6') || name.includes('P3,91'))) ||
+           notes.includes('м.кв.') || notes.includes('×') || notes.includes('x') ||
+           notes.match(/\d+\s*м²/);
+  };
+
   const hasModifications = (budgetItemId: string) => {
     // Check if modifications have been applied to this item
     if (itemsWithAppliedModifications.has(budgetItemId)) {
@@ -205,52 +216,69 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
             isFromComposition: false
           });
         } else {
-          // Virtual item - expand it into its components
-          // Check for composition
-          if (item.equipment_id) {
-            try {
-              const compositions = await getEquipmentCompositions(item.equipment_id);
-              for (const comp of compositions) {
-                items.push({
-                  budgetItemId: `${item.id}-comp-${comp.id}`,
-                  categoryId: item.category_id || null,
-                  name: comp.child_name || 'Unknown',
-                  sku: comp.child_sku || '',
-                  quantity: item.quantity * comp.quantity,
-                  unit: 'шт.',
-                  category: comp.child_category || 'Components',
-                  notes: item.notes || '',
-                  picked: item.picked_in_warehouse || false,
-                  isFromComposition: true,
-                  parentName: item.equipment?.name
-                });
+          // Virtual item - check if it's an LED screen
+          if (isLedScreenBudgetItem(item)) {
+            // LED screen: add as single item, don't expand
+            items.push({
+              budgetItemId: item.id,
+              categoryId: item.category_id || null,
+              name: item.equipment?.name || 'Unknown',
+              sku: item.equipment?.sku || '',
+              quantity: item.quantity,
+              unit: 'шт.',
+              category: item.equipment?.category || 'Other',
+              notes: item.notes || '',
+              picked: item.picked_in_warehouse || false,
+              isFromComposition: false
+            });
+          } else {
+            // Non-LED virtual item - expand it into its components
+            // Check for composition
+            if (item.equipment_id) {
+              try {
+                const compositions = await getEquipmentCompositions(item.equipment_id);
+                for (const comp of compositions) {
+                  items.push({
+                    budgetItemId: `${item.id}-comp-${comp.id}`,
+                    categoryId: item.category_id || null,
+                    name: comp.child_name || 'Unknown',
+                    sku: comp.child_sku || '',
+                    quantity: item.quantity * comp.quantity,
+                    unit: 'шт.',
+                    category: comp.child_category || 'Components',
+                    notes: item.notes || '',
+                    picked: item.picked_in_warehouse || false,
+                    isFromComposition: true,
+                    parentName: item.equipment?.name
+                  });
+                }
+              } catch (error) {
+                console.error('Error loading composition for', item.equipment?.name, ':', error);
               }
-            } catch (error) {
-              console.error('Error loading composition for', item.equipment?.name, ':', error);
             }
-          }
 
-          // Check for modifications
-          if (item.modification_id) {
-            try {
-              const components = await getModificationComponents(item.modification_id);
-              for (const component of components) {
-                items.push({
-                  budgetItemId: `${item.id}-mod-${component.id}`,
-                  categoryId: item.category_id || null,
-                  name: component.component?.name || 'Unknown',
-                  sku: component.component?.sku || '',
-                  quantity: item.quantity * component.quantity,
-                  unit: 'шт.',
-                  category: component.component?.category || 'Modification Components',
-                  notes: item.notes || '',
-                  picked: item.picked_in_warehouse || false,
-                  isFromComposition: true,
-                  parentName: item.equipment?.name
-                });
+            // Check for modifications
+            if (item.modification_id) {
+              try {
+                const components = await getModificationComponents(item.modification_id);
+                for (const component of components) {
+                  items.push({
+                    budgetItemId: `${item.id}-mod-${component.id}`,
+                    categoryId: item.category_id || null,
+                    name: component.component?.name || 'Unknown',
+                    sku: component.component?.sku || '',
+                    quantity: item.quantity * component.quantity,
+                    unit: 'шт.',
+                    category: component.component?.category || 'Modification Components',
+                    notes: item.notes || '',
+                    picked: item.picked_in_warehouse || false,
+                    isFromComposition: true,
+                    parentName: item.equipment?.name
+                  });
+                }
+              } catch (error) {
+                console.error('Error loading modification components:', error);
               }
-            } catch (error) {
-              console.error('Error loading modification components:', error);
             }
             }
             }
