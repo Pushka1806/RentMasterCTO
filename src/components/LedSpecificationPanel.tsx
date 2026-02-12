@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calculator } from 'lucide-react';
+import { X, Calculator, Plus, Minus, ChevronDown, ChevronRight } from 'lucide-react';
 import { BudgetItem } from '../lib/events';
+import { getEquipmentCompositions, updateEquipmentComposition, addEquipmentComposition, getAvailableLedModules } from '../lib/equipmentCompositions';
+import { EquipmentComposition, EquipmentModule } from '../lib/equipmentCompositions';
 
 interface LedSpecificationPanelProps {
   budgetItemId: string;
@@ -10,200 +12,257 @@ interface LedSpecificationPanelProps {
 
 export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: LedSpecificationPanelProps) {
   const budgetItem = budgetItems.find(b => b.id === budgetItemId);
-  const notes = budgetItem?.notes || '';
+  const [modules, setModules] = useState<EquipmentComposition[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showAddModule, setShowAddModule] = useState(false);
+  const [availableModules, setAvailableModules] = useState<EquipmentModule[]>([]);
+  const [loadingModules, setLoadingModules] = useState(false);
   
-  const [moduleType, setModuleType] = useState<'P2.6' | 'P3.91'>('P3.91');
-  const [moduleSize, setModuleSize] = useState({ width: 0.25, height: 0.25 });
-  const [targetArea, setTargetArea] = useState(0);
+  // Determine screen type from equipment name
+  const screenType: 'P2.6' | 'P3.91' = budgetItem?.equipment?.name?.includes('P2') ? 'P2.6' : 'P3.91';
   
   useEffect(() => {
-    if (notes) {
-      // Parse area from notes
-      const areaMatch = notes.match(/(\d+(?:\.\d+)?)\s*м\.кв\./);
-      if (areaMatch) {
-        setTargetArea(parseFloat(areaMatch[1]));
-      } else {
-        const dimMatch = notes.match(/(\d+(?:\.\d+)?)\s*[×x]\s*(\d+(?:\.\d+)?)/);
-        if (dimMatch) {
-          setTargetArea(parseFloat(dimMatch[1]) * parseFloat(dimMatch[2]));
-        }
+    const loadModules = async () => {
+      if (!budgetItem?.equipmentId) {
+        setLoading(false);
+        return;
       }
       
-      // Auto-detect module type from notes or equipment name
-      const name = budgetItem?.equipment?.name || '';
-      if (name.includes('P2,6') || name.includes('P2.6')) {
-        setModuleType('P2.6');
-      } else if (name.includes('P3,91') || name.includes('P3.91')) {
-        setModuleType('P3.91');
+      try {
+        const compositions = await getEquipmentCompositions(budgetItem.equipmentId);
+        setModules(compositions);
+      } catch (error) {
+        console.error('Error loading modules:', error);
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [notes, budgetItem]);
-  
-  useEffect(() => {
-    setModuleSize(moduleType === 'P2.6' ? { width: 0.25, height: 0.25 } : { width: 0.25, height: 0.25 });
-  }, [moduleType]);
-  
-  const moduleArea = moduleSize.width * moduleSize.height;
-  const totalModules = targetArea > 0 ? Math.ceil(targetArea / moduleArea) : 0;
-  
-  const casesData = [
-    { caseName: 'Кейс 2 м²', caseId: 'VI_CASE_2', modulesPerCase: 32 },
-    { caseName: 'Кейс 3 м²', caseId: 'VI_CASE_3', modulesPerCase: 48 },
-  ];
-  
-  const calculateCases = () => {
-    const cases: Array<{ modulesCount: number; caseCount: number; caseId: string; caseName: string }> = [];
-    let remainingModules = totalModules;
+    };
     
-    for (const caseTemplate of casesData) {
-      if (remainingModules <= 0) break;
-      const caseCount = Math.floor(remainingModules / caseTemplate.modulesPerCase);
-      if (caseCount > 0) {
-        cases.push({
-          modulesCount: caseTemplate.modulesPerCase,
-          caseCount,
-          caseId: caseTemplate.caseId,
-          caseName: caseTemplate.caseName
-        });
-        remainingModules -= caseCount * caseTemplate.modulesPerCase;
-      }
-    }
-    
-    if (remainingModules > 0) {
-      const smallCaseModules = casesData[0].modulesPerCase;
-      const additionalCases = Math.ceil(remainingModules / smallCaseModules);
-      const existingCase = cases.find(c => c.caseId === casesData[0].caseId);
-      if (existingCase) {
-        existingCase.caseCount += additionalCases;
-      } else {
-        cases.push({
-          modulesCount: smallCaseModules,
-          caseCount: additionalCases,
-          caseId: casesData[0].caseId,
-          caseName: casesData[0].caseName
-        });
-      }
-    }
-    
-    return cases;
+    loadModules();
+  }, [budgetItem?.equipmentId]);
+
+  const handleQuantityChange = (moduleId: string, newQuantity: number) => {
+    setModules(prev => prev.map(m => 
+      m.id === moduleId ? { ...m, quantity: Math.max(0, newQuantity) } : m
+    ));
   };
-  
-  const calculatedCases = calculateCases();
-  const progress = targetArea > 0 ? Math.min(100, Math.round((totalModules * moduleArea / targetArea) * 100)) : 0;
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      for (const module of modules) {
+        await updateEquipmentComposition(module.id, module.quantity);
+      }
+      onClose();
+    } catch (error) {
+      console.error('Error saving modules:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddModule = async (moduleModule: EquipmentModule, quantity: number = 1) => {
+    if (!budgetItem?.equipmentId) return;
+    
+    try {
+      const newCompositionId = await addEquipmentComposition(budgetItem.equipmentId, moduleModule.id, quantity);
+      // Reload modules to get the new composition
+      const compositions = await getEquipmentCompositions(budgetItem.equipmentId);
+      setModules(compositions);
+      setShowAddModule(false);
+    } catch (error) {
+      console.error('Error adding module:', error);
+    }
+  };
+
+  const handleLoadAvailableModules = async () => {
+    setLoadingModules(true);
+    try {
+      const modules = await getAvailableLedModules(screenType);
+      setAvailableModules(modules);
+    } catch (error) {
+      console.error('Error loading available modules:', error);
+    } finally {
+      setLoadingModules(false);
+    }
+  };
+
+  const totalModules = modules.reduce((sum, m) => sum + m.quantity, 0);
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70]">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-[500px] overflow-hidden">
+          <div className="flex justify-center items-center p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="mt-4 bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h4 className="text-sm font-bold text-white flex items-center gap-2">
-          <Calculator className="w-4 h-4 text-green-500" />
-          Спецификация модулей LED экрана
-        </h4>
-        <button onClick={onClose} className="text-gray-500 hover:text-white">
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">Тип модуля</label>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setModuleType('P3.91')}
-              className={`flex-1 py-1.5 text-xs font-medium rounded border transition-all ${
-                moduleType === 'P3.91'
-                  ? 'bg-green-600 border-green-500 text-white'
-                  : 'bg-gray-700 border-gray-600 text-gray-400 hover:border-gray-500'
-              }`}
-            >
-              P3.91
-            </button>
-            <button
-              onClick={() => setModuleType('P2.6')}
-              className={`flex-1 py-1.5 text-xs font-medium rounded border transition-all ${
-                moduleType === 'P2.6'
-                  ? 'bg-green-600 border-green-500 text-white'
-                  : 'bg-gray-700 border-gray-600 text-gray-400 hover:border-gray-500'
-              }`}
-            >
-              P2.6
-            </button>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70]">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-[600px] overflow-hidden max-h-[80vh]">
+        <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Calculator className="w-5 h-5 text-green-500" />
+            <h3 className="text-lg font-bold text-white">
+              Спецификация модулей LED экрана
+            </h3>
           </div>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
         
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">Размер модуля (м)</label>
-          <div className="flex items-center gap-1 bg-gray-700 rounded px-2 py-1.5">
-            <input
-              type="number"
-              step="0.01"
-              value={moduleSize.width}
-              onChange={(e) => setModuleSize({ ...moduleSize, width: parseFloat(e.target.value) || 0 })}
-              className="w-14 bg-transparent text-white text-xs text-center outline-none"
-            />
-            <span className="text-gray-500 text-xs">×</span>
-            <input
-              type="number"
-              step="0.01"
-              value={moduleSize.height}
-              onChange={(e) => setModuleSize({ ...moduleSize, height: parseFloat(e.target.value) || 0 })}
-              className="w-14 bg-transparent text-white text-xs text-center outline-none"
-            />
+        <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+          <div className="bg-gray-800/50 rounded-lg p-4 mb-4">
+            <h4 className="text-sm font-medium text-white mb-2">
+              {budgetItem?.equipment?.name || 'LED экран'}
+            </h4>
+            <p className="text-xs text-gray-400">
+              Отредактируйте количество модулей для подбора оптимальной конфигурации
+            </p>
           </div>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">Площадь экрана (м²)</label>
-          <input
-            type="number"
-            step="0.1"
-            value={targetArea}
-            onChange={(e) => setTargetArea(parseFloat(e.target.value) || 0)}
-            className="w-full px-3 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm outline-none focus:border-green-500"
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">Итого модулей</label>
-          <div className="px-3 py-1.5 bg-gray-900 rounded text-white text-sm font-bold">
-            {totalModules} шт
-          </div>
-        </div>
-      </div>
-      
-      <div className="mb-4">
-        <div className="flex justify-between text-xs mb-1">
-          <span className="text-gray-400">Покрытие площади</span>
-          <span className={`font-bold ${progress >= 100 ? 'text-green-500' : 'text-yellow-500'}`}>
-            {progress}%
-          </span>
-        </div>
-        <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-          <div
-            className={`h-full transition-all ${progress >= 100 ? 'bg-green-500' : 'bg-yellow-500'}`}
-            style={{ width: `${Math.min(100, progress)}%` }}
-          />
-        </div>
-        <div className="text-[10px] text-gray-500 mt-1">
-          Фактическая площадь: {(totalModules * moduleArea).toFixed(2)} м²
-        </div>
-      </div>
-      
-      <div>
-        <label className="block text-xs text-gray-400 mb-2">Необходимые кейсы</label>
-        <div className="space-y-2">
-          {calculatedCases.map((c, idx) => (
-            <div key={idx} className="flex items-center justify-between bg-gray-700/50 rounded px-3 py-2">
-              <div>
-                <span className="text-xs text-white font-medium">{c.caseName}</span>
-                <span className="text-[10px] text-gray-500 ml-2">({c.modulesCount} мод.)</span>
+
+          <div className="space-y-4">
+            {modules.map((module) => (
+              <div key={module.id} className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex-1">
+                    <h5 className="text-sm font-medium text-white mb-1">
+                      {module.child_name}
+                    </h5>
+                    <p className="text-xs text-gray-400">
+                      SKU: {module.child_sku} • Категория: {module.child_category}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-gray-400">Всего в составе</div>
+                    <div className="text-lg font-bold text-green-400">{module.quantity}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <label className="text-xs text-gray-400">Количество:</label>
+                  <div className="flex items-center gap-2 bg-gray-700 rounded-lg px-3 py-2">
+                    <button
+                      onClick={() => handleQuantityChange(module.id, module.quantity - 1)}
+                      className="text-gray-400 hover:text-white transition-colors"
+                      disabled={module.quantity <= 0}
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <input
+                      type="number"
+                      min="0"
+                      value={module.quantity}
+                      onChange={(e) => handleQuantityChange(module.id, parseInt(e.target.value) || 0)}
+                      className="w-20 bg-transparent text-white text-sm text-center outline-none"
+                    />
+                    <button
+                      onClick={() => handleQuantityChange(module.id, module.quantity + 1)}
+                      className="text-gray-400 hover:text-white transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="text-xs text-gray-500">шт.</div>
+                </div>
               </div>
-              <span className="text-sm font-bold text-green-400">{c.caseCount} шт</span>
+            ))}
+            
+            {modules.length === 0 && (
+              <div className="text-center py-8">
+                <div className="text-gray-400 mb-2">Модули не найдены</div>
+                <div className="text-xs text-gray-500">
+                  Возможно, состав экрана еще не настроен в системе
+                </div>
+              </div>
+            )}
+            
+            <div className="pt-4 border-t border-gray-700">
+              <button
+                onClick={() => {
+                  setShowAddModule(!showAddModule);
+                  if (!showAddModule && availableModules.length === 0) {
+                    handleLoadAvailableModules();
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors"
+              >
+                {showAddModule ? <ChevronDown className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                Добавить модуль из справочника
+              </button>
+              
+              {showAddModule && (
+                <div className="mt-4 bg-gray-800/30 rounded-lg p-4">
+                  {loadingModules ? (
+                    <div className="flex justify-center py-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="text-xs text-gray-400">
+                        Доступные модули для экрана {screenType}
+                      </div>
+                      {availableModules.map((module) => (
+                        <div key={module.id} className="flex items-center justify-between bg-gray-800 rounded-lg p-3">
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-white mb-1">{module.name}</div>
+                            <div className="text-xs text-gray-400">SKU: {module.sku}</div>
+                            {module.note && (
+                              <div className="text-xs text-gray-500 mt-1">{module.note}</div>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => handleAddModule(module, 1)}
+                            className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors"
+                          >
+                            Добавить
+                          </button>
+                        </div>
+                      ))}
+                      {availableModules.length === 0 && (
+                        <div className="text-center py-4 text-gray-500 text-sm">
+                          Модули не найдены
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          ))}
-          {calculatedCases.length === 0 && (
-            <div className="text-xs text-gray-500 text-center py-2">Укажите площадь экрана</div>
-          )}
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-800 bg-gray-800/30">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-400">
+              Общее количество модулей: 
+              <span className="text-white font-bold ml-1">{totalModules}</span>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+              >
+                {saving ? 'Сохранение...' : 'Сохранить'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
