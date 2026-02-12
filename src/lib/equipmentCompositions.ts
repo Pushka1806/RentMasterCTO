@@ -259,3 +259,142 @@ export async function getEquipmentCompositionsByChild(childId: string): Promise<
     created_at: item.created_at
   }));
 }
+
+export interface LedSpecificationCase {
+  id: string;
+  event_id: string;
+  budget_item_id: string;
+  case_id: string;
+  quantity: number;
+  picked: boolean;
+  case_name?: string;
+  case_sku?: string;
+  case_category?: string;
+  created_at: string;
+}
+
+export async function getLedSpecificationCases(eventId: string): Promise<LedSpecificationCase[]> {
+  const { data, error } = await supabase
+    .from('led_specification_cases')
+    .select(`
+      id,
+      event_id,
+      budget_item_id,
+      case_id,
+      quantity,
+      picked,
+      created_at,
+      case:equipment_items!led_specification_cases_case_id_fkey (
+        name,
+        sku,
+        category
+      )
+    `)
+    .eq('event_id', eventId)
+    .order('created_at');
+
+  if (error) throw error;
+
+  return (data || []).map(item => ({
+    id: item.id,
+    event_id: item.event_id,
+    budget_item_id: item.budget_item_id,
+    case_id: item.case_id,
+    quantity: item.quantity,
+    picked: item.picked,
+    case_name: (item.case as any)?.name,
+    case_sku: (item.case as any)?.sku,
+    case_category: (item.case as any)?.category,
+    created_at: item.created_at
+  }));
+}
+
+export async function getLedSpecificationCasesForBudgetItem(budgetItemId: string): Promise<LedSpecificationCase[]> {
+  const { data, error } = await supabase
+    .from('led_specification_cases')
+    .select(`
+      id,
+      event_id,
+      budget_item_id,
+      case_id,
+      quantity,
+      picked,
+      created_at,
+      case:equipment_items!led_specification_cases_case_id_fkey (
+        name,
+        sku,
+        category
+      )
+    `)
+    .eq('budget_item_id', budgetItemId)
+    .order('created_at');
+
+  if (error) throw error;
+
+  return (data || []).map(item => ({
+    id: item.id,
+    event_id: item.event_id,
+    budget_item_id: item.budget_item_id,
+    case_id: item.case_id,
+    quantity: item.quantity,
+    picked: item.picked,
+    case_name: (item.case as any)?.name,
+    case_sku: (item.case as any)?.sku,
+    case_category: (item.case as any)?.category,
+    created_at: item.created_at
+  }));
+}
+
+export async function addLedSpecificationCase(
+  eventId: string,
+  budgetItemId: string,
+  caseId: string,
+  quantity: number
+): Promise<string> {
+  const { data, error } = await supabase
+    .from('led_specification_cases')
+    .insert({
+      event_id: eventId,
+      budget_item_id: budgetItemId,
+      case_id: caseId,
+      quantity
+    })
+    .select('id')
+    .single();
+
+  if (error) throw error;
+  return data.id;
+}
+
+export async function updateLedSpecificationCase(
+  id: string,
+  updates: Partial<Pick<LedSpecificationCase, 'quantity' | 'picked'>>
+): Promise<void> {
+  const { error } = await supabase
+    .from('led_specification_cases')
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', id);
+
+  if (error) throw error;
+}
+
+export async function deleteLedSpecificationCase(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('led_specification_cases')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+}
+
+export async function deleteLedSpecificationCasesForBudgetItem(budgetItemId: string): Promise<void> {
+  const { error } = await supabase
+    .from('led_specification_cases')
+    .delete()
+    .eq('budget_item_id', budgetItemId);
+
+  if (error) throw error;
+}

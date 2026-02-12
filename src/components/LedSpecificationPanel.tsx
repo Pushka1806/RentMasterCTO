@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calculator, Plus, Minus, ChevronDown, ChevronRight } from 'lucide-react';
 import { BudgetItem } from '../lib/events';
-import { getEquipmentCompositions, updateEquipmentComposition, addEquipmentComposition, getAvailableLedModules, findCasesForModules, deleteEquipmentComposition } from '../lib/equipmentCompositions';
+import { getEquipmentCompositions, updateEquipmentComposition, addEquipmentComposition, getAvailableLedModules, findCasesForModules, deleteEquipmentComposition, getLedSpecificationCasesForBudgetItem, addLedSpecificationCase, deleteLedSpecificationCasesForBudgetItem } from '../lib/equipmentCompositions';
 import { EquipmentComposition, EquipmentModule } from '../lib/equipmentCompositions';
 
 interface LedSpecificationPanelProps {
   budgetItemId: string;
   budgetItems: BudgetItem[];
+  eventId: string;
   onClose: () => void;
 }
 
-export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: LedSpecificationPanelProps) {
+export function LedSpecificationPanel({ budgetItemId, budgetItems, eventId, onClose }: LedSpecificationPanelProps) {
   const budgetItem = budgetItems.find(b => b.id === budgetItemId);
   
   console.log('LedSpecificationPanel props:', {
@@ -75,7 +76,7 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
         }
       }
 
-      // Find and add cases for modules
+      // Find and add cases for modules to the warehouse specification
       if (budgetItem?.equipment_id) {
         const moduleIds = modules
           .filter(m => m.quantity > 0)
@@ -93,20 +94,8 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
           const cases = allPotentialCases.filter(c => c.id !== budgetItem.equipment_id);
           console.log('Filtered cases (excluding current screen):', cases);
 
-          // Get existing compositions to check for existing cases
-          const existingCompositions = await getEquipmentCompositions(budgetItem.equipment_id);
-          console.log('Existing compositions:', existingCompositions);
-          
-          // Remove existing case compositions (to recalculate)
-          // Cases are items that appear in our cases list
-          const caseIds = new Set(cases.map(c => c.id));
-          for (const comp of existingCompositions) {
-            // Check if this composition is a case (its child_id matches one of our case IDs)
-            if (caseIds.has(comp.child_id)) {
-              console.log(`Removing existing case composition: ${comp.child_name}`);
-              await deleteEquipmentComposition(comp.id);
-            }
-          }
+          // Remove existing case entries for this budget item (to recalculate)
+          await deleteLedSpecificationCasesForBudgetItem(budgetItemId);
 
           // Calculate required cases for each module type
           const caseQuantities: Map<string, { caseId: string; caseName: string; quantity: number; moduleId: string }> = new Map();
@@ -144,10 +133,10 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
 
           console.log('Final case quantities to add:', Array.from(caseQuantities.entries()));
 
-          // Add case compositions
+          // Add cases to the LED specification cases table (for warehouse specification)
           for (const [caseId, caseInfo] of caseQuantities) {
-            console.log(`Adding case: ${caseInfo.caseName} x ${caseInfo.quantity}`);
-            await addEquipmentComposition(budgetItem.equipment_id, caseId, caseInfo.quantity);
+            console.log(`Adding case to warehouse specification: ${caseInfo.caseName} x ${caseInfo.quantity}`);
+            await addLedSpecificationCase(eventId, budgetItemId, caseId, caseInfo.quantity);
           }
         }
       }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Minus, Package, Download, ChevronDown, ChevronRight, CheckCircle, Layers, Calculator } from 'lucide-react';
 import { BudgetItem, getBudgetItems, getEvent, updateBudgetItemPicked, confirmSpecification, createBudgetItem } from '../lib/events';
 import { EquipmentItem, getEquipmentItems, getEquipmentModifications, EquipmentModification, ModificationComponent } from '../lib/equipment';
-import { getEquipmentCompositions } from '../lib/equipmentCompositions';
+import { getEquipmentCompositions, getLedSpecificationCases, LedSpecificationCase } from '../lib/equipmentCompositions';
 import { Category, getCategories } from '../lib/categories';
 import { EquipmentSelector } from './EquipmentSelector';
 import { LedSpecificationPanel } from './LedSpecificationPanel';
@@ -88,6 +88,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
     progress: number;
     cases: Array<{ modulesCount: number; caseCount: number; caseId: string }>;
   }>>({});
+  const [ledCases, setLedCases] = useState<LedSpecificationCase[]>([]);
 
   const isLedScreenItem = (item: ExpandedItem) => {
     const category = item.category || '';
@@ -171,14 +172,15 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
   const loadData = async () => {
     try {
       setLoading(true);
-      const [budgetData, categoriesData, equipmentData, event, cablesData, connectorsData, otherData] = await Promise.all([
+      const [budgetData, categoriesData, equipmentData, event, cablesData, connectorsData, otherData, ledCasesData] = await Promise.all([
         getBudgetItems(eventId),
         getCategories(),
         getEquipmentItems(),
         getEvent(eventId),
         getCables(eventId),
         getConnectors(eventId),
-        getOtherItems(eventId)
+        getOtherItems(eventId),
+        getLedSpecificationCases(eventId)
       ]);
 
       setCategories(categoriesData);
@@ -188,6 +190,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
       setCables(cablesData);
       setConnectors(connectorsData);
       setOtherItems(otherData);
+      setLedCases(ledCasesData);
       
       // Initialize empty modifications map - will load on demand
       setEquipmentModifications({});
@@ -302,6 +305,23 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
               }
             }
 
+            // Add LED specification cases to the items list
+            for (const ledCase of ledCasesData) {
+              items.push({
+                budgetItemId: `led-case-${ledCase.id}`,
+                categoryId: null,
+                name: ledCase.case_name || 'Кейс для модулей LED',
+                sku: ledCase.case_sku || '',
+                quantity: ledCase.quantity,
+                unit: 'шт.',
+                category: ledCase.case_category || 'Видео',
+                notes: 'Кейс для LED модулей',
+                picked: ledCase.picked,
+                isFromComposition: true,
+                parentName: 'LED спецификация'
+              });
+            }
+
             setExpandedItems(items);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -312,6 +332,17 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
 
   const handlePickedChange = async (budgetItemId: string, picked: boolean) => {
     try {
+      // Check if this is an LED case item
+      if (budgetItemId.startsWith('led-case-')) {
+        const ledCaseId = budgetItemId.replace('led-case-', '');
+        const { updateLedSpecificationCase } = await import('../lib/equipmentCompositions');
+        await updateLedSpecificationCase(ledCaseId, { picked });
+        setExpandedItems(expandedItems.map(item =>
+          item.budgetItemId === budgetItemId ? { ...item, picked } : item
+        ));
+        return;
+      }
+
       // Find the real budget item ID (ignoring composition suffixes like -comp- or -mod-)
       // UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
       // We need to extract the full UUID before any suffix
@@ -327,6 +358,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
       alert('Ошибка при обновлении статуса');
     }
   };
+
 
   const handleCablePickedChange = async (id: string, picked: boolean) => {
     try {
@@ -994,7 +1026,11 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                 <LedSpecificationPanel
                   budgetItemId={showLedSpecification}
                   budgetItems={budgetItems}
-                  onClose={() => setShowLedSpecification(null)}
+                  eventId={eventId}
+                  onClose={() => {
+                    setShowLedSpecification(null);
+                    loadData(); // Reload to show updated cases
+                  }}
                 />
               )}
             </>
