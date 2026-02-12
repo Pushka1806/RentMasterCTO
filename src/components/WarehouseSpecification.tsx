@@ -5,6 +5,7 @@ import { EquipmentItem, getEquipmentItems, getEquipmentModifications, EquipmentM
 import { getEquipmentCompositions } from '../lib/equipmentCompositions';
 import { Category, getCategories } from '../lib/categories';
 import { EquipmentSelector } from './EquipmentSelector';
+import { LEDScreenSpecification, LEDModule, DEFAULT_MODULE } from './LEDScreenSpecification';
 import { useAuth } from '../contexts/AuthContext';
 import { isWarehouse } from '../lib/auth';
 import {
@@ -79,6 +80,11 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
   const [componentQuantities, setComponentQuantities] = useState<Record<string, number>>({});
   const [loadingModifications, setLoadingModifications] = useState(false);
   const [itemsWithAppliedModifications, setItemsWithAppliedModifications] = useState<Set<string>>(new Set());
+
+  // LED Screen Specification state
+  const [showLEDScreenSpec, setShowLEDScreenSpec] = useState(false);
+  const [selectedLEDEquipment, setSelectedLEDEquipment] = useState<EquipmentItem | null>(null);
+  const [ledModules] = useState<LEDModule[]>([DEFAULT_MODULE]);
 
   const hasModifications = (budgetItemId: string) => {
     // Check if modifications have been applied to this item
@@ -415,7 +421,21 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
     setSelectedBudgetItemForMod(null);
   };
 
+  const isLEDEquipment = (equipment: EquipmentItem): boolean => {
+    return equipment.subtype?.toUpperCase() === 'LED' ||
+           equipment.name?.toLowerCase().includes('экран') ||
+           equipment.name?.toLowerCase().includes('led');
+  };
+
   const handleAddEquipment = async (equipment: EquipmentItem, quantity: number, modificationId?: string) => {
+    // Check if this is LED equipment and show LED specification form
+    if (isLEDEquipment(equipment) && !modificationId) {
+      setSelectedLEDEquipment(equipment);
+      setShowLEDScreenSpec(true);
+      setShowEquipmentSelector(false);
+      return;
+    }
+
     try {
       const newItem = await createBudgetItem({
         event_id: eventId,
@@ -436,6 +456,33 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
     } catch (error) {
       console.error('Error adding equipment:', error);
       alert('Ошибка при добавлении оборудования');
+    }
+  };
+
+  const handleLEDConfirm = async (quantity: number, totalArea: number) => {
+    if (!selectedLEDEquipment) return;
+
+    try {
+      const newItem = await createBudgetItem({
+        event_id: eventId,
+        equipment_id: selectedLEDEquipment.id,
+        modification_id: null,
+        item_type: 'equipment',
+        quantity,
+        price: selectedLEDEquipment.rental_price,
+        exchange_rate: 1,
+        category_id: null,
+        notes: `Площадь: ${totalArea.toFixed(1)} м²`
+      });
+
+      console.log('Created LED budget item:', newItem);
+      setShowLEDScreenSpec(false);
+      setSelectedLEDEquipment(null);
+      await loadData();
+      alert(`Добавлено: ${selectedLEDEquipment.name} x ${quantity} (${totalArea.toFixed(1)} м²)`);
+    } catch (error) {
+      console.error('Error adding LED equipment:', error);
+      alert('Ошибка при добавлении LED оборудования');
     }
   };
 
@@ -1490,6 +1537,18 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
             />
           </div>
         </div>
+      )}
+
+      {showLEDScreenSpec && selectedLEDEquipment && (
+        <LEDScreenSpecification
+          equipment={selectedLEDEquipment}
+          modules={ledModules}
+          onConfirm={handleLEDConfirm}
+          onClose={() => {
+            setShowLEDScreenSpec(false);
+            setSelectedLEDEquipment(null);
+          }}
+        />
       )}
     </div>
   );
