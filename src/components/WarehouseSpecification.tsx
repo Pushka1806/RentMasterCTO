@@ -78,8 +78,14 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
   const [modificationComponents, setModificationComponents] = useState<ModificationComponent[]>([]);
   const [componentQuantities, setComponentQuantities] = useState<Record<string, number>>({});
   const [loadingModifications, setLoadingModifications] = useState(false);
+  const [itemsWithAppliedModifications, setItemsWithAppliedModifications] = useState<Set<string>>(new Set());
 
   const hasModifications = (budgetItemId: string) => {
+    // Check if modifications have been applied to this item
+    if (itemsWithAppliedModifications.has(budgetItemId)) {
+      return false;
+    }
+    
     // Find the budget item
     const budgetItem = budgetItems.find(item => item.id === budgetItemId);
     if (!budgetItem?.equipment_id) return false;
@@ -341,7 +347,25 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
         parentName: `${selectedBudgetItemForMod.equipment?.name} (${selectedModification.name})`
       }));
     
-    setExpandedItems([...expandedItems, ...newItems]);
+    // Find the parent item index
+    const parentIndex = expandedItems.findIndex(item => item.budgetItemId === selectedBudgetItemForMod.id);
+    
+    // Insert new items right after the parent
+    const updatedItems = [...expandedItems];
+    if (parentIndex >= 0) {
+      updatedItems.splice(parentIndex + 1, 0, ...newItems);
+    } else {
+      updatedItems.push(...newItems);
+    }
+    
+    setExpandedItems(updatedItems);
+    
+    // Mark parent item as having applied modifications
+    setItemsWithAppliedModifications(prev => {
+      const newSet = new Set(prev);
+      newSet.add(selectedBudgetItemForMod.id);
+      return newSet;
+    });
     
     // Reset state
     setShowComponentsDialog(false);
