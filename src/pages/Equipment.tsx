@@ -44,7 +44,11 @@ export function Equipment() {
       await loadData();
     } catch (error) {
       console.error('Error deleting equipment:', error);
-      alert('Ошибка при удалении');
+      let errorMessage = 'Ошибка при удалении оборудования';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      alert(errorMessage);
     }
   };
 

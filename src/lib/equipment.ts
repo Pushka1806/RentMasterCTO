@@ -70,6 +70,33 @@ export async function updateEquipmentItem(id: string, item: Partial<EquipmentIte
 }
 
 export async function deleteEquipmentItem(id: string): Promise<void> {
+  // First check if equipment is referenced in budget_items
+  const { data: budgetItems, error: budgetError } = await supabase
+    .from('budget_items')
+    .select('id')
+    .eq('equipment_id', id)
+    .limit(1);
+
+  if (budgetError) throw budgetError;
+
+  if (budgetItems && budgetItems.length > 0) {
+    throw new Error('Нельзя удалить оборудование, которое используется в сметах. Сначала удалите или измените связанные позиции в сметах.');
+  }
+
+  // Check if equipment is referenced in template_items
+  const { data: templateItems, error: templateError } = await supabase
+    .from('template_items')
+    .select('id')
+    .eq('equipment_id', id)
+    .limit(1);
+
+  if (templateError) throw templateError;
+
+  if (templateItems && templateItems.length > 0) {
+    throw new Error('Нельзя удалить оборудование, которое используется в шаблонах. Сначала удалите или измените связанные позиции в шаблонах.');
+  }
+
+  // If no references found, proceed with deletion
   const { error } = await supabase
     .from('equipment_items')
     .delete()
