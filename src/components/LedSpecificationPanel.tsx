@@ -77,20 +77,29 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
           .filter(m => m.quantity > 0)
           .map(m => m.child_id);
         
+        console.log('Looking for cases for modules:', moduleIds);
+        console.log('Current modules:', modules);
+        
         if (moduleIds.length > 0) {
           // Find cases that contain these modules
-          const cases = await findCasesForModules(moduleIds);
-          console.log('Found cases for modules:', cases);
+          const allPotentialCases = await findCasesForModules(moduleIds);
+          console.log('Found potential cases:', allPotentialCases);
+          
+          // Filter out the current LED screen itself - we only want actual cases, not the screen
+          const cases = allPotentialCases.filter(c => c.id !== budgetItem.equipment_id);
+          console.log('Filtered cases (excluding current screen):', cases);
 
           // Get existing compositions to check for existing cases
           const existingCompositions = await getEquipmentCompositions(budgetItem.equipment_id);
+          console.log('Existing compositions:', existingCompositions);
           
           // Remove existing case compositions (to recalculate)
-          const existingCaseIds = new Set(cases.map(c => c.id));
+          // Cases are items that appear in our cases list
+          const caseIds = new Set(cases.map(c => c.id));
           for (const comp of existingCompositions) {
-            // Check if this composition is a case (contains "кейс" or "футляр" in name)
-            if (comp.child_name.toLowerCase().includes('кейс') || 
-                comp.child_name.toLowerCase().includes('футляр')) {
+            // Check if this composition is a case (its child_id matches one of our case IDs)
+            if (caseIds.has(comp.child_id)) {
+              console.log(`Removing existing case composition: ${comp.child_name}`);
               await deleteEquipmentComposition(comp.id);
             }
           }
@@ -106,6 +115,7 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
             if (matchingCase) {
               // Calculate how many cases needed (round up)
               const casesNeeded = Math.ceil(module.quantity / matchingCase.modulesPerCase);
+              console.log(`Module ${module.child_name}: ${module.quantity} units, ${matchingCase.modulesPerCase} per case = ${casesNeeded} cases needed`);
               
               // Use the first matching case (or could prioritize based on criteria)
               const existing = caseQuantities.get(matchingCase.id);
@@ -123,8 +133,12 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
                   moduleId: module.child_id
                 });
               }
+            } else {
+              console.log(`No case found for module: ${module.child_name} (${module.child_id})`);
             }
           }
+
+          console.log('Final case quantities to add:', Array.from(caseQuantities.entries()));
 
           // Add case compositions
           for (const [caseId, caseInfo] of caseQuantities) {

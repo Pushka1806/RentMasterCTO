@@ -173,52 +173,57 @@ export interface ModuleCase {
 export async function findCasesForModules(moduleIds: string[]): Promise<ModuleCase[]> {
   if (moduleIds.length === 0) return [];
   
-  // Find all equipment items that are cases (кейсы/футляры)
-  // Cases are equipment items that have "кейс" or "футляр" in their name or category
-  const { data: casesData, error: casesError } = await supabase
-    .from('equipment_items')
-    .select('id, name, sku, category, type, subtype, note')
-    .or('name.ilike.%кейс%,name.ilike.%футляр%,category.ilike.%кейс%,category.ilike.%футляр%,type.ilike.%кейс%,type.ilike.%футляр%');
+  // Find all equipment compositions where the child is one of our target modules
+  // This will give us all parent items (potential cases) that contain these modules
+  const { data: compositionsData, error: compositionsError } = await supabase
+    .from('equipment_compositions')
+    .select(`
+      id,
+      parent_id,
+      child_id,
+      quantity,
+      parent:equipment_items!equipment_compositions_parent_id_fkey (
+        id,
+        name,
+        sku,
+        category,
+        type,
+        subtype
+      )
+    `)
+    .in('child_id', moduleIds);
   
-  if (casesError) throw casesError;
-  if (!casesData || casesData.length === 0) return [];
+  if (compositionsError) {
+    console.error('Error finding cases:', compositionsError);
+    throw compositionsError;
+  }
+  
+  if (!compositionsData || compositionsData.length === 0) {
+    console.log('No cases found containing the specified modules');
+    return [];
+  }
+  
+  console.log('Found compositions containing modules:', compositionsData);
   
   const cases: ModuleCase[] = [];
   
-  // For each potential case, check its composition to see which modules it contains
-  for (const caseItem of casesData) {
-    const { data: compositionData, error: compositionError } = await supabase
-      .from('equipment_compositions')
-      .select(`
-        id,
-        quantity,
-        child:equipment_items!equipment_compositions_child_id_fkey (
-          id,
-          name,
-          sku
-        )
-      `)
-      .eq('parent_id', caseItem.id);
-    
-    if (compositionError) continue;
-    
-    // Check if this case contains any of our target modules
-    for (const comp of (compositionData || [])) {
-      const child = (comp as any).child;
-      if (child && moduleIds.includes(child.id)) {
-        cases.push({
-          id: caseItem.id,
-          name: caseItem.name,
-          sku: caseItem.sku,
-          category: caseItem.category,
-          modulesPerCase: comp.quantity,
-          moduleId: child.id,
-          moduleName: child.name
-        });
-      }
+  // Each parent that contains a module is a potential case
+  for (const comp of compositionsData) {
+    const parent = (comp as any).parent;
+    if (parent) {
+      cases.push({
+        id: parent.id,
+        name: parent.name,
+        sku: parent.sku,
+        category: parent.category,
+        modulesPerCase: comp.quantity,
+        moduleId: comp.child_id,
+        moduleName: '' // We don't have the module name here, but we don't need it
+      });
     }
   }
   
+  console.log('Processed cases:', cases);
   return cases;
 }
 
