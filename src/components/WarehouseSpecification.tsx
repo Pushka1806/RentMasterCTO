@@ -89,6 +89,17 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
     cases: Array<{ modulesCount: number; caseCount: number; caseId: string }>;
   }>>({});
 
+  const isLedScreenItem = (item: ExpandedItem) => {
+    const category = item.category || '';
+    const name = item.name || '';
+    const notes = item.notes || '';
+    
+    return (category === 'Видео' && (name.includes('LED') || name.includes('Светодиодный экран') ||
+             name.includes('P2,6') || name.includes('P3,91'))) ||
+           notes.includes('м.кв.') || notes.includes('×') || notes.includes('x') ||
+           notes.match(/\d+\s*м²/);
+  };
+
   const hasModifications = (budgetItemId: string) => {
     // Check if modifications have been applied to this item
     if (itemsWithAppliedModifications.has(budgetItemId)) {
@@ -911,7 +922,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                                     <Layers className="w-3.5 h-3.5" />
                                   </button>
                                 )}
-                                {item.notes && item.notes.match(/\d+\s*(м\.кв\.|×|x)/) && (
+                                {(isLedScreenItem(item) || (item.notes && (item.notes.includes('м.кв.') || item.notes.match(/\d+\s*[×x]\s*\d+/)))) && (
                                   <button
                                     onClick={() => setShowLedSpecification(item.budgetItemId === showLedSpecification ? null : item.budgetItemId)}
                                     className="p-1 text-green-500 hover:text-green-400 transition-colors"

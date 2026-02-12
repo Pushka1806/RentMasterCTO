@@ -18,6 +18,7 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
   
   useEffect(() => {
     if (notes) {
+      // Parse area from notes
       const areaMatch = notes.match(/(\d+(?:\.\d+)?)\s*м\.кв\./);
       if (areaMatch) {
         setTargetArea(parseFloat(areaMatch[1]));
@@ -27,8 +28,16 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
           setTargetArea(parseFloat(dimMatch[1]) * parseFloat(dimMatch[2]));
         }
       }
+      
+      // Auto-detect module type from notes or equipment name
+      const name = budgetItem?.equipment?.name || '';
+      if (name.includes('P2,6') || name.includes('P2.6')) {
+        setModuleType('P2.6');
+      } else if (name.includes('P3,91') || name.includes('P3.91')) {
+        setModuleType('P3.91');
+      }
     }
-  }, [notes]);
+  }, [notes, budgetItem]);
   
   useEffect(() => {
     setModuleSize(moduleType === 'P2.6' ? { width: 0.25, height: 0.25 } : { width: 0.25, height: 0.25 });

@@ -130,7 +130,13 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
   };
 
   const isLedScreen = (equipmentItem: EquipmentItem) => {
-    return equipmentItem.subtype === 'Экран P2,6' || equipmentItem.subtype === 'Экран P3,91';
+    const subtype = equipmentItem.subtype || '';
+    const name = equipmentItem.name || '';
+    const category = equipmentItem.category || '';
+    
+    return (subtype.includes('Экран P2,6') || subtype.includes('Экран P3,91') ||
+            name.includes('LED') || name.includes('Светодиодный экран')) &&
+           category === 'Видео';
   };
 
   const handleEquipmentClick = async (equipmentItem: EquipmentItem) => {
