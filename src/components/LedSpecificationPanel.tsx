@@ -58,24 +58,9 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
   }, [budgetItem?.equipment_id]);
 
   const handleQuantityChange = (moduleId: string, newQuantity: number) => {
-    setModules(prev => prev.map(m => 
+    setModules(prev => prev.map(m =>
       m.id === moduleId ? { ...m, quantity: Math.max(0, newQuantity) } : m
     ));
-    
-    // Show success message when 100% progress is reached
-    if (screenDimensions && progress < 100) {
-      const newTotalModules = modules
-        .map(m => m.id === moduleId ? newQuantity : m.quantity)
-        .reduce((sum, q) => sum + q, 0);
-      const newTotalArea = newTotalModules * moduleSize;
-      const newProgress = requiredArea > 0 ? Math.min((newTotalArea / requiredArea) * 100, 100) : 0;
-      
-      if (newProgress >= 100) {
-        setTimeout(() => {
-          alert('Отлично! Количество модулей соответствует необходимой площади экрана');
-        }, 100);
-      }
-    }
   };
 
   const handleSave = async () => {
@@ -145,11 +130,36 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
 
   const screenDimensions = getScreenDimensions();
   const totalModules = modules.reduce((sum, m) => sum + m.quantity, 0);
-  
-  // Calculate total area covered by modules (assuming standard module size 0.5x0.5m = 0.25 m²)
-  const moduleSize = 0.5 * 0.5; // 0.25 m² per module
-  const totalModuleArea = totalModules * moduleSize;
-  
+
+  // Helper function to extract module dimensions from name or note
+  const getModuleDimensions = (name: string, note: string) => {
+    // Try to extract dimensions from name or note (format: 0,5x0,5, 0.5x1, etc.)
+    const text = `${name} ${note}`;
+    const match = text.match(/(\d+(?:[.,]\d+)?)\s*[x×]\s*(\d+(?:[.,]\d+)?)/);
+    if (match) {
+      return {
+        width: parseFloat(match[1].replace(',', '.')),
+        height: parseFloat(match[2].replace(',', '.'))
+      };
+    }
+    return null;
+  };
+
+  // Calculate total area covered by modules using actual module dimensions
+  let totalModuleArea = 0;
+  let totalModuleCount = 0;
+
+  modules.forEach(module => {
+    const dimensions = getModuleDimensions(module.child_name, module.child_sku);
+    if (dimensions) {
+      totalModuleArea += module.quantity * (dimensions.width * dimensions.height);
+    } else {
+      // Fallback to 0.25 m² if no dimensions found
+      totalModuleArea += module.quantity * 0.25;
+    }
+    totalModuleCount += module.quantity;
+  });
+
   const requiredArea = screenDimensions?.area || 0;
   const progress = requiredArea > 0 ? Math.min((totalModuleArea / requiredArea) * 100, 100) : 0;
 
@@ -215,8 +225,8 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
                 />
               </div>
               <div className="flex justify-between mt-2 text-xs text-gray-500">
-                <span>Требуется модулей: ~{Math.ceil(requiredArea / moduleSize)} шт.</span>
                 <span>Добавлено: {totalModules} шт.</span>
+                <span>Покрытие: {totalModuleArea.toFixed(2)} м²</span>
               </div>
             </div>
           )}
@@ -224,24 +234,13 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
           <div className="space-y-4">
             {modules.map((module) => (
               <div key={module.id} className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <h5 className="text-sm font-medium text-white mb-1">
+                    <h5 className="text-sm font-medium text-white">
                       {module.child_name}
                     </h5>
-                    <p className="text-xs text-gray-400">
-                      SKU: {module.child_sku} • Категория: {module.child_category}
-                    </p>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm text-gray-400">Всего в составе</div>
-                    <div className="text-lg font-bold text-green-400">{module.quantity}</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <label className="text-xs text-gray-400">Количество:</label>
-                  <div className="flex items-center gap-2 bg-gray-700 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-2 bg-gray-700 rounded-lg px-3 py-1.5">
                     <button
                       onClick={() => handleQuantityChange(module.id, module.quantity - 1)}
                       className="text-gray-400 hover:text-white transition-colors"
@@ -254,7 +253,7 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
                       min="0"
                       value={module.quantity}
                       onChange={(e) => handleQuantityChange(module.id, parseInt(e.target.value) || 0)}
-                      className="w-20 bg-transparent text-white text-sm text-center outline-none"
+                      className="w-16 bg-transparent text-white text-sm text-center outline-none"
                     />
                     <button
                       onClick={() => handleQuantityChange(module.id, module.quantity + 1)}
@@ -263,7 +262,7 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="text-xs text-gray-500">шт.</div>
+                  <div className="text-xs text-gray-500 ml-2">шт.</div>
                 </div>
               </div>
             ))}
@@ -305,8 +304,7 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
                       {availableModules.map((module) => (
                         <div key={module.id} className="flex items-center justify-between bg-gray-800 rounded-lg p-3">
                           <div className="flex-1">
-                            <div className="text-sm font-medium text-white mb-1">{module.name}</div>
-                            <div className="text-xs text-gray-400">SKU: {module.sku}</div>
+                            <div className="text-sm font-medium text-white">{module.name}</div>
                             {module.note && (
                               <div className="text-xs text-gray-500 mt-1">{module.note}</div>
                             )}
