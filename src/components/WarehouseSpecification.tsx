@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Minus, Package, Download, ChevronDown, ChevronRight, CheckCircle } from 'lucide-react';
+import { X, Plus, Minus, Package, Download, ChevronDown, ChevronRight, CheckCircle, Layers } from 'lucide-react';
 import { BudgetItem, getBudgetItems, getEvent, updateBudgetItemPicked, confirmSpecification, createBudgetItem } from '../lib/events';
-import { EquipmentItem, getEquipmentItems } from '../lib/equipment';
+import { EquipmentItem, getEquipmentItems, getEquipmentModifications, EquipmentModification, ModificationComponent } from '../lib/equipment';
 import { getEquipmentCompositions } from '../lib/equipmentCompositions';
 import { Category, getCategories } from '../lib/categories';
 import { EquipmentSelector } from './EquipmentSelector';
@@ -70,6 +70,21 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
   const [expandedConnectorCategories, setExpandedConnectorCategories] = useState<Record<string, boolean>>({});
   const [expandedOtherCategories, setExpandedOtherCategories] = useState<Record<string, boolean>>({});
   const [confirming, setConfirming] = useState(false);
+  const [equipmentModifications, setEquipmentModifications] = useState<Record<string, EquipmentModification[]>>({});
+  const [showModificationSelector, setShowModificationSelector] = useState(false);
+  const [selectedBudgetItemForMod, setSelectedBudgetItemForMod] = useState<BudgetItem | null>(null);
+  const [showComponentsDialog, setShowComponentsDialog] = useState(false);
+  const [selectedModification, setSelectedModification] = useState<EquipmentModification | null>(null);
+  const [modificationComponents, setModificationComponents] = useState<ModificationComponent[]>([]);
+  const [componentQuantities, setComponentQuantities] = useState<Record<string, number>>({});
+
+  const hasModifications = (budgetItemId: string) => {
+    // Find the budget item
+    const budgetItem = budgetItems.find(item => item.id === budgetItemId);
+    if (!budgetItem?.equipment_id) return false;
+    
+    return equipmentModifications[budgetItem.equipment_id]?.length > 0;
+  };
 
   const groups = categories
     .map(cat => ({
@@ -107,6 +122,20 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
       setCables(cablesData);
       setConnectors(connectorsData);
       setOtherItems(otherData);
+
+      // Load modifications for all equipment
+      const modificationsMap: Record<string, EquipmentModification[]> = {};
+      for (const equipment of equipmentData) {
+        try {
+          const mods = await getEquipmentModifications(equipment.id);
+          if (mods.length > 0) {
+            modificationsMap[equipment.id] = mods;
+          }
+        } catch (error) {
+          console.error('Error loading modifications for equipment', equipment.id, ':', error);
+        }
+      }
+      setEquipmentModifications(modificationsMap);
 
       const items: ExpandedItem[] = [];
 
@@ -243,6 +272,66 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
     } finally {
       setConfirming(false);
     }
+  };
+
+  const handleOpenModificationSelector = (budgetItem: BudgetItem) => {
+    setSelectedBudgetItemForMod(budgetItem);
+    setShowModificationSelector(true);
+  };
+
+  const handleModificationSelect = async (modification: EquipmentModification) => {
+    setSelectedModification(modification);
+    setShowModificationSelector(false);
+    
+    // Load components
+    const components = await getModificationComponents(modification.id);
+    setModificationComponents(components);
+    
+    // Initialize quantities to 0
+    const quantities: Record<string, number> = {};
+    components.forEach(comp => {
+      quantities[comp.id] = 0;
+    });
+    setComponentQuantities(quantities);
+    
+    setShowComponentsDialog(true);
+  };
+
+  const handleComponentQuantityChange = (componentId: string, quantity: number) => {
+    setComponentQuantities({
+      ...componentQuantities,
+      [componentId]: Math.max(0, quantity)
+    });
+  };
+
+  const handleSaveComponents = () => {
+    if (!selectedBudgetItemForMod || !selectedModification) return;
+    
+    // Add components as expanded items
+    const newItems: ExpandedItem[] = modificationComponents
+      .filter(comp => componentQuantities[comp.id] > 0)
+      .map(comp => ({
+        budgetItemId: `${selectedBudgetItemForMod.id}-mod-${comp.id}-${Date.now()}`,
+        categoryId: selectedBudgetItemForMod.category_id || null,
+        name: comp.component?.name || 'Unknown',
+        sku: comp.component?.sku || '',
+        quantity: componentQuantities[comp.id],
+        unit: 'шт.',
+        category: comp.component?.category || 'Modification Components',
+        notes: '',
+        picked: false,
+        isFromComposition: true,
+        parentName: `${selectedBudgetItemForMod.equipment?.name} (${selectedModification.name})`
+      }));
+    
+    setExpandedItems([...expandedItems, ...newItems]);
+    
+    // Reset state
+    setShowComponentsDialog(false);
+    setSelectedModification(null);
+    setModificationComponents([]);
+    setComponentQuantities({});
+    setSelectedBudgetItemForMod(null);
   };
 
   const handleAddEquipment = async (equipment: EquipmentItem, quantity: number, modificationId?: string) => {
@@ -709,12 +798,30 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                             </td>
                             <td className="px-3 py-1.5 text-center text-xs text-gray-500">{index + 1}</td>
                             <td className="px-3 py-1.5">
-                              <div className="text-xs text-white font-medium">{item.name}</div>
-                              {item.parentName && (
-                                <div className="text-[10px] text-cyan-500 mt-0.5">
-                                  ↳ {item.parentName}
+                              <div className="flex items-center gap-2">
+                                <div>
+                                  <div className="text-xs text-white font-medium">{item.name}</div>
+                                  {item.parentName && (
+                                    <div className="text-[10px] text-cyan-500 mt-0.5">
+                                      ↳ {item.parentName}
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                                {!item.isFromComposition && hasModifications(item.budgetItemId) && (
+                                  <button
+                                    onClick={() => {
+                                      const budgetItem = budgetItems.find(b => b.id === item.budgetItemId);
+                                      if (budgetItem) {
+                                        handleOpenModificationSelector(budgetItem);
+                                      }
+                                    }}
+                                    className="p-1 text-cyan-500 hover:text-cyan-400 transition-colors"
+                                    title="Выбрать модификацию"
+                                  >
+                                    <Layers className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
                             </td>
                             <td className="px-3 py-1.5 text-xs text-gray-400">{item.sku}</td>
                             <td className="px-3 py-1.5 text-center text-xs text-white font-bold">{item.quantity}</td>
@@ -1158,6 +1265,125 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
           </div>
         </div>
       </div>
+
+      {showModificationSelector && selectedBudgetItemForMod && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60]">
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Выбор модификации</h3>
+              <button
+                onClick={() => setShowModificationSelector(false)}
+                className="p-1 hover:bg-gray-800 text-gray-400 rounded"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Оборудование</label>
+                <div className="text-white font-medium text-sm">{selectedBudgetItemForMod.equipment?.name}</div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Модификации</label>
+                <div className="space-y-1.5 max-h-[300px] overflow-y-auto custom-scrollbar">
+                  {equipmentModifications[selectedBudgetItemForMod.equipment_id || '']?.map((mod) => (
+                    <button
+                      key={mod.id}
+                      onClick={() => handleModificationSelect(mod)}
+                      className="w-full text-left px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white text-xs rounded transition-colors"
+                    >
+                      <div className="font-medium">{mod.name}</div>
+                      {mod.description && (
+                        <div className="text-xs text-gray-500 mt-0.5">{mod.description}</div>
+                      )}
+                    </button>
+                  )) || (
+                    <div className="text-gray-500 text-xs">Нет доступных модификаций</div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => setShowModificationSelector(false)}
+                className="flex-1 px-4 py-2 bg-gray-700 text-white text-xs rounded hover:bg-gray-600 transition-colors"
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showComponentsDialog && selectedModification && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60]">
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 max-w-2xl w-full max-h-[80vh] flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Компоненты модификации: {selectedModification.name}</h3>
+              <button
+                onClick={() => {
+                  setShowComponentsDialog(false);
+                  setSelectedModification(null);
+                  setModificationComponents([]);
+                  setComponentQuantities({});
+                }}
+                className="p-1 hover:bg-gray-800 text-gray-400 rounded"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-800">
+                    <th className="px-3 py-2 text-left text-[10px] text-gray-500 uppercase tracking-wider">Наименование</th>
+                    <th className="px-3 py-2 text-left w-28 text-[10px] text-gray-500 uppercase tracking-wider">Артикул</th>
+                    <th className="px-3 py-2 text-center w-24 text-[10px] text-gray-500 uppercase tracking-wider">Количество</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-800">
+                  {modificationComponents.map((comp) => (
+                    <tr key={comp.id} className="hover:bg-gray-800 transition-colors">
+                      <td className="px-3 py-2">
+                        <div className="text-xs text-white font-medium">{comp.component?.name || 'Unknown'}</div>
+                      </td>
+                      <td className="px-3 py-2 text-xs text-gray-400">{comp.component?.sku || ''}</td>
+                      <td className="px-3 py-2 text-center">
+                        <input
+                          type="number"
+                          value={componentQuantities[comp.id] || 0}
+                          onChange={(e) => handleComponentQuantityChange(comp.id, parseInt(e.target.value) || 0)}
+                          className="w-16 px-2 py-1 bg-gray-800 border border-gray-700 rounded text-center text-xs text-white"
+                          min="0"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => {
+                  setShowComponentsDialog(false);
+                  setSelectedModification(null);
+                  setModificationComponents([]);
+                  setComponentQuantities({});
+                }}
+                className="flex-1 px-4 py-2 bg-gray-700 text-white text-xs rounded hover:bg-gray-600 transition-colors"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleSaveComponents}
+                className="flex-1 px-4 py-2 bg-cyan-600 text-white text-xs rounded hover:bg-cyan-700 transition-colors"
+              >
+                Добавить компоненты
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showEquipmentSelector && !isWarehouseUser && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60]">

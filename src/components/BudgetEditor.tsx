@@ -8,7 +8,6 @@ import { CategoryBlock } from './CategoryBlock';
 import { WorkPersonnelManager } from './WorkPersonnelManager';
 import { TemplatesInBudget } from './TemplatesInBudget';
 import { WarehouseSpecification } from './WarehouseSpecification';
-import { ModificationSelector } from './ModificationSelector';
 import { generateBudgetPDF } from '../lib/pdfGenerator';
 
 interface BudgetEditorProps {
@@ -45,10 +44,6 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showWarehouseSpec, setShowWarehouseSpec] = useState(false);
-  const [showModificationSelector, setShowModificationSelector] = useState(false);
-  const [selectedEquipmentForMods, setSelectedEquipmentForMods] = useState<EquipmentItem | null>(null);
-  const [equipmentModifications, setEquipmentModifications] = useState<EquipmentModification[]>([]);
-  const [loadingModifications, setLoadingModifications] = useState(false);
   const [showExchangeRatePopover, setShowExchangeRatePopover] = useState(false);
 
   const budgetListRef = useRef<HTMLDivElement>(null);
@@ -131,37 +126,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
   };
 
   const handleEquipmentClick = async (equipmentItem: EquipmentItem) => {
-    try {
-      setLoadingModifications(true);
-      const mods = await getEquipmentModifications(equipmentItem.id);
-
-      if (mods.length > 0) {
-        setSelectedEquipmentForMods(equipmentItem);
-        setEquipmentModifications(mods);
-        setShowModificationSelector(true);
-      } else {
-        await handleAddItem(equipmentItem, 1, undefined, selectedCategoryId || undefined);
-      }
-    } catch (error) {
-      console.error('Error loading modifications:', error);
-      await handleAddItem(equipmentItem, 1, undefined, selectedCategoryId || undefined);
-    } finally {
-      setLoadingModifications(false);
-    }
-  };
-
-  const handleModificationSelect = async (modificationId: string | null, quantity: number) => {
-    if (selectedEquipmentForMods) {
-      setShowModificationSelector(false);
-      await handleAddItem(
-        selectedEquipmentForMods,
-        quantity,
-        modificationId || undefined,
-        selectedCategoryId || undefined
-      );
-      setSelectedEquipmentForMods(null);
-      setEquipmentModifications([]);
-    }
+    await handleAddItem(equipmentItem, 1, undefined, selectedCategoryId || undefined);
   };
 
   const handleAddItem = async (equipmentItem: EquipmentItem, quantity: number = 1, modificationId?: string, categoryId?: string) => {
@@ -841,15 +806,6 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
           eventId={eventId}
           eventName={eventName}
           onClose={() => setShowWarehouseSpec(false)}
-        />
-      )}
-
-      {showModificationSelector && selectedEquipmentForMods && (
-        <ModificationSelector
-          equipmentName={selectedEquipmentForMods.name}
-          modifications={equipmentModifications}
-          onSelect={handleModificationSelect}
-          onClose={() => { setShowModificationSelector(false); setSelectedEquipmentForMods(null); setEquipmentModifications([]); }}
         />
       )}
     </div>
