@@ -100,6 +100,17 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
            notes.match(/\d+\s*м²/);
   };
 
+  const isLedScreenBudgetItem = (item: BudgetItem) => {
+    const category = item.equipment?.category || '';
+    const name = item.equipment?.name || '';
+    const notes = item.notes || '';
+    
+    return (category === 'Видео' && (name.includes('LED') || name.includes('Светодиодный экран') ||
+             name.includes('P2,6') || name.includes('P3,91'))) ||
+           notes.includes('м.кв.') || notes.includes('×') || notes.includes('x') ||
+           notes.match(/\d+\s*м²/);
+  };
+
   const hasModifications = (budgetItemId: string) => {
     // Check if modifications have been applied to this item
     if (itemsWithAppliedModifications.has(budgetItemId)) {
@@ -189,9 +200,10 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
         if (item.item_type !== 'equipment') continue;
 
         const isVirtual = item.equipment?.object_type === 'virtual';
+        const isLedScreen = isLedScreenBudgetItem(item);
 
-        if (!isVirtual) {
-          // Add parent item if it's physical
+        if (!isVirtual || isLedScreen) {
+          // Add parent item if it's physical or if it's an LED screen (which should not be expanded)
           items.push({
             budgetItemId: item.id,
             categoryId: item.category_id || null,
@@ -205,7 +217,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
             isFromComposition: false
           });
         } else {
-          // Virtual item - expand it into its components
+          // Virtual item (non-LED screen) - expand it into its components
           // Check for composition
           if (item.equipment_id) {
             try {
