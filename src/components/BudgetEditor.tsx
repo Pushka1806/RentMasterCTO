@@ -400,14 +400,16 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     const sourceCategoryId = sourceItem.category_id || 'uncategorized';
     const targetCategoryId = targetItem.category_id || 'uncategorized';
 
+    // Create a working copy with the source item moved to the target category if needed
+    let workingItems = [...budgetItems];
     if (sourceCategoryId !== targetCategoryId) {
-      const updatedSourceItem = await updateBudgetItem(sourceItemId, { category_id: targetItem.category_id });
-      setBudgetItems(budgetItems.map(item =>
+      await updateBudgetItem(sourceItemId, { category_id: targetItem.category_id });
+      workingItems = budgetItems.map(item =>
         item.id === sourceItemId ? { ...item, category_id: targetItem.category_id } : item
-      ));
+      );
     }
 
-    const categoryItems = budgetItems
+    const categoryItems = workingItems
       .filter(item => (item.category_id || 'uncategorized') === targetCategoryId)
       .sort((a, b) => a.sort_order - b.sort_order);
 
@@ -419,17 +421,16 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
       const [movedItem] = newOrder.splice(sourceIndex, 1);
       newOrder.splice(targetIndex, 0, movedItem);
 
-      const updatedItems = [...budgetItems];
-
       for (let i = 0; i < newOrder.length; i++) {
-        const itemToUpdate = updatedItems.find(item => item.id === newOrder[i].id);
-        if (itemToUpdate) {
-          itemToUpdate.sort_order = i;
-          await updateBudgetItem(newOrder[i].id, { sort_order: i });
-        }
+        await updateBudgetItem(newOrder[i].id, { sort_order: i });
       }
 
-      setBudgetItems(updatedItems);
+      // Build the final array with items in correct order
+      const otherCategoryItems = workingItems.filter(
+        item => (item.category_id || 'uncategorized') !== targetCategoryId
+      );
+      const reorderedItems = otherCategoryItems.concat(newOrder);
+      setBudgetItems(reorderedItems);
     }
 
     setDraggedItem(null);
