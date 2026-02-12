@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Minus, Package, Download, ChevronDown, ChevronRight, CheckCircle, Layers } from 'lucide-react';
+import { X, Plus, Minus, Package, Download, ChevronDown, ChevronRight, CheckCircle, Layers, Calculator } from 'lucide-react';
 import { BudgetItem, getBudgetItems, getEvent, updateBudgetItemPicked, confirmSpecification, createBudgetItem } from '../lib/events';
 import { EquipmentItem, getEquipmentItems, getEquipmentModifications, EquipmentModification, ModificationComponent } from '../lib/equipment';
 import { getEquipmentCompositions } from '../lib/equipmentCompositions';
 import { Category, getCategories } from '../lib/categories';
 import { EquipmentSelector } from './EquipmentSelector';
+import { LedSpecificationPanel } from './LedSpecificationPanel';
 import { useAuth } from '../contexts/AuthContext';
 import { isWarehouse } from '../lib/auth';
 import {
@@ -79,6 +80,14 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
   const [componentQuantities, setComponentQuantities] = useState<Record<string, number>>({});
   const [loadingModifications, setLoadingModifications] = useState(false);
   const [itemsWithAppliedModifications, setItemsWithAppliedModifications] = useState<Set<string>>(new Set());
+  const [showLedSpecification, setShowLedSpecification] = useState<string | null>(null);
+  const [ledSpecifications, setLedSpecifications] = useState<Record<string, {
+    moduleType: string;
+    moduleSize: { width: number; height: number };
+    totalArea: number;
+    progress: number;
+    cases: Array<{ modulesCount: number; caseCount: number; caseId: string }>;
+  }>>({});
 
   const hasModifications = (budgetItemId: string) => {
     // Check if modifications have been applied to this item
@@ -902,6 +911,15 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                                     <Layers className="w-3.5 h-3.5" />
                                   </button>
                                 )}
+                                {item.notes && item.notes.match(/\d+\s*(м\.кв\.|×|x)/) && (
+                                  <button
+                                    onClick={() => setShowLedSpecification(item.budgetItemId === showLedSpecification ? null : item.budgetItemId)}
+                                    className="p-1 text-green-500 hover:text-green-400 transition-colors"
+                                    title="Спецификация модулей"
+                                  >
+                                    <Calculator className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                               </div>
                             </td>
                             <td className="px-3 py-1.5 text-xs text-gray-400">{item.sku}</td>
@@ -931,6 +949,14 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                   <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
                   <p className="text-sm">Спецификация пуста</p>
                 </div>
+              )}
+
+              {showLedSpecification && (
+                <LedSpecificationPanel
+                  budgetItemId={showLedSpecification}
+                  budgetItems={budgetItems}
+                  onClose={() => setShowLedSpecification(null)}
+                />
               )}
             </>
           )}

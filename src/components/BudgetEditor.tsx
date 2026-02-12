@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Plus, Save, Package, Download, FileText, Settings, ChevronDown } from 'lucide-react';
+import { X, Plus, Save, Package, Download, FileText, Settings, ChevronDown, Calculator } from 'lucide-react';
 import { BudgetItem, getBudgetItems, createBudgetItem, updateBudgetItem, deleteBudgetItem, getEvent } from '../lib/events';
 import { EquipmentItem, getEquipmentItems, getEquipmentModifications, EquipmentModification } from '../lib/equipment';
 import { WorkItem, getWorkItems } from '../lib/personnel';
@@ -45,6 +45,10 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
   const [showTemplates, setShowTemplates] = useState(false);
   const [showWarehouseSpec, setShowWarehouseSpec] = useState(false);
   const [showExchangeRatePopover, setShowExchangeRatePopover] = useState(false);
+  const [showLedSizeDialog, setShowLedSizeDialog] = useState(false);
+  const [selectedLedEquipment, setSelectedLedEquipment] = useState<EquipmentItem | null>(null);
+  const [ledSizeValue, setLedSizeValue] = useState('');
+  const [ledSizeType, setLedSizeType] = useState<'dimensions' | 'area'>('area');
 
   const budgetListRef = useRef<HTMLDivElement>(null);
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -125,11 +129,20 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     setExpandedCategories({ ...expandedCategories, [categoryId]: true });
   };
 
+  const isLedScreen = (equipmentItem: EquipmentItem) => {
+    return equipmentItem.subtype === 'Экран P2,6' || equipmentItem.subtype === 'Экран P3,91';
+  };
+
   const handleEquipmentClick = async (equipmentItem: EquipmentItem) => {
+    if (isLedScreen(equipmentItem)) {
+      setSelectedLedEquipment(equipmentItem);
+      setShowLedSizeDialog(true);
+      return;
+    }
     await handleAddItem(equipmentItem, 1, undefined, selectedCategoryId || undefined);
   };
 
-  const handleAddItem = async (equipmentItem: EquipmentItem, quantity: number = 1, modificationId?: string, categoryId?: string) => {
+  const handleAddItem = async (equipmentItem: EquipmentItem, quantity: number = 1, modificationId?: string, categoryId?: string, customName?: string) => {
     try {
       const targetCategoryId = categoryId || selectedCategoryId || undefined;
 
@@ -142,7 +155,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
         price: equipmentItem.rental_price,
         exchange_rate: exchangeRate,
         category_id: targetCategoryId,
-        notes: ''
+        notes: customName || ''
       });
       const updatedItems = [...budgetItems, newItem];
       setBudgetItems(updatedItems);
@@ -167,6 +180,22 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
       console.error('Error adding item:', error);
       alert(`Ошибка добавления: ${error.message}`);
     }
+  };
+
+  const handleAddLedScreen = async () => {
+    if (!selectedLedEquipment || !ledSizeValue) return;
+    
+    let customName = '';
+    if (ledSizeType === 'area') {
+      customName = `${ledSizeValue} м.кв.`;
+    } else {
+      customName = `${ledSizeValue}`;
+    }
+    
+    await handleAddItem(selectedLedEquipment, 1, undefined, selectedCategoryId || undefined, customName);
+    setShowLedSizeDialog(false);
+    setLedSizeValue('');
+    setSelectedLedEquipment(null);
   };
 
   const handleAddWorkItem = async (workItem: WorkItem, categoryId?: string) => {
@@ -807,6 +836,86 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
           eventName={eventName}
           onClose={() => setShowWarehouseSpec(false)}
         />
+      )}
+
+      {showLedSizeDialog && selectedLedEquipment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70]">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-[400px] overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-800 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Calculator className="w-4 h-4 text-cyan-500" />
+                <h3 className="text-sm font-bold text-white">Размер экрана</h3>
+              </div>
+              <button
+                onClick={() => { setShowLedSizeDialog(false); setLedSizeValue(''); setSelectedLedEquipment(null); }}
+                className="text-gray-500 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="bg-gray-800/50 rounded-lg p-3">
+                <p className="text-xs text-gray-400 mb-1">Оборудование</p>
+                <p className="text-sm font-medium text-white">{selectedLedEquipment.name}</p>
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-400 block mb-2">Тип размера</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setLedSizeType('area')}
+                    className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-all ${
+                      ledSizeType === 'area'
+                        ? 'bg-cyan-600 border-cyan-500 text-white'
+                        : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
+                    }`}
+                  >
+                    Площадь (м²)
+                  </button>
+                  <button
+                    onClick={() => setLedSizeType('dimensions')}
+                    className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-all ${
+                      ledSizeType === 'dimensions'
+                        ? 'bg-cyan-600 border-cyan-500 text-white'
+                        : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
+                    }`}
+                  >
+                    Размеры (Ш×В)
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-400 block mb-2">
+                  {ledSizeType === 'area' ? 'Площадь (м²)' : 'Размеры (формат: Ш×В или Ш×В×Г)'}
+                </label>
+                <input
+                  type="text"
+                  value={ledSizeValue}
+                  onChange={(e) => setLedSizeValue(e.target.value)}
+                  placeholder={ledSizeType === 'area' ? 'например: 12' : 'например: 4×3 или 4×3×0.15'}
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddLedScreen()}
+                />
+              </div>
+            </div>
+            <div className="px-4 py-3 border-t border-gray-800 flex justify-end gap-2">
+              <button
+                onClick={() => { setShowLedSizeDialog(false); setLedSizeValue(''); setSelectedLedEquipment(null); }}
+                className="px-4 py-2 text-xs text-gray-400 hover:text-white transition-colors"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleAddLedScreen}
+                disabled={!ledSizeValue.trim()}
+                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Добавить
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
