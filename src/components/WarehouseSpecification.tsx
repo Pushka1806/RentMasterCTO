@@ -282,10 +282,10 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
               } catch (error) {
                 console.error('Error loading modification components:', error);
               }
-            }
-            }
-            }
-            }
+  }
+  }
+  }
+  }
 
             // Pre-load modifications for all equipment items to know which ones have modifications
             const equipmentIds = budgetData
@@ -323,12 +323,12 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
             }
 
             setExpandedItems(items);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (error) {
+    console.error('Error loading data:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handlePickedChange = async (budgetItemId: string, picked: boolean) => {
     try {
