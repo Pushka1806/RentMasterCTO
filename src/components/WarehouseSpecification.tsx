@@ -95,8 +95,30 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
       return equipmentModifications[budgetItem.equipment_id].length > 0;
     }
     
-    // If not loaded yet, we'll show the button and load on click
-    return true;
+    // If not loaded yet, we need to check
+    return false;
+  };
+
+  const checkAndLoadModifications = async (budgetItem: BudgetItem) => {
+    if (!budgetItem.equipment_id) return false;
+    
+    // If we already know about this equipment's modifications, return that result
+    if (equipmentModifications[budgetItem.equipment_id] !== undefined) {
+      return equipmentModifications[budgetItem.equipment_id].length > 0;
+    }
+    
+    // Otherwise, load the modifications
+    try {
+      const mods = await getEquipmentModifications(budgetItem.equipment_id);
+      setEquipmentModifications(prev => ({
+        ...prev,
+        [budgetItem.equipment_id]: mods
+      }));
+      return mods.length > 0;
+    } catch (error) {
+      console.error('Error loading modifications for equipment', budgetItem.equipment_id, ':', error);
+      return false;
+    }
   };
 
   const groups = categories
@@ -210,11 +232,29 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
             } catch (error) {
               console.error('Error loading modification components:', error);
             }
-          }
-        }
-      }
+            }
+            }
+            }
 
-      setExpandedItems(items);
+            // Pre-load modifications for all equipment items to know which ones have modifications
+            const equipmentIds = budgetData
+              .filter(item => item.item_type === 'equipment' && item.equipment_id && item.equipment?.object_type !== 'virtual')
+              .map(item => item.equipment_id);
+
+            if (equipmentIds.length > 0) {
+              try {
+                const modsMap: Record<string, EquipmentModification[]> = {};
+                for (const equipmentId of equipmentIds) {
+                  const mods = await getEquipmentModifications(equipmentId);
+                  modsMap[equipmentId] = mods;
+                }
+                setEquipmentModifications(modsMap);
+              } catch (error) {
+                console.error('Error pre-loading modifications:', error);
+              }
+            }
+
+            setExpandedItems(items);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
