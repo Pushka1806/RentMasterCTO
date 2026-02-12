@@ -64,10 +64,10 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
     
     // Show success message when 100% progress is reached
     if (screenDimensions && progress < 100) {
-      const newTotalModules = modules
-        .map(m => m.id === moduleId ? newQuantity : m.quantity)
-        .reduce((sum, q) => sum + q, 0);
-      const newTotalArea = newTotalModules * moduleSize;
+      const newTotalArea = modules.reduce((sum, m) => {
+        const quantity = m.id === moduleId ? newQuantity : m.quantity;
+        return sum + (quantity * getModuleArea(m));
+      }, 0);
       const newProgress = requiredArea > 0 ? Math.min((newTotalArea / requiredArea) * 100, 100) : 0;
       
       if (newProgress >= 100) {
@@ -143,13 +143,35 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
     return null;
   };
 
+  // Extract module dimensions from name (format: 0,5×0,5 or 0.5x1)
+  const getModuleDimensions = (name: string): { width: number; height: number; area: number } | null => {
+    const match = name.match(/(\d+[.,]?\d*)[x×](\d+[.,]?\d*)/);
+    if (match) {
+      const width = parseFloat(match[1].replace(',', '.'));
+      const height = parseFloat(match[2].replace(',', '.'));
+      return { width, height, area: width * height };
+    }
+    return null;
+  };
+
+  // Get individual module area based on its name
+  const getModuleArea = (module: EquipmentComposition): number => {
+    const dimensions = getModuleDimensions(module.child_name);
+    if (dimensions) {
+      return dimensions.area;
+    }
+    // Fallback to default size
+    return 0.5 * 0.5; // 0.25 m²
+  };
+
   const screenDimensions = getScreenDimensions();
   const totalModules = modules.reduce((sum, m) => sum + m.quantity, 0);
-  
-  // Calculate total area covered by modules (assuming standard module size 0.5x0.5m = 0.25 m²)
-  const moduleSize = 0.5 * 0.5; // 0.25 m² per module
-  const totalModuleArea = totalModules * moduleSize;
-  
+
+  // Calculate total area covered by modules using individual module sizes
+  const totalModuleArea = modules.reduce((sum, module) => {
+    return sum + (module.quantity * getModuleArea(module));
+  }, 0);
+
   const requiredArea = screenDimensions?.area || 0;
   const progress = requiredArea > 0 ? Math.min((totalModuleArea / requiredArea) * 100, 100) : 0;
 
@@ -215,58 +237,56 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
                 />
               </div>
               <div className="flex justify-between mt-2 text-xs text-gray-500">
-                <span>Требуется модулей: ~{Math.ceil(requiredArea / moduleSize)} шт.</span>
+                <span>Требуется площади: {requiredArea.toFixed(2)} м²</span>
                 <span>Добавлено: {totalModules} шт.</span>
               </div>
             </div>
           )}
 
-          <div className="space-y-4">
-            {modules.map((module) => (
-              <div key={module.id} className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex-1">
-                    <h5 className="text-sm font-medium text-white mb-1">
-                      {module.child_name}
-                    </h5>
-                    <p className="text-xs text-gray-400">
-                      SKU: {module.child_sku} • Категория: {module.child_category}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-gray-400">Всего в составе</div>
-                    <div className="text-lg font-bold text-green-400">{module.quantity}</div>
+          <div className="space-y-3">
+            {modules.map((module) => {
+              const moduleDimensions = getModuleDimensions(module.child_name);
+              const moduleArea = getModuleArea(module);
+              return (
+                <div key={module.id} className="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h5 className="text-sm font-medium text-white">
+                        {module.child_name}
+                      </h5>
+                      {moduleDimensions && (
+                        <p className="text-xs text-gray-400">
+                          {moduleDimensions.width}×{moduleDimensions.height}м ({moduleArea.toFixed(2)} м²)
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 bg-gray-700 rounded-lg px-3 py-2">
+                      <button
+                        onClick={() => handleQuantityChange(module.id, module.quantity - 1)}
+                        className="text-gray-400 hover:text-white transition-colors"
+                        disabled={module.quantity <= 0}
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <input
+                        type="number"
+                        min="0"
+                        value={module.quantity}
+                        onChange={(e) => handleQuantityChange(module.id, parseInt(e.target.value) || 0)}
+                        className="w-20 bg-transparent text-white text-sm text-center outline-none"
+                      />
+                      <button
+                        onClick={() => handleQuantityChange(module.id, module.quantity + 1)}
+                        className="text-gray-400 hover:text-white transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                      <span className="text-xs text-gray-500">шт.</span>
+                    </div>
                   </div>
                 </div>
-                
-                <div className="flex items-center gap-3">
-                  <label className="text-xs text-gray-400">Количество:</label>
-                  <div className="flex items-center gap-2 bg-gray-700 rounded-lg px-3 py-2">
-                    <button
-                      onClick={() => handleQuantityChange(module.id, module.quantity - 1)}
-                      className="text-gray-400 hover:text-white transition-colors"
-                      disabled={module.quantity <= 0}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <input
-                      type="number"
-                      min="0"
-                      value={module.quantity}
-                      onChange={(e) => handleQuantityChange(module.id, parseInt(e.target.value) || 0)}
-                      className="w-20 bg-transparent text-white text-sm text-center outline-none"
-                    />
-                    <button
-                      onClick={() => handleQuantityChange(module.id, module.quantity + 1)}
-                      className="text-gray-400 hover:text-white transition-colors"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="text-xs text-gray-500">шт.</div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
             
             {modules.length === 0 && (
               <div className="text-center py-8">
