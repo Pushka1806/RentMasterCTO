@@ -96,19 +96,6 @@ export async function deleteEquipmentItem(id: string): Promise<void> {
     throw new Error('Нельзя удалить оборудование, которое используется в шаблонах. Сначала удалите или измените связанные позиции в шаблонах.');
   }
 
-  // Check if equipment is referenced in warehouse_specification_items
-  const { data: warehouseItems, error: warehouseError } = await supabase
-    .from('warehouse_specification_items')
-    .select('id')
-    .eq('equipment_id', id)
-    .limit(1);
-
-  if (warehouseError) throw warehouseError;
-
-  if (warehouseItems && warehouseItems.length > 0) {
-    throw new Error('Нельзя удалить оборудование, которое используется в складских спецификациях. Сначала удалите или измените связанные позиции в спецификациях.');
-  }
-
   // If no references found, proceed with deletion
   const { error } = await supabase
     .from('equipment_items')
