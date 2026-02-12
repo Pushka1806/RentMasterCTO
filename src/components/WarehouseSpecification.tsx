@@ -77,13 +77,20 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
   const [selectedModification, setSelectedModification] = useState<EquipmentModification | null>(null);
   const [modificationComponents, setModificationComponents] = useState<ModificationComponent[]>([]);
   const [componentQuantities, setComponentQuantities] = useState<Record<string, number>>({});
+  const [loadingModifications, setLoadingModifications] = useState(false);
 
   const hasModifications = (budgetItemId: string) => {
     // Find the budget item
     const budgetItem = budgetItems.find(item => item.id === budgetItemId);
     if (!budgetItem?.equipment_id) return false;
     
-    return equipmentModifications[budgetItem.equipment_id]?.length > 0;
+    // Check if we already know this equipment has no modifications
+    if (equipmentModifications[budgetItem.equipment_id] !== undefined) {
+      return equipmentModifications[budgetItem.equipment_id].length > 0;
+    }
+    
+    // If not loaded yet, we'll show the button and load on click
+    return true;
   };
 
   const groups = categories
@@ -122,20 +129,9 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
       setCables(cablesData);
       setConnectors(connectorsData);
       setOtherItems(otherData);
-
-      // Load modifications for all equipment
-      const modificationsMap: Record<string, EquipmentModification[]> = {};
-      for (const equipment of equipmentData) {
-        try {
-          const mods = await getEquipmentModifications(equipment.id);
-          if (mods.length > 0) {
-            modificationsMap[equipment.id] = mods;
-          }
-        } catch (error) {
-          console.error('Error loading modifications for equipment', equipment.id, ':', error);
-        }
-      }
-      setEquipmentModifications(modificationsMap);
+      
+      // Initialize empty modifications map - will load on demand
+      setEquipmentModifications({});
 
       const items: ExpandedItem[] = [];
 
@@ -274,9 +270,30 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
     }
   };
 
-  const handleOpenModificationSelector = (budgetItem: BudgetItem) => {
+  const handleOpenModificationSelector = async (budgetItem: BudgetItem) => {
+    if (!budgetItem.equipment_id) return;
+    
+    setLoadingModifications(true);
+    
+    // Check if we already have modifications loaded for this equipment
+    if (!equipmentModifications[budgetItem.equipment_id]) {
+      try {
+        const mods = await getEquipmentModifications(budgetItem.equipment_id);
+        setEquipmentModifications(prev => ({
+          ...prev,
+          [budgetItem.equipment_id]: mods
+        }));
+      } catch (error) {
+        console.error('Error loading modifications for equipment', budgetItem.equipment_id, ':', error);
+        alert('Ошибка загрузки модификаций');
+        setLoadingModifications(false);
+        return;
+      }
+    }
+    
     setSelectedBudgetItemForMod(budgetItem);
     setShowModificationSelector(true);
+    setLoadingModifications(false);
   };
 
   const handleModificationSelect = async (modification: EquipmentModification) => {
@@ -1285,22 +1302,27 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-400 mb-1">Модификации</label>
-                <div className="space-y-1.5 max-h-[300px] overflow-y-auto custom-scrollbar">
-                  {equipmentModifications[selectedBudgetItemForMod.equipment_id || '']?.map((mod) => (
-                    <button
-                      key={mod.id}
-                      onClick={() => handleModificationSelect(mod)}
-                      className="w-full text-left px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white text-xs rounded transition-colors"
-                    >
-                      <div className="font-medium">{mod.name}</div>
-                      {mod.description && (
-                        <div className="text-xs text-gray-500 mt-0.5">{mod.description}</div>
-                      )}
-                    </button>
-                  )) || (
-                    <div className="text-gray-500 text-xs">Нет доступных модификаций</div>
-                  )}
-                </div>
+                {loadingModifications ? (
+                  <div className="text-gray-500 text-xs py-2">Загрузка модификаций...</div>
+                ) : (
+                  <div className="space-y-1.5 max-h-[300px] overflow-y-auto custom-scrollbar">
+                    {equipmentModifications[selectedBudgetItemForMod.equipment_id || '']?.length > 0 ? (
+                      equipmentModifications[selectedBudgetItemForMod.equipment_id || ''].map((mod) => (
+                        <button
+                          key={mod.id}
+                          onClick={() => handleModificationSelect(mod)}
+                          className="w-full text-left px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white text-xs rounded transition-colors"
+                        >
+                          <div className="font-medium">{mod.name}</div>
+                          {mod.description && (
+                            <div className="text-xs text-gray-500 mt-0.5">{mod.description}</div>
+                          )}
+                        </button>
+                      )
+                    ) : (
+                      <div className="text-gray-500 text-xs">Нет доступных модификаций</div>
+                    )}
+                  </div>
               </div>
             </div>
             <div className="mt-4 flex gap-2">
