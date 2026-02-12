@@ -159,3 +159,98 @@ export async function getAvailableLedModules(screenType: 'P2.6' | 'P3.91'): Prom
     return isModule && (hasDimensions || isCompatible);
   });
 }
+
+export interface ModuleCase {
+  id: string;
+  name: string;
+  sku: string;
+  category: string;
+  modulesPerCase: number;
+  moduleId: string;
+  moduleName: string;
+}
+
+export async function findCasesForModules(moduleIds: string[]): Promise<ModuleCase[]> {
+  if (moduleIds.length === 0) return [];
+  
+  // Find all equipment items that are cases (кейсы/футляры)
+  // Cases are equipment items that have "кейс" or "футляр" in their name or category
+  const { data: casesData, error: casesError } = await supabase
+    .from('equipment_items')
+    .select('id, name, sku, category, type, subtype, note')
+    .or('name.ilike.%кейс%,name.ilike.%футляр%,category.ilike.%кейс%,category.ilike.%футляр%,type.ilike.%кейс%,type.ilike.%футляр%');
+  
+  if (casesError) throw casesError;
+  if (!casesData || casesData.length === 0) return [];
+  
+  const cases: ModuleCase[] = [];
+  
+  // For each potential case, check its composition to see which modules it contains
+  for (const caseItem of casesData) {
+    const { data: compositionData, error: compositionError } = await supabase
+      .from('equipment_compositions')
+      .select(`
+        id,
+        quantity,
+        child:equipment_items!equipment_compositions_child_id_fkey (
+          id,
+          name,
+          sku
+        )
+      `)
+      .eq('parent_id', caseItem.id);
+    
+    if (compositionError) continue;
+    
+    // Check if this case contains any of our target modules
+    for (const comp of (compositionData || [])) {
+      const child = (comp as any).child;
+      if (child && moduleIds.includes(child.id)) {
+        cases.push({
+          id: caseItem.id,
+          name: caseItem.name,
+          sku: caseItem.sku,
+          category: caseItem.category,
+          modulesPerCase: comp.quantity,
+          moduleId: child.id,
+          moduleName: child.name
+        });
+      }
+    }
+  }
+  
+  return cases;
+}
+
+export async function getEquipmentCompositionsByChild(childId: string): Promise<EquipmentComposition[]> {
+  const { data, error } = await supabase
+    .from('equipment_compositions')
+    .select(`
+      id,
+      parent_id,
+      child_id,
+      quantity,
+      created_at,
+      parent:equipment_items!equipment_compositions_parent_id_fkey (
+        name,
+        sku,
+        category,
+        type
+      )
+    `)
+    .eq('child_id', childId);
+
+  if (error) throw error;
+
+  return (data || []).map(item => ({
+    id: item.id,
+    parent_id: item.parent_id,
+    child_id: item.child_id,
+    quantity: item.quantity,
+    child_name: (item.parent as any).name,
+    child_sku: (item.parent as any).sku,
+    child_category: (item.parent as any).category,
+    child_type: (item.parent as any).type,
+    created_at: item.created_at
+  }));
+}

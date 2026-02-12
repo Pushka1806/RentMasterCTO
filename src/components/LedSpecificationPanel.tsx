@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calculator, Plus, Minus, ChevronDown, ChevronRight } from 'lucide-react';
 import { BudgetItem } from '../lib/events';
-import { getEquipmentCompositions, updateEquipmentComposition, addEquipmentComposition, getAvailableLedModules } from '../lib/equipmentCompositions';
+import { getEquipmentCompositions, updateEquipmentComposition, addEquipmentComposition, getAvailableLedModules, findCasesForModules, deleteEquipmentComposition } from '../lib/equipmentCompositions';
 import { EquipmentComposition, EquipmentModule } from '../lib/equipmentCompositions';
 
 interface LedSpecificationPanelProps {
@@ -66,9 +66,74 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Update module quantities
       for (const module of modules) {
         await updateEquipmentComposition(module.id, module.quantity);
       }
+
+      // Find and add cases for modules
+      if (budgetItem?.equipment_id) {
+        const moduleIds = modules
+          .filter(m => m.quantity > 0)
+          .map(m => m.child_id);
+        
+        if (moduleIds.length > 0) {
+          // Find cases that contain these modules
+          const cases = await findCasesForModules(moduleIds);
+          console.log('Found cases for modules:', cases);
+
+          // Get existing compositions to check for existing cases
+          const existingCompositions = await getEquipmentCompositions(budgetItem.equipment_id);
+          
+          // Remove existing case compositions (to recalculate)
+          const existingCaseIds = new Set(cases.map(c => c.id));
+          for (const comp of existingCompositions) {
+            // Check if this composition is a case (contains "кейс" or "футляр" in name)
+            if (comp.child_name.toLowerCase().includes('кейс') || 
+                comp.child_name.toLowerCase().includes('футляр')) {
+              await deleteEquipmentComposition(comp.id);
+            }
+          }
+
+          // Calculate required cases for each module type
+          const caseQuantities: Map<string, { caseId: string; caseName: string; quantity: number; moduleId: string }> = new Map();
+          
+          for (const module of modules) {
+            if (module.quantity <= 0) continue;
+            
+            // Find a case for this module
+            const matchingCase = cases.find(c => c.moduleId === module.child_id);
+            if (matchingCase) {
+              // Calculate how many cases needed (round up)
+              const casesNeeded = Math.ceil(module.quantity / matchingCase.modulesPerCase);
+              
+              // Use the first matching case (or could prioritize based on criteria)
+              const existing = caseQuantities.get(matchingCase.id);
+              if (existing) {
+                // If we already have this case, take the maximum needed
+                caseQuantities.set(matchingCase.id, {
+                  ...existing,
+                  quantity: Math.max(existing.quantity, casesNeeded)
+                });
+              } else {
+                caseQuantities.set(matchingCase.id, {
+                  caseId: matchingCase.id,
+                  caseName: matchingCase.name,
+                  quantity: casesNeeded,
+                  moduleId: module.child_id
+                });
+              }
+            }
+          }
+
+          // Add case compositions
+          for (const [caseId, caseInfo] of caseQuantities) {
+            console.log(`Adding case: ${caseInfo.caseName} x ${caseInfo.quantity}`);
+            await addEquipmentComposition(budgetItem.equipment_id, caseId, caseInfo.quantity);
+          }
+        }
+      }
+
       onClose();
     } catch (error) {
       console.error('Error saving modules:', error);
