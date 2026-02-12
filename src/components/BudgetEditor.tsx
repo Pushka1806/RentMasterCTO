@@ -401,12 +401,15 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     const targetCategoryId = targetItem.category_id || 'uncategorized';
 
     if (sourceCategoryId !== targetCategoryId) {
-      await handleUpdateItem(sourceItemId, { category_id: targetItem.category_id });
+      const updatedSourceItem = await updateBudgetItem(sourceItemId, { category_id: targetItem.category_id });
+      setBudgetItems(budgetItems.map(item =>
+        item.id === sourceItemId ? { ...item, category_id: targetItem.category_id } : item
+      ));
     }
 
-    const categoryItems = budgetItems.filter(
-      item => (item.category_id || 'uncategorized') === targetCategoryId
-    ).sort((a, b) => a.sort_order - b.sort_order);
+    const categoryItems = budgetItems
+      .filter(item => (item.category_id || 'uncategorized') === targetCategoryId)
+      .sort((a, b) => a.sort_order - b.sort_order);
 
     const sourceIndex = categoryItems.findIndex(item => item.id === sourceItemId);
     const targetIndex = categoryItems.findIndex(item => item.id === targetItemId);
@@ -416,11 +419,17 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
       const [movedItem] = newOrder.splice(sourceIndex, 1);
       newOrder.splice(targetIndex, 0, movedItem);
 
+      const updatedItems = [...budgetItems];
+
       for (let i = 0; i < newOrder.length; i++) {
-        await updateBudgetItem(newOrder[i].id, { sort_order: i });
+        const itemToUpdate = updatedItems.find(item => item.id === newOrder[i].id);
+        if (itemToUpdate) {
+          itemToUpdate.sort_order = i;
+          await updateBudgetItem(newOrder[i].id, { sort_order: i });
+        }
       }
 
-      await loadData();
+      setBudgetItems(updatedItems);
     }
 
     setDraggedItem(null);
