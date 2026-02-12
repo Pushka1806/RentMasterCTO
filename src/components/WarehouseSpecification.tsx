@@ -1318,11 +1318,12 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                             <div className="text-xs text-gray-500 mt-0.5">{mod.description}</div>
                           )}
                         </button>
-                      )
+                      ))
                     ) : (
                       <div className="text-gray-500 text-xs">Нет доступных модификаций</div>
                     )}
                   </div>
+                )}
               </div>
             </div>
             <div className="mt-4 flex gap-2">
