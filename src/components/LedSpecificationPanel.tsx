@@ -61,6 +61,21 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
     setModules(prev => prev.map(m => 
       m.id === moduleId ? { ...m, quantity: Math.max(0, newQuantity) } : m
     ));
+    
+    // Show success message when 100% progress is reached
+    if (screenDimensions && progress < 100) {
+      const newTotalModules = modules
+        .map(m => m.id === moduleId ? newQuantity : m.quantity)
+        .reduce((sum, q) => sum + q, 0);
+      const newTotalArea = newTotalModules * moduleSize;
+      const newProgress = requiredArea > 0 ? Math.min((newTotalArea / requiredArea) * 100, 100) : 0;
+      
+      if (newProgress >= 100) {
+        setTimeout(() => {
+          alert('Отлично! Количество модулей соответствует необходимой площади экрана');
+        }, 100);
+      }
+    }
   };
 
   const handleSave = async () => {
@@ -114,7 +129,29 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
     }
   };
 
+  // Extract screen dimensions from notes (format: (4x3м))
+  const getScreenDimensions = () => {
+    if (!budgetItem?.notes) return null;
+    const match = budgetItem.notes.match(/\((\d+(?:[.,]\d+)?)x(\d+(?:[.,]\d+)?)м\)/);
+    if (match) {
+      return {
+        width: parseFloat(match[1]),
+        height: parseFloat(match[2]),
+        area: parseFloat(match[1]) * parseFloat(match[2])
+      };
+    }
+    return null;
+  };
+
+  const screenDimensions = getScreenDimensions();
   const totalModules = modules.reduce((sum, m) => sum + m.quantity, 0);
+  
+  // Calculate total area covered by modules (assuming standard module size 0.5x0.5m = 0.25 m²)
+  const moduleSize = 0.5 * 0.5; // 0.25 m² per module
+  const totalModuleArea = totalModules * moduleSize;
+  
+  const requiredArea = screenDimensions?.area || 0;
+  const progress = requiredArea > 0 ? Math.min((totalModuleArea / requiredArea) * 100, 100) : 0;
 
   if (loading) {
     return (
@@ -150,11 +187,39 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
           <div className="bg-gray-800/50 rounded-lg p-4 mb-4">
             <h4 className="text-sm font-medium text-white mb-2">
               {budgetItem?.equipment?.name || 'LED экран'}
+              {screenDimensions && (
+                <span className="text-green-400 ml-2">
+                  {screenDimensions.width}×{screenDimensions.height}м ({screenDimensions.area.toFixed(2)} м²)
+                </span>
+              )}
             </h4>
             <p className="text-xs text-gray-400">
               Отредактируйте количество модулей для подбора оптимальной конфигурации
             </p>
           </div>
+
+          {screenDimensions && (
+            <div className="bg-gray-800/50 rounded-lg p-4 mb-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs text-gray-400">Заполнение модулями</span>
+                <span className="text-xs font-medium text-white">
+                  {totalModuleArea.toFixed(2)} / {requiredArea.toFixed(2)} м² ({Math.round(progress)}%)
+                </span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
+                <div 
+                  className={`h-full rounded-full transition-all duration-300 ${
+                    progress >= 100 ? 'bg-green-500' : progress >= 75 ? 'bg-cyan-500' : progress >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="flex justify-between mt-2 text-xs text-gray-500">
+                <span>Требуется модулей: ~{Math.ceil(requiredArea / moduleSize)} шт.</span>
+                <span>Добавлено: {totalModules} шт.</span>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-4">
             {modules.map((module) => (
