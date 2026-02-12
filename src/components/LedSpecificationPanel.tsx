@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calculator, Plus, Minus, ChevronDown, ChevronRight } from 'lucide-react';
-import { BudgetItem } from '../lib/events';
-import { getEquipmentCompositions, updateEquipmentComposition, addEquipmentComposition, getAvailableLedModules } from '../lib/equipmentCompositions';
+import { BudgetItem, createBudgetItem } from '../lib/events';
+import { getEquipmentCompositions, updateEquipmentComposition, addEquipmentComposition, getAvailableLedModules, findCasesForModules } from '../lib/equipmentCompositions';
 import { EquipmentComposition, EquipmentModule } from '../lib/equipmentCompositions';
 
 interface LedSpecificationPanelProps {
   budgetItemId: string;
   budgetItems: BudgetItem[];
+  eventId: string;
   onClose: () => void;
 }
 
-export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: LedSpecificationPanelProps) {
+export function LedSpecificationPanel({ budgetItemId, budgetItems, eventId, onClose }: LedSpecificationPanelProps) {
   const budgetItem = budgetItems.find(b => b.id === budgetItemId);
   
   console.log('LedSpecificationPanel props:', {
@@ -66,9 +67,58 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, onClose }: Le
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Сохраняем количество модулей
       for (const module of modules) {
         await updateEquipmentComposition(module.id, module.quantity);
       }
+
+      // Находим кейсы для модулей и добавляем их в спецификацию
+      const moduleIds = modules.map(m => m.child_id);
+      if (moduleIds.length > 0) {
+        const cases = await findCasesForModules(moduleIds);
+        
+        // Группируем кейсы по ID кейса (чтобы не добавлять дубликаты)
+        const casesByModule: Record<string, { caseInfo: typeof cases[0], moduleQuantity: number }> = {};
+        
+        for (const module of modules) {
+          if (module.quantity <= 0) continue;
+          
+          // Находим кейс для этого модуля
+          const matchingCase = cases.find(c => c.moduleChildId === module.child_id);
+          if (matchingCase) {
+            casesByModule[module.child_id] = {
+              caseInfo: matchingCase,
+              moduleQuantity: module.quantity
+            };
+          }
+        }
+
+        // Добавляем кейсы в спецификацию
+        for (const { caseInfo, moduleQuantity } of Object.values(casesByModule)) {
+          // Рассчитываем необходимое количество кейсов (округляем вверх)
+          const casesNeeded = Math.ceil(moduleQuantity / caseInfo.moduleCapacity);
+          
+          if (casesNeeded > 0) {
+            try {
+              await createBudgetItem({
+                event_id: eventId,
+                equipment_id: caseInfo.id,
+                item_type: 'equipment',
+                quantity: casesNeeded,
+                price: 0, // Кейсы обычно не тарифицируются отдельно
+                exchange_rate: 1,
+                category_id: budgetItem?.category_id || null,
+                notes: `Кейс для ${moduleQuantity} шт. модулей ${caseInfo.name}`,
+                picked: false,
+                sort_order: 0
+              });
+            } catch (error) {
+              console.error('Error adding case to specification:', error);
+            }
+          }
+        }
+      }
+
       onClose();
     } catch (error) {
       console.error('Error saving modules:', error);

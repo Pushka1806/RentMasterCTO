@@ -159,3 +159,56 @@ export async function getAvailableLedModules(screenType: 'P2.6' | 'P3.91'): Prom
     return isModule && (hasDimensions || isCompatible);
   });
 }
+
+export interface ModuleCase {
+  id: string;
+  name: string;
+  sku: string;
+  category: string;
+  type: string;
+  moduleCapacity: number; // сколько модулей помещается в кейс
+  moduleChildId: string; // ID модуля, который хранится в кейсе
+}
+
+export async function findCasesForModules(moduleIds: string[]): Promise<ModuleCase[]> {
+  // Находим все кейсы (физические элементы), которые содержат указанные модули в своем составе
+  const { data, error } = await supabase
+    .from('equipment_compositions')
+    .select(`
+      id,
+      parent_id,
+      child_id,
+      quantity,
+      parent:equipment_items!equipment_compositions_parent_id_fkey (
+        id,
+        name,
+        sku,
+        category,
+        type,
+        object_type
+      )
+    `)
+    .in('child_id', moduleIds);
+
+  if (error) throw error;
+
+  const cases: ModuleCase[] = [];
+  
+  for (const item of data || []) {
+    const parent = (item.parent as any);
+    // Фильтруем только физические элементы (кейсы)
+    if (parent && parent.object_type === 'physical') {
+      cases.push({
+        id: parent.id,
+        name: parent.name,
+        sku: parent.sku,
+        category: parent.category,
+        type: parent.type,
+        moduleCapacity: item.quantity,
+        moduleChildId: item.child_id
+      });
+    }
+  }
+
+  return cases;
+}

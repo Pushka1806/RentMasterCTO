@@ -994,6 +994,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                 <LedSpecificationPanel
                   budgetItemId={showLedSpecification}
                   budgetItems={budgetItems}
+                  eventId={eventId}
                   onClose={() => setShowLedSpecification(null)}
                 />
               )}
