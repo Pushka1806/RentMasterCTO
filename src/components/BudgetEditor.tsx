@@ -149,9 +149,12 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     await handleAddItem(equipmentItem, 1, undefined, selectedCategoryId || undefined);
   };
 
-  const handleAddItem = async (equipmentItem: EquipmentItem, quantity: number = 1, modificationId?: string, categoryId?: string, customName?: string) => {
+  const handleAddItem = async (equipmentItem: EquipmentItem, quantity: number = 1, modificationId?: string, categoryId?: string, customName?: string, area?: number) => {
     try {
       const targetCategoryId = categoryId || selectedCategoryId || undefined;
+
+      const isLed = isLedScreen(equipmentItem);
+      const price = isLed && area ? Math.round(area * equipmentItem.rental_price) : equipmentItem.rental_price;
 
       const newItem = await createBudgetItem({
         event_id: eventId,
@@ -159,7 +162,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
         modification_id: modificationId || null,
         item_type: 'equipment',
         quantity,
-        price: equipmentItem.rental_price,
+        price,
         exchange_rate: exchangeRate,
         category_id: targetCategoryId,
         notes: customName || ''
@@ -191,10 +194,14 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
 
   const handleAddLedScreen = async () => {
     if (!selectedLedEquipment || !ledWidth || !ledHeight) return;
-    
+
+    const width = parseFloat(ledWidth.replace(',', '.'));
+    const height = parseFloat(ledHeight.replace(',', '.'));
+    const area = width * height;
+
     const customName = `(${ledWidth}x${ledHeight}м)`;
-    
-    await handleAddItem(selectedLedEquipment, 1, undefined, selectedCategoryId || undefined, customName);
+
+    await handleAddItem(selectedLedEquipment, 1, undefined, selectedCategoryId || undefined, customName, area);
     setShowLedSizeDialog(false);
     setLedWidth('');
     setLedHeight('');
@@ -732,6 +739,9 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                       <div className="flex items-center gap-3 ml-3">
                         <div className="text-right">
                           <p className="text-xs font-mono text-cyan-500 font-bold">${item.rental_price}</p>
+                          {isLedScreen(item) && (
+                            <p className="text-[9px] text-gray-500">за м²</p>
+                          )}
                         </div>
                         <div className="p-1 bg-gray-800 rounded-md group-hover:bg-cyan-600 group-hover:text-white text-gray-500 transition-all">
                           <Plus className="w-3.5 h-3.5" />
@@ -891,12 +901,23 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                 </div>
                 
                 {ledWidth && ledHeight && (
-                  <div className="bg-gray-800/30 rounded-lg p-3">
-                    <p className="text-xs text-gray-400 mb-1">Общая площадь</p>
-                    <p className="text-sm font-bold text-cyan-400">
-                      {(parseFloat(ledWidth) * parseFloat(ledHeight)).toFixed(2)} м²
-                    </p>
-                  </div>
+                  <>
+                    <div className="bg-gray-800/30 rounded-lg p-3">
+                      <p className="text-xs text-gray-400 mb-1">Общая площадь</p>
+                      <p className="text-sm font-bold text-cyan-400">
+                        {(parseFloat(ledWidth.replace(',', '.')) * parseFloat(ledHeight.replace(',', '.'))).toFixed(2)} м²
+                      </p>
+                    </div>
+                    {selectedLedEquipment && (
+                      <div className="bg-gray-800/30 rounded-lg p-3">
+                        <p className="text-xs text-gray-400 mb-1">Итоговая стоимость</p>
+                        <p className="text-sm font-bold text-green-400">
+                          ${Math.round(parseFloat(ledWidth.replace(',', '.')) * parseFloat(ledHeight.replace(',', '.')) * selectedLedEquipment.rental_price).toLocaleString()}
+                          <span className="text-xs text-gray-500 ml-1">(цена за м²: ${selectedLedEquipment.rental_price})</span>
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
