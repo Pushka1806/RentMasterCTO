@@ -56,7 +56,7 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, eventId, onCl
       
       console.log('Loading modules for equipment_id:', budgetItem.equipment_id);
       try {
-        const compositions = await getEquipmentCompositions(budgetItem.equipment_id);
+        const compositions = await getEquipmentCompositions(budgetItem.equipment_id, true);
         console.log('Loaded compositions:', compositions);
         
         // Display all compositions - they are already the modules stored in this LED screen
@@ -141,7 +141,7 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, eventId, onCl
     try {
       const newCompositionId = await addEquipmentComposition(budgetItem.equipment_id, moduleModule.id, quantity);
       // Reload modules to get the new composition
-      const compositions = await getEquipmentCompositions(budgetItem.equipment_id);
+      const compositions = await getEquipmentCompositions(budgetItem.equipment_id, true);
       setModules(compositions);
       setShowAddModule(false);
     } catch (error) {
