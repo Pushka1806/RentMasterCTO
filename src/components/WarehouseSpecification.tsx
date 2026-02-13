@@ -1039,7 +1039,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                   eventId={eventId}
                   onClose={() => {
                     setShowLedSpecification(null);
-                    loadData();
+                    // Не вызываем loadData(), чтобы сохранить добавленные кейсы в expandedItems
                   }}
                 />
               )}
