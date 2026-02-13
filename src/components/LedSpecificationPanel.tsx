@@ -47,6 +47,8 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, eventId, onCl
       try {
         const compositions = await getEquipmentCompositions(budgetItem.equipment_id);
         console.log('Loaded compositions:', compositions);
+        
+        // Display all compositions - they are already the modules stored in this LED screen
         setModules(compositions);
       } catch (error) {
         console.error('Error loading modules:', error);
