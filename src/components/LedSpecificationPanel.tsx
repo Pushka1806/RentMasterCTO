@@ -49,15 +49,21 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, eventId, onCl
         console.log('Loaded compositions:', compositions);
         
         // Filter out cases - only keep LED modules
-        const filteredModules = compositions.filter(composition => 
-          isLedModule({
+        const filteredModules = compositions.filter(composition => {
+          const isModule = isLedModule({
             name: composition.child_name,
             note: composition.child_sku,
             category: composition.child_category,
             subtype: composition.child_type,
             object_type: composition.child_object_type
-          })
-        );
+          });
+          console.log(`Checking composition "${composition.child_name}":`, {
+            name: composition.child_name,
+            object_type: composition.child_object_type,
+            isModule
+          });
+          return isModule;
+        });
         
         console.log('Filtered modules (excluding cases):', filteredModules);
         setModules(filteredModules);

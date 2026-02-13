@@ -129,18 +129,16 @@ export async function getLedModules(): Promise<EquipmentModule[]> {
 
 /**
  * Helper function to determine if an item is an LED module (not a case).
- * Excludes items that are physical (cases) and includes items that are LED panels/modules.
+ * Excludes cases (items with "кейс" in name) and includes LED panels/modules.
  */
 export function isLedModule(item: { name: string; note: string; category: string; subtype?: string; object_type?: string }): boolean {
   const name = item.name.toLowerCase();
   const note = item.note?.toLowerCase() || '';
   const category = item.category?.toLowerCase() || '';
   const subtype = item.subtype?.toLowerCase() || '';
-  const objectType = item.object_type || 'virtual';
 
-  // Exclude physical items (cases)
-  // Physical items with names containing "кейс" (case in Russian) are cases, not modules
-  if (objectType === 'physical' || name.includes('кейс') || note.includes('кейс')) {
+  // Exclude cases - items with "кейс" (case in Russian) in name or note
+  if (name.includes('кейс') || note.includes('кейс')) {
     return false;
   }
 
