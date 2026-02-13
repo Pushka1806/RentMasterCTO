@@ -1055,9 +1055,26 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                               </div>
                             </td>
                             <td className="px-3 py-1.5 text-xs text-gray-400">{item.sku}</td>
-                            <td className="px-3 py-1.5 text-center text-xs text-white font-bold">{item.quantity}</td>
+                            <td className="px-3 py-1.5 text-center">
+                              <div className="flex justify-center items-center gap-1">
+                                <button
+                                  onClick={() => handleQuantityChange(item.budgetItemId, item.quantity - 1)}
+                                  disabled={item.quantity === 0}
+                                  className="p-0.5 text-red-500/50 hover:text-red-400 disabled:text-gray-700 transition-colors"
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <span className="text-xs text-white font-bold w-6 text-center">{item.quantity}</span>
+                                <button
+                                  onClick={() => handleQuantityChange(item.budgetItemId, item.quantity + 1)}
+                                  className="p-0.5 text-cyan-500/50 hover:text-cyan-400 transition-colors"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </td>
                             <td className="px-3 py-1.5 text-xs text-gray-500">{item.unit}</td>
-                            {!isWarehouseUser && (
+                            
                               <td className="px-3 py-1.5">
                                 <input
                                   type="text"
@@ -1067,7 +1084,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                                   placeholder="..."
                                 />
                               </td>
-                            )}
+                            
                           </tr>
                         ))}
                       </tbody>
