@@ -1,0 +1,16 @@
+--- a/src/components/WarehouseSpecification.tsx
++++ b/src/components/WarehouseSpecification.tsx
+@@ -491,6 +491,12 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: WarehouseSpec
+     }
+     
+     setExpandedItems(updatedItems);
++    
++    // Mark the new modification component items as modified so they get saved
++    setModifiedItems(prev => {
++      const newSet = new Set(prev);
++      newItems.forEach(item => newSet.add(item.budgetItemId));
++      return newSet;
++    });
+     
+     // Mark parent item as having applied modifications
+     setItemsWithAppliedModifications(prev => {
