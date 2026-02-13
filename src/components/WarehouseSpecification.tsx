@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Minus, Package, Download, ChevronDown, ChevronRight, CheckCircle, Layers, Calculator } from 'lucide-react';
 import { BudgetItem, getBudgetItems, getEvent, updateBudgetItemPicked, confirmSpecification, createBudgetItem } from '../lib/events';
 import { EquipmentItem, getEquipmentItems, getEquipmentModifications, EquipmentModification, ModificationComponent } from '../lib/equipment';
-import { getEquipmentCompositions } from '../lib/equipmentCompositions';
+import { getEquipmentCompositions, findCasesForModules } from '../lib/equipmentCompositions';
 import { Category, getCategories } from '../lib/categories';
+import { addCaseRowsForLedScreen } from '../lib/ledCases';
 import { EquipmentSelector } from './EquipmentSelector';
 import { LedSpecificationPanel } from './LedSpecificationPanel';
 import { useAuth } from '../contexts/AuthContext';
@@ -231,6 +232,9 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
               picked: item.picked_in_warehouse || false,
               isFromComposition: false
             });
+
+            // Add case rows derived from LED screen modules
+            await addCaseRowsForLedScreen(item, items);
           } else {
             // Non-LED virtual item - expand it into its components
             // Check for composition
@@ -312,10 +316,10 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
 
   const handlePickedChange = async (budgetItemId: string, picked: boolean) => {
     try {
-      // Find the real budget item ID (ignoring composition suffixes like -comp- or -mod-)
+      // Find the real budget item ID (ignoring composition suffixes like -comp-, -mod-, or -case-)
       // UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
       // We need to extract the full UUID before any suffix
-      const realId = budgetItemId.replace(/(-comp-.*|-mod-.*)$/, '');
+      const realId = budgetItemId.replace(/(-comp-.*|-mod-.*|-case-.*)$/, '');
       await updateBudgetItemPicked(realId, picked);
       
       // Update all items sharing this budget item ID
@@ -995,7 +999,10 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                   budgetItemId={showLedSpecification}
                   budgetItems={budgetItems}
                   eventId={eventId}
-                  onClose={() => setShowLedSpecification(null)}
+                  onClose={() => {
+                    setShowLedSpecification(null);
+                    loadData();
+                  }}
                 />
               )}
             </>
