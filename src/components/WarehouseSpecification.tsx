@@ -554,6 +554,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
     setSavingChanges(true);
     try {
       const errors: string[] = [];
+      const createdItems: { oldId: string; newId: string }[] = [];
       
       for (const budgetItemId of modifiedItems) {
         // Find the expanded item to get current values
@@ -563,19 +564,55 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
         
         if (!expandedItem) continue;
         
-        // Find the original budget item
-        const budgetItem = budgetItems.find(b => b.id === budgetItemId);
-        if (!budgetItem) continue;
+        // Check if this is a virtual item (case or modification)
+        const isVirtualItem = budgetItemId.includes('-case-') || budgetItemId.includes('-mod-');
         
-        try {
-          await updateBudgetItem(budgetItemId, {
-            quantity: expandedItem.quantity,
-            notes: expandedItem.notes
-          });
-        } catch (err) {
-          console.error('Error saving budget item:', budgetItemId, err);
-          errors.push(expandedItem.name);
+        if (isVirtualItem) {
+          // For virtual items, create a new budget item
+          try {
+            const newItem = await createBudgetItem({
+              event_id: eventId,
+              equipment_id: null,
+              work_item_id: null,
+              category_id: expandedItem.categoryId,
+              name: expandedItem.name,
+              sku: expandedItem.sku,
+              quantity: expandedItem.quantity,
+              unit: expandedItem.unit,
+              notes: expandedItem.notes,
+              picked_in_warehouse: expandedItem.picked
+            });
+            createdItems.push({ oldId: budgetItemId, newId: newItem.id });
+          } catch (err) {
+            console.error('Error creating budget item:', budgetItemId, err);
+            errors.push(expandedItem.name);
+          }
+        } else {
+          // Find the original budget item
+          const budgetItem = budgetItems.find(b => b.id === budgetItemId);
+          if (!budgetItem) continue;
+          
+          try {
+            await updateBudgetItem(budgetItemId, {
+              quantity: expandedItem.quantity,
+              notes: expandedItem.notes
+            });
+          } catch (err) {
+            console.error('Error saving budget item:', budgetItemId, err);
+            errors.push(expandedItem.name);
+          }
         }
+      }
+      
+      // Update expandedItems to replace virtual IDs with real IDs
+      if (createdItems.length > 0) {
+        setExpandedItems(prev => prev.map(item => {
+          const created = createdItems.find(c => c.oldId === item.budgetItemId);
+          if (created) {
+            return { ...item, budgetItemId: created.newId };
+          }
+          return item;
+        }));
       }
       
       if (errors.length > 0) {
