@@ -10,6 +10,8 @@ export interface EquipmentComposition {
   child_category: string;
   child_type: string;
   child_object_type?: string;
+  child_note: string;
+  child_subtype: string;
   created_at: string;
 }
 
@@ -39,7 +41,9 @@ export async function getEquipmentCompositions(parentId: string): Promise<Equipm
         sku,
         category,
         type,
-        object_type
+        object_type,
+        note,
+        subtype
       )
     `)
     .eq('parent_id', parentId)
@@ -47,7 +51,7 @@ export async function getEquipmentCompositions(parentId: string): Promise<Equipm
 
   if (error) throw error;
 
-  return (data || []).map(item => ({
+  const compositions = (data || []).map(item => ({
     id: item.id,
     parent_id: item.parent_id,
     child_id: item.child_id,
@@ -57,8 +61,21 @@ export async function getEquipmentCompositions(parentId: string): Promise<Equipm
     child_category: (item.child as any).category,
     child_type: (item.child as any).type,
     child_object_type: (item.child as any).object_type,
+    child_note: (item.child as any).note,
+    child_subtype: (item.child as any).subtype,
     created_at: item.created_at
   }));
+
+  // Filter to only LED modules, excluding cases
+  return compositions.filter(comp => {
+    return isLedModule({
+      name: comp.child_name || '',
+      note: comp.child_note || '',
+      category: comp.child_category || '',
+      subtype: comp.child_subtype || '',
+      object_type: comp.child_object_type
+    });
+  });
 }
 
 export async function addEquipmentComposition(
