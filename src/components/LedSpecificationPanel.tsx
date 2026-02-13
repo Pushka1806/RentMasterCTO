@@ -80,9 +80,11 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, eventId, onCl
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Сохраняем количество модулей
+      // Сохраняем количество модулей (только те, что больше 0)
       for (const module of modules) {
-        await updateEquipmentComposition(module.id, module.quantity);
+        if (module.quantity > 0) {
+          await updateEquipmentComposition(module.id, module.quantity);
+        }
       }
 
       // Рассчитываем кейсы на основе сохраненных модулей
