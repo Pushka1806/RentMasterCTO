@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calculator, Plus, Minus, ChevronDown, ChevronRight } from 'lucide-react';
 import { BudgetItem } from '../lib/events';
-import { getEquipmentCompositions, updateEquipmentComposition, addEquipmentComposition, getAvailableLedModules } from '../lib/equipmentCompositions';
+import { getEquipmentCompositions, updateEquipmentComposition, addEquipmentComposition, getAvailableLedModules, isLedModule } from '../lib/equipmentCompositions';
 import { EquipmentComposition, EquipmentModule } from '../lib/equipmentCompositions';
 
 interface LedSpecificationPanelProps {
@@ -47,7 +47,20 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, eventId, onCl
       try {
         const compositions = await getEquipmentCompositions(budgetItem.equipment_id);
         console.log('Loaded compositions:', compositions);
-        setModules(compositions);
+        
+        // Filter out cases - only keep LED modules
+        const filteredModules = compositions.filter(composition => 
+          isLedModule({
+            name: composition.child_name,
+            note: composition.child_sku,
+            category: composition.child_category,
+            subtype: composition.child_type,
+            object_type: composition.child_object_type
+          })
+        );
+        
+        console.log('Filtered modules (excluding cases):', filteredModules);
+        setModules(filteredModules);
       } catch (error) {
         console.error('Error loading modules:', error);
       } finally {
@@ -85,9 +98,18 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, eventId, onCl
     
     try {
       const newCompositionId = await addEquipmentComposition(budgetItem.equipment_id, moduleModule.id, quantity);
-      // Reload modules to get the new composition
+      // Reload modules to get the new composition (with filtering applied)
       const compositions = await getEquipmentCompositions(budgetItem.equipment_id);
-      setModules(compositions);
+      const filteredModules = compositions.filter(composition => 
+        isLedModule({
+          name: composition.child_name,
+          note: composition.child_sku,
+          category: composition.child_category,
+          subtype: composition.child_type,
+          object_type: composition.child_object_type
+        })
+      );
+      setModules(filteredModules);
       setShowAddModule(false);
     } catch (error) {
       console.error('Error adding module:', error);

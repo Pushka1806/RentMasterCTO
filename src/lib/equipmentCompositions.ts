@@ -9,6 +9,7 @@ export interface EquipmentComposition {
   child_sku: string;
   child_category: string;
   child_type: string;
+  child_object_type?: string;
   created_at: string;
 }
 
@@ -20,6 +21,7 @@ export interface EquipmentModule {
   type: string;
   subtype: string;
   note: string;
+  object_type?: string;
   quantity?: number; // For existing compositions
 }
 
@@ -36,7 +38,8 @@ export async function getEquipmentCompositions(parentId: string): Promise<Equipm
         name,
         sku,
         category,
-        type
+        type,
+        object_type
       )
     `)
     .eq('parent_id', parentId)
@@ -53,6 +56,7 @@ export async function getEquipmentCompositions(parentId: string): Promise<Equipm
     child_sku: (item.child as any).sku,
     child_category: (item.child as any).category,
     child_type: (item.child as any).type,
+    child_object_type: (item.child as any).object_type,
     created_at: item.created_at
   }));
 }
@@ -101,16 +105,16 @@ export async function deleteEquipmentComposition(id: string): Promise<void> {
 }
 
 export async function getLedModules(): Promise<EquipmentModule[]> {
-  // Search for LED modules - look for "модуль" in name or note, or check if category is "Видео"
+  // Search for LED modules - look for "модуль" in name or note
   const { data, error } = await supabase
     .from('equipment_items')
-    .select('id, name, sku, category, type, subtype, note')
+    .select('id, name, sku, category, type, subtype, note, object_type')
     .or('name.ilike.%модуль%,note.ilike.%модуль%,category.eq.Видео')
     .order('name');
 
   if (error) throw error;
 
-  // Filter to only LED modules
+  // Filter to only LED modules and exclude cases
   return (data || []).map(item => ({
     id: item.id,
     name: item.name || '',
@@ -118,23 +122,37 @@ export async function getLedModules(): Promise<EquipmentModule[]> {
     category: item.category || '',
     type: item.type || '',
     subtype: item.subtype || '',
-    note: item.note || ''
-  })).filter(module => {
-    const name = module.name.toLowerCase();
-    const note = module.note.toLowerCase();
-    const category = module.category.toLowerCase();
-    const subtype = module.subtype?.toLowerCase() || '';
-    
-    // Include if it's a LED module or video equipment
-    return name.includes('модуль') || 
-           note.includes('модуль') ||
-           name.includes('led') || 
-           note.includes('led') ||
-           name.includes('светодиод') ||
-           note.includes('светодиод') ||
-           category === 'видео' ||
-           subtype.includes('модуль');
-  });
+    note: item.note || '',
+    object_type: item.object_type || 'virtual'
+  })).filter(isLedModule);
+}
+
+/**
+ * Helper function to determine if an item is an LED module (not a case).
+ * Excludes items that are physical (cases) and includes items that are LED panels/modules.
+ */
+export function isLedModule(item: { name: string; note: string; category: string; subtype?: string; object_type?: string }): boolean {
+  const name = item.name.toLowerCase();
+  const note = item.note?.toLowerCase() || '';
+  const category = item.category?.toLowerCase() || '';
+  const subtype = item.subtype?.toLowerCase() || '';
+  const objectType = item.object_type || 'virtual';
+
+  // Exclude physical items (cases)
+  // Physical items with names containing "кейс" (case in Russian) are cases, not modules
+  if (objectType === 'physical' || name.includes('кейс') || note.includes('кейс')) {
+    return false;
+  }
+
+  // Include if it's a LED module or video equipment
+  return name.includes('модуль') || 
+         note.includes('модуль') ||
+         name.includes('led') || 
+         note.includes('led') ||
+         name.includes('светодиод') ||
+         note.includes('светодиод') ||
+         category === 'видео' ||
+         subtype.includes('модуль');
 }
 
 export async function getAvailableLedModules(screenType: 'P2.6' | 'P3.91'): Promise<EquipmentModule[]> {
