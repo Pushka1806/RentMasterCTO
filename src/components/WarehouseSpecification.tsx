@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Minus, Package, Download, ChevronDown, ChevronRight, CheckCircle, Layers, Calculator } from 'lucide-react';
-import { BudgetItem, getBudgetItems, getEvent, updateBudgetItemPicked, confirmSpecification, createBudgetItem } from '../lib/events';
+import { X, Plus, Minus, Package, Download, ChevronDown, ChevronRight, CheckCircle, Layers, Calculator, Save } from 'lucide-react';
+import { BudgetItem, getBudgetItems, getEvent, updateBudgetItemPicked, confirmSpecification, createBudgetItem, updateBudgetItem } from '../lib/events';
 import { EquipmentItem, getEquipmentItems, getEquipmentModifications, EquipmentModification, ModificationComponent } from '../lib/equipment';
 import { getEquipmentCompositions } from '../lib/equipmentCompositions';
 import { Category, getCategories } from '../lib/categories';
@@ -90,6 +90,8 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
     progress: number;
     cases: Array<{ modulesCount: number; caseCount: number; caseId: string }>;
   }>>({});
+  const [modifiedItems, setModifiedItems] = useState<Set<string>>(new Set());
+  const [savingChanges, setSavingChanges] = useState(false);
 
   const isLedScreenItem = (item: ExpandedItem) => {
     const category = item.category || '';
@@ -532,12 +534,62 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
     setExpandedItems(expandedItems.map(item =>
       item.budgetItemId === budgetItemId ? { ...item, quantity: Math.max(0, newQuantity) } : item
     ));
+    // Track modified item (extract real budget item ID for composed items)
+    const realId = budgetItemId.replace(/(-comp-.*|-mod-.*|-case-.*)$/, '');
+    setModifiedItems(prev => new Set(prev).add(realId));
   };
 
   const handleNotesChange = (budgetItemId: string, newNotes: string) => {
     setExpandedItems(expandedItems.map(item =>
       item.budgetItemId === budgetItemId ? { ...item, notes: newNotes } : item
     ));
+    // Track modified item (extract real budget item ID for composed items)
+    const realId = budgetItemId.replace(/(-comp-.*|-mod-.*|-case-.*)$/, '');
+    setModifiedItems(prev => new Set(prev).add(realId));
+  };
+
+  const handleSaveChanges = async () => {
+    if (modifiedItems.size === 0) return;
+    
+    setSavingChanges(true);
+    try {
+      const errors: string[] = [];
+      
+      for (const budgetItemId of modifiedItems) {
+        // Find the expanded item to get current values
+        const expandedItem = expandedItems.find(item => 
+          item.budgetItemId === budgetItemId || item.budgetItemId.startsWith(budgetItemId + '-')
+        );
+        
+        if (!expandedItem) continue;
+        
+        // Find the original budget item
+        const budgetItem = budgetItems.find(b => b.id === budgetItemId);
+        if (!budgetItem) continue;
+        
+        try {
+          await updateBudgetItem(budgetItemId, {
+            quantity: expandedItem.quantity,
+            notes: expandedItem.notes
+          });
+        } catch (err) {
+          console.error('Error saving budget item:', budgetItemId, err);
+          errors.push(expandedItem.name);
+        }
+      }
+      
+      if (errors.length > 0) {
+        alert('Ошибка при сохранении: ' + errors.join(', '));
+      } else {
+        setModifiedItems(new Set());
+        alert('Изменения сохранены');
+      }
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      alert('Ошибка при сохранении изменений');
+    } finally {
+      setSavingChanges(false);
+    }
   };
 
   const handleAddCableFromTemplate = async (cableType: string, cableLength: string) => {
@@ -1432,6 +1484,22 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
             )}
           </div>
           <div className="flex gap-2">
+            {modifiedItems.size > 0 && (
+              <button
+                onClick={handleSaveChanges}
+                disabled={savingChanges}
+                className="px-3 py-1.5 bg-cyan-600 text-white text-xs rounded hover:bg-cyan-700 disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
+              >
+                {savingChanges ? (
+                  <>...</>
+                ) : (
+                  <>
+                    <Save className="w-3.5 h-3.5" />
+                    Сохранить
+                  </>
+                )}
+              </button>
+            )}
             <button
               onClick={onClose}
               className="px-3 py-1.5 text-xs text-gray-400 border border-gray-700 rounded hover:bg-gray-800 transition-colors"
