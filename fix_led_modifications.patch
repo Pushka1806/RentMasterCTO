@@ -1,0 +1,18 @@
+--- a/src/components/WarehouseSpecification.tsx
++++ b/src/components/WarehouseSpecification.tsx
+@@ -293,8 +293,12 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: WarehouseSpec
+             }
+             }
+ 
+             // Pre-load modifications for all equipment items to know which ones have modifications
+             const equipmentIds = budgetData
+-              .filter(item => item.item_type === 'equipment' && item.equipment_id && item.equipment?.object_type !== 'virtual')
+-              .map(item => item.equipment_id);
++              .filter(item => {
++                if (item.item_type !== 'equipment' || !item.equipment_id) return false;
++                // Include all physical equipment and LED screens
++                if (item.equipment?.object_type !== 'virtual') return true;
++                // Only include virtual items that are LED screens
++                return isLedScreenBudgetItem(item);
++              })
++              .map(item => item.equipment_id);
