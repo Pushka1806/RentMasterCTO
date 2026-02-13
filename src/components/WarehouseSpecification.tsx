@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Minus, Package, Download, ChevronDown, ChevronRight, CheckCircle, Layers, Calculator } from 'lucide-react';
-import { BudgetItem, getBudgetItems, getEvent, updateBudgetItemPicked, confirmSpecification, createBudgetItem } from '../lib/events';
+import { X, Plus, Minus, Package, Download, ChevronDown, ChevronRight, CheckCircle, Layers, Calculator, Save } from 'lucide-react';
+import { BudgetItem, getBudgetItems, getEvent, updateBudgetItemPicked, confirmSpecification, createBudgetItem, updateBudgetItem } from '../lib/events';
 import { EquipmentItem, getEquipmentItems, getEquipmentModifications, EquipmentModification, ModificationComponent } from '../lib/equipment';
-import { getEquipmentCompositions, findCasesForModules } from '../lib/equipmentCompositions';
+import { getEquipmentCompositions } from '../lib/equipmentCompositions';
 import { Category, getCategories } from '../lib/categories';
-import { addCaseRowsForLedScreen } from '../lib/ledCases';
+import { CalculatedCase } from './LedSpecificationPanel';
 import { EquipmentSelector } from './EquipmentSelector';
 import { LedSpecificationPanel } from './LedSpecificationPanel';
 import { useAuth } from '../contexts/AuthContext';
@@ -82,6 +82,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
   const [loadingModifications, setLoadingModifications] = useState(false);
   const [itemsWithAppliedModifications, setItemsWithAppliedModifications] = useState<Set<string>>(new Set());
   const [showLedSpecification, setShowLedSpecification] = useState<string | null>(null);
+  const [ledItemsWithCases, setLedItemsWithCases] = useState<Set<string>>(new Set());
   const [ledSpecifications, setLedSpecifications] = useState<Record<string, {
     moduleType: string;
     moduleSize: { width: number; height: number };
@@ -89,6 +90,8 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
     progress: number;
     cases: Array<{ modulesCount: number; caseCount: number; caseId: string }>;
   }>>({});
+  const [modifiedItems, setModifiedItems] = useState<Set<string>>(new Set());
+  const [savingChanges, setSavingChanges] = useState(false);
 
   const isLedScreenItem = (item: ExpandedItem) => {
     const category = item.category || '';
@@ -203,18 +206,20 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
         const isVirtual = item.equipment?.object_type === 'virtual';
 
         if (!isVirtual) {
-          // Add parent item if it's physical
+          // Add parent item if it's physical or a saved virtual item
+          // For virtual items (equipment is null), use name/sku from the budget item itself
+          const isSavedVirtualItem = !item.equipment && item.name;
           items.push({
             budgetItemId: item.id,
             categoryId: item.category_id || null,
-            name: item.equipment?.name || 'Unknown',
-            sku: item.equipment?.sku || '',
+            name: item.equipment?.name || item.name || 'Unknown',
+            sku: item.equipment?.sku || item.sku || '',
             quantity: item.quantity,
             unit: 'шт.',
             category: item.equipment?.category || 'Other',
             notes: item.notes || '',
             picked: item.picked_in_warehouse || false,
-            isFromComposition: false
+            isFromComposition: isSavedVirtualItem
           });
         } else {
           // Virtual item - check if it's an LED screen
@@ -233,8 +238,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
               isFromComposition: false
             });
 
-            // Add case rows derived from LED screen modules
-            await addCaseRowsForLedScreen(item, items);
+            // Кейсы для LED экранов добавляются только после нажатия "Сохранить" в LedSpecificationPanel
           } else {
             // Non-LED virtual item - expand it into its components
             // Check for composition
@@ -312,6 +316,43 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLedCasesCalculated = (budgetItemId: string, cases: CalculatedCase[]) => {
+    if (cases.length === 0) return;
+    
+    const budgetItem = budgetItems.find(b => b.id === budgetItemId);
+    if (!budgetItem) return;
+    
+    if (ledItemsWithCases.has(budgetItemId)) {
+      setExpandedItems(prev => prev.filter(item => !item.budgetItemId.startsWith(`${budgetItemId}-case-`)));
+    }
+    
+    const newCaseItems: ExpandedItem[] = cases.map(calculatedCase => ({
+      budgetItemId: `${budgetItemId}-case-${calculatedCase.caseId}`,
+      categoryId: budgetItem.category_id || null,
+      name: calculatedCase.name,
+      sku: calculatedCase.sku,
+      quantity: calculatedCase.caseCount,
+      unit: 'шт.',
+      category: calculatedCase.category,
+      notes: `Кейс для ${calculatedCase.modulesCount} шт. модулей`,
+      picked: budgetItem.picked_in_warehouse || false,
+      isFromComposition: true,
+      parentName: budgetItem.equipment?.name
+    }));
+    
+    const ledItemIndex = expandedItems.findIndex(item => item.budgetItemId === budgetItemId);
+    const updatedItems = [...expandedItems];
+    
+    if (ledItemIndex >= 0) {
+      updatedItems.splice(ledItemIndex + 1, 0, ...newCaseItems);
+    } else {
+      updatedItems.push(...newCaseItems);
+    }
+    
+    setExpandedItems(updatedItems);
+    setLedItemsWithCases(prev => new Set(prev).add(budgetItemId));
   };
 
   const handlePickedChange = async (budgetItemId: string, picked: boolean) => {
@@ -495,12 +536,100 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
     setExpandedItems(expandedItems.map(item =>
       item.budgetItemId === budgetItemId ? { ...item, quantity: Math.max(0, newQuantity) } : item
     ));
+    // Track modified item (extract real budget item ID for composed items)
+    const realId = budgetItemId.replace(/(-comp-.*|-mod-.*|-case-.*)$/, '');
+    setModifiedItems(prev => new Set(prev).add(realId));
   };
 
   const handleNotesChange = (budgetItemId: string, newNotes: string) => {
     setExpandedItems(expandedItems.map(item =>
       item.budgetItemId === budgetItemId ? { ...item, notes: newNotes } : item
     ));
+    // Track modified item (extract real budget item ID for composed items)
+    const realId = budgetItemId.replace(/(-comp-.*|-mod-.*|-case-.*)$/, '');
+    setModifiedItems(prev => new Set(prev).add(realId));
+  };
+
+  const handleSaveChanges = async () => {
+    if (modifiedItems.size === 0) return;
+    
+    setSavingChanges(true);
+    try {
+      const errors: string[] = [];
+      const createdItems: { oldId: string; newId: string }[] = [];
+      
+      for (const budgetItemId of modifiedItems) {
+        // Find the expanded item to get current values
+        const expandedItem = expandedItems.find(item => 
+          item.budgetItemId === budgetItemId || item.budgetItemId.startsWith(budgetItemId + '-')
+        );
+        
+        if (!expandedItem) continue;
+        
+        // Check if this is a virtual item (case or modification)
+        const isVirtualItem = budgetItemId.includes('-case-') || budgetItemId.includes('-mod-');
+        
+        if (isVirtualItem) {
+          // For virtual items, create a new budget item
+          try {
+            const newItem = await createBudgetItem({
+              event_id: eventId,
+              item_type: 'equipment',
+              equipment_id: null,
+              work_item_id: null,
+              category_id: expandedItem.categoryId,
+              name: expandedItem.name,
+              sku: expandedItem.sku,
+              quantity: expandedItem.quantity,
+              unit: expandedItem.unit,
+              notes: expandedItem.notes,
+              picked_in_warehouse: expandedItem.picked
+            });
+            createdItems.push({ oldId: budgetItemId, newId: newItem.id });
+          } catch (err) {
+            console.error('Error creating budget item:', budgetItemId, err);
+            errors.push(expandedItem.name);
+          }
+        } else {
+          // Find the original budget item
+          const budgetItem = budgetItems.find(b => b.id === budgetItemId);
+          if (!budgetItem) continue;
+          
+          try {
+            await updateBudgetItem(budgetItemId, {
+              quantity: expandedItem.quantity,
+              notes: expandedItem.notes
+            });
+          } catch (err) {
+            console.error('Error saving budget item:', budgetItemId, err);
+            errors.push(expandedItem.name);
+          }
+        }
+      }
+      
+      // Update expandedItems to replace virtual IDs with real IDs
+      if (createdItems.length > 0) {
+        setExpandedItems(prev => prev.map(item => {
+          const created = createdItems.find(c => c.oldId === item.budgetItemId);
+          if (created) {
+            return { ...item, budgetItemId: created.newId };
+          }
+          return item;
+        }));
+      }
+      
+      if (errors.length > 0) {
+        alert('Ошибка при сохранении: ' + errors.join(', '));
+      } else {
+        setModifiedItems(new Set());
+        alert('Изменения сохранены');
+      }
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      alert('Ошибка при сохранении изменений');
+    } finally {
+      setSavingChanges(false);
+    }
   };
 
   const handleAddCableFromTemplate = async (cableType: string, cableLength: string) => {
@@ -966,9 +1095,26 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                               </div>
                             </td>
                             <td className="px-3 py-1.5 text-xs text-gray-400">{item.sku}</td>
-                            <td className="px-3 py-1.5 text-center text-xs text-white font-bold">{item.quantity}</td>
+                            <td className="px-3 py-1.5 text-center">
+                              <div className="flex justify-center items-center gap-1">
+                                <button
+                                  onClick={() => handleQuantityChange(item.budgetItemId, item.quantity - 1)}
+                                  disabled={item.quantity === 0}
+                                  className="p-0.5 text-red-500/50 hover:text-red-400 disabled:text-gray-700 transition-colors"
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <span className="text-xs text-white font-bold w-6 text-center">{item.quantity}</span>
+                                <button
+                                  onClick={() => handleQuantityChange(item.budgetItemId, item.quantity + 1)}
+                                  className="p-0.5 text-cyan-500/50 hover:text-cyan-400 transition-colors"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </td>
                             <td className="px-3 py-1.5 text-xs text-gray-500">{item.unit}</td>
-                            {!isWarehouseUser && (
+                            
                               <td className="px-3 py-1.5">
                                 <input
                                   type="text"
@@ -978,7 +1124,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                                   placeholder="..."
                                 />
                               </td>
-                            )}
+                            
                           </tr>
                         ))}
                       </tbody>
@@ -997,11 +1143,12 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
               {showLedSpecification && (
                 <LedSpecificationPanel
                   budgetItemId={showLedSpecification}
+                  onSaveWithCases={(cases) => handleLedCasesCalculated(showLedSpecification, cases)}
                   budgetItems={budgetItems}
                   eventId={eventId}
                   onClose={() => {
                     setShowLedSpecification(null);
-                    loadData();
+                    // Не вызываем loadData(), чтобы сохранить добавленные кейсы в expandedItems
                   }}
                 />
               )}
@@ -1394,6 +1541,22 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
             )}
           </div>
           <div className="flex gap-2">
+            {modifiedItems.size > 0 && (
+              <button
+                onClick={handleSaveChanges}
+                disabled={savingChanges}
+                className="px-3 py-1.5 bg-cyan-600 text-white text-xs rounded hover:bg-cyan-700 disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
+              >
+                {savingChanges ? (
+                  <>...</>
+                ) : (
+                  <>
+                    <Save className="w-3.5 h-3.5" />
+                    Сохранить
+                  </>
+                )}
+              </button>
+            )}
             <button
               onClick={onClose}
               className="px-3 py-1.5 text-xs text-gray-400 border border-gray-700 rounded hover:bg-gray-800 transition-colors"
