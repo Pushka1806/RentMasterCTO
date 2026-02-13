@@ -137,8 +137,8 @@ export function isLedModule(item: { name: string; note: string; category: string
   const category = item.category?.toLowerCase() || '';
   const subtype = item.subtype?.toLowerCase() || '';
 
-  // Exclude cases - items with "CASE" in name or note
-  if (name.includes('CASE') || note.includes('CASE')) {
+  // Exclude cases - items with "case" in name or note
+  if (name.includes('case') || note.includes('case')) {
     return false;
   }
 
