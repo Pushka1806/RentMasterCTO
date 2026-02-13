@@ -99,6 +99,8 @@ export interface BudgetItem {
   picked: boolean;
   created_at: string;
   updated_at: string;
+  name?: string;
+  sku?: string;
   equipment?: Equipment;
   work_item?: WorkItem;
 }

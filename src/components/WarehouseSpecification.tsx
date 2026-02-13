@@ -206,18 +206,20 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
         const isVirtual = item.equipment?.object_type === 'virtual';
 
         if (!isVirtual) {
-          // Add parent item if it's physical
+          // Add parent item if it's physical or a saved virtual item
+          // For virtual items (equipment is null), use name/sku from the budget item itself
+          const isSavedVirtualItem = !item.equipment && item.name;
           items.push({
             budgetItemId: item.id,
             categoryId: item.category_id || null,
-            name: item.equipment?.name || 'Unknown',
-            sku: item.equipment?.sku || '',
+            name: item.equipment?.name || item.name || 'Unknown',
+            sku: item.equipment?.sku || item.sku || '',
             quantity: item.quantity,
             unit: 'шт.',
             category: item.equipment?.category || 'Other',
             notes: item.notes || '',
             picked: item.picked_in_warehouse || false,
-            isFromComposition: false
+            isFromComposition: isSavedVirtualItem
           });
         } else {
           // Virtual item - check if it's an LED screen
@@ -572,6 +574,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
           try {
             const newItem = await createBudgetItem({
               event_id: eventId,
+              item_type: 'equipment',
               equipment_id: null,
               work_item_id: null,
               category_id: expandedItem.categoryId,
