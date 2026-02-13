@@ -27,7 +27,7 @@ export interface EquipmentModule {
   quantity?: number; // For existing compositions
 }
 
-export async function getEquipmentCompositions(parentId: string): Promise<EquipmentComposition[]> {
+export async function getEquipmentCompositions(parentId: string, filterForLedModules: boolean = false): Promise<EquipmentComposition[]> {
   const { data, error } = await supabase
     .from('equipment_compositions')
     .select(`
@@ -66,16 +66,20 @@ export async function getEquipmentCompositions(parentId: string): Promise<Equipm
     created_at: item.created_at
   }));
 
-  // Filter to only LED modules, excluding cases
-  return compositions.filter(comp => {
-    return isLedModule({
-      name: comp.child_name || '',
-      note: comp.child_note || '',
-      category: comp.child_category || '',
-      subtype: comp.child_subtype || '',
-      object_type: comp.child_object_type
+  // Filter to only LED modules, excluding cases (only when explicitly requested)
+  if (filterForLedModules) {
+    return compositions.filter(comp => {
+      return isLedModule({
+        name: comp.child_name || '',
+        note: comp.child_note || '',
+        category: comp.child_category || '',
+        subtype: comp.child_subtype || '',
+        object_type: comp.child_object_type
+      });
     });
-  });
+  }
+
+  return compositions;
 }
 
 export async function addEquipmentComposition(

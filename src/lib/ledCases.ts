@@ -27,7 +27,7 @@ export async function addCaseRowsForLedScreen(
   if (!item.equipment_id) return;
 
   try {
-    const compositions = await getEquipmentCompositions(item.equipment_id);
+    const compositions = await getEquipmentCompositions(item.equipment_id, true);
     if (compositions.length === 0) return;
 
     const moduleIds = compositions.map(c => c.child_id);
