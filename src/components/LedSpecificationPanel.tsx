@@ -1,17 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calculator, Plus, Minus, ChevronDown, ChevronRight } from 'lucide-react';
 import { BudgetItem } from '../lib/events';
-import { getEquipmentCompositions, updateEquipmentComposition, addEquipmentComposition, getAvailableLedModules } from '../lib/equipmentCompositions';
+import { getEquipmentCompositions, updateEquipmentComposition, addEquipmentComposition, getAvailableLedModules, findCasesForModules } from '../lib/equipmentCompositions';
 import { EquipmentComposition, EquipmentModule } from '../lib/equipmentCompositions';
+
+export interface CalculatedCase {
+  caseId: string;
+  name: string;
+  sku: string;
+  category: string;
+  moduleCapacity: number;
+  modulesCount: number;
+  caseCount: number;
+}
 
 interface LedSpecificationPanelProps {
   budgetItemId: string;
   budgetItems: BudgetItem[];
   eventId: string;
   onClose: () => void;
+  onSaveWithCases?: (cases: CalculatedCase[]) => void;
 }
 
-export function LedSpecificationPanel({ budgetItemId, budgetItems, eventId, onClose }: LedSpecificationPanelProps) {
+export function LedSpecificationPanel({ budgetItemId, budgetItems, eventId, onClose, onSaveWithCases }: LedSpecificationPanelProps) {
   const budgetItem = budgetItems.find(b => b.id === budgetItemId);
   
   console.log('LedSpecificationPanel props:', {
@@ -72,6 +83,46 @@ export function LedSpecificationPanel({ budgetItemId, budgetItems, eventId, onCl
       // Сохраняем количество модулей
       for (const module of modules) {
         await updateEquipmentComposition(module.id, module.quantity);
+      }
+
+      // Рассчитываем кейсы на основе сохраненных модулей
+      if (onSaveWithCases && budgetItem && modules.length > 0) {
+        const moduleIds = modules.map(m => m.child_id);
+        const cases = await findCasesForModules(moduleIds);
+        
+        // Агрегируем кейсы по caseId
+        const casesById: Record<string, { caseInfo: typeof cases[0], totalModuleQty: number }> = {};
+        
+        for (const module of modules) {
+          if (module.quantity <= 0) continue;
+          
+          const totalModuleQty = module.quantity * budgetItem.quantity;
+          const matchingCase = cases.find(c => c.moduleChildId === module.child_id);
+          
+          if (matchingCase) {
+            if (casesById[matchingCase.id]) {
+              casesById[matchingCase.id].totalModuleQty += totalModuleQty;
+            } else {
+              casesById[matchingCase.id] = {
+                caseInfo: matchingCase,
+                totalModuleQty
+              };
+            }
+          }
+        }
+        
+        // Формируем результат
+        const calculatedCases: CalculatedCase[] = Object.entries(casesById).map(([caseId, data]) => ({
+          caseId,
+          name: data.caseInfo.name,
+          sku: data.caseInfo.sku,
+          category: data.caseInfo.category,
+          moduleCapacity: data.caseInfo.moduleCapacity,
+          modulesCount: data.totalModuleQty,
+          caseCount: Math.ceil(data.totalModuleQty / data.caseInfo.moduleCapacity)
+        })).filter(c => c.caseCount > 0);
+        
+        onSaveWithCases(calculatedCases);
       }
 
       onClose();

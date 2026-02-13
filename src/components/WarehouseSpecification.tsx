@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Minus, Package, Download, ChevronDown, ChevronRight, CheckCircle, Layers, Calculator } from 'lucide-react';
 import { BudgetItem, getBudgetItems, getEvent, updateBudgetItemPicked, confirmSpecification, createBudgetItem } from '../lib/events';
 import { EquipmentItem, getEquipmentItems, getEquipmentModifications, EquipmentModification, ModificationComponent } from '../lib/equipment';
-import { getEquipmentCompositions, findCasesForModules } from '../lib/equipmentCompositions';
+import { getEquipmentCompositions } from '../lib/equipmentCompositions';
 import { Category, getCategories } from '../lib/categories';
-import { addCaseRowsForLedScreen } from '../lib/ledCases';
+import { CalculatedCase } from './LedSpecificationPanel';
 import { EquipmentSelector } from './EquipmentSelector';
 import { LedSpecificationPanel } from './LedSpecificationPanel';
 import { useAuth } from '../contexts/AuthContext';
@@ -82,6 +82,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
   const [loadingModifications, setLoadingModifications] = useState(false);
   const [itemsWithAppliedModifications, setItemsWithAppliedModifications] = useState<Set<string>>(new Set());
   const [showLedSpecification, setShowLedSpecification] = useState<string | null>(null);
+  const [ledItemsWithCases, setLedItemsWithCases] = useState<Set<string>>(new Set());
   const [ledSpecifications, setLedSpecifications] = useState<Record<string, {
     moduleType: string;
     moduleSize: { width: number; height: number };
@@ -233,8 +234,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
               isFromComposition: false
             });
 
-            // Add case rows derived from LED screen modules
-            await addCaseRowsForLedScreen(item, items);
+            // Кейсы для LED экранов добавляются только после нажатия "Сохранить" в LedSpecificationPanel
           } else {
             // Non-LED virtual item - expand it into its components
             // Check for composition
@@ -312,6 +312,43 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLedCasesCalculated = (budgetItemId: string, cases: CalculatedCase[]) => {
+    if (cases.length === 0) return;
+    
+    const budgetItem = budgetItems.find(b => b.id === budgetItemId);
+    if (!budgetItem) return;
+    
+    if (ledItemsWithCases.has(budgetItemId)) {
+      setExpandedItems(prev => prev.filter(item => !item.budgetItemId.startsWith(`${budgetItemId}-case-`)));
+    }
+    
+    const newCaseItems: ExpandedItem[] = cases.map(calculatedCase => ({
+      budgetItemId: `${budgetItemId}-case-${calculatedCase.caseId}`,
+      categoryId: budgetItem.category_id || null,
+      name: calculatedCase.name,
+      sku: calculatedCase.sku,
+      quantity: calculatedCase.caseCount,
+      unit: 'шт.',
+      category: calculatedCase.category,
+      notes: `Кейс для ${calculatedCase.modulesCount} шт. модулей`,
+      picked: budgetItem.picked_in_warehouse || false,
+      isFromComposition: true,
+      parentName: budgetItem.equipment?.name
+    }));
+    
+    const ledItemIndex = expandedItems.findIndex(item => item.budgetItemId === budgetItemId);
+    const updatedItems = [...expandedItems];
+    
+    if (ledItemIndex >= 0) {
+      updatedItems.splice(ledItemIndex + 1, 0, ...newCaseItems);
+    } else {
+      updatedItems.push(...newCaseItems);
+    }
+    
+    setExpandedItems(updatedItems);
+    setLedItemsWithCases(prev => new Set(prev).add(budgetItemId));
   };
 
   const handlePickedChange = async (budgetItemId: string, picked: boolean) => {
@@ -997,6 +1034,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
               {showLedSpecification && (
                 <LedSpecificationPanel
                   budgetItemId={showLedSpecification}
+                  onSaveWithCases={(cases) => handleLedCasesCalculated(showLedSpecification, cases)}
                   budgetItems={budgetItems}
                   eventId={eventId}
                   onClose={() => {
