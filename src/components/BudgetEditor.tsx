@@ -165,7 +165,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     await handleAddItem(equipmentItem, 1, undefined, selectedCategoryId || undefined);
   };
 
-  const handleAddItem = async (equipmentItem: EquipmentItem, quantity: number = 1, modificationId?: string, categoryId?: string, customName?: string) => {
+  const handleAddItem = async (equipmentItem: EquipmentItem, quantity: number = 1, modificationId?: string, categoryId?: string, customName?: string, customPrice?: number) => {
     try {
       const targetCategoryId = categoryId || selectedCategoryId || undefined;
 
@@ -175,7 +175,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
         modification_id: modificationId || null,
         item_type: 'equipment',
         quantity,
-        price: equipmentItem.rental_price,
+        price: customPrice !== undefined ? customPrice : equipmentItem.rental_price,
         exchange_rate: exchangeRate,
         category_id: targetCategoryId,
         notes: customName || ''
@@ -226,8 +226,9 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     const area = width * depth;
 
     const customName = `${width}x${depth}x${height}`;
+    const totalPrice = selectedPodiumEquipment.rental_price * area;
 
-    await handleAddItem(selectedPodiumEquipment, Math.round(area * 100) / 100, undefined, selectedCategoryId || undefined, customName);
+    await handleAddItem(selectedPodiumEquipment, 1, undefined, selectedCategoryId || undefined, customName, totalPrice);
     setShowPodiumDialog(false);
     setPodiumWidth('');
     setPodiumDepth('');
