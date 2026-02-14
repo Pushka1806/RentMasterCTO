@@ -297,7 +297,6 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
   };
 
   const handleDeleteItem = async (itemId: string) => {
-    if (!confirm('Удалить позицию из сметы?')) return;
     try {
       await deleteBudgetItem(itemId);
       setBudgetItems(budgetItems.filter(item => item.id !== itemId));
