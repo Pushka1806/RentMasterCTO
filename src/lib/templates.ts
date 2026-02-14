@@ -21,7 +21,7 @@ export interface TemplateItem {
   exchange_rate: number;
   sort_order: number;
   created_at: string;
-  equipment?: EquipmentItem;
+  equipment_items?: EquipmentItem;
 }
 
 export interface TemplateWithItems extends Template {
@@ -165,7 +165,7 @@ export async function removeTemplateItem(itemId: string): Promise<void> {
 }
 
 export async function reorderTemplateItems(
-  templateId: string,
+  _templateId: string,
   items: Array<{ id: string; sort_order: number }>
 ): Promise<void> {
   const updates = items.map(item =>
@@ -192,13 +192,14 @@ export async function applyTemplateToEvent(
       categoryName || template.name
     );
 
-    const promises = template.items.map(item => {
-      if (!item.equipment_items) return null;
+    for (let i = 0; i < template.items.length; i++) {
+      const item = template.items[i];
+      if (!item.equipment_items) continue;
 
       const price = item.price || item.equipment_items.rental_price || 0;
       const total = price * item.quantity;
 
-      return createBudgetItem({
+      await createBudgetItem({
         event_id: eventId,
         equipment_id: item.equipment_id,
         item_type: 'equipment',
@@ -207,11 +208,10 @@ export async function applyTemplateToEvent(
         total,
         exchange_rate: 1,
         category_id: category.id,
-        notes: ''
+        notes: '',
+        sort_order: i
       });
-    });
-
-    await Promise.all(promises.filter(p => p !== null));
+    }
   } catch (error) {
     console.error('Error applying template:', error);
     throw error;
