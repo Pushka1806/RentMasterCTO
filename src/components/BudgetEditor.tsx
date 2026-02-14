@@ -51,6 +51,12 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
   const [ledHeight, setLedHeight] = useState('');
   const [ledSizeType, setLedSizeType] = useState<'dimensions' | 'area'>('dimensions');
 
+  const [showPodiumDialog, setShowPodiumDialog] = useState(false);
+  const [selectedPodiumEquipment, setSelectedPodiumEquipment] = useState<EquipmentItem | null>(null);
+  const [podiumWidth, setPodiumWidth] = useState('');
+  const [podiumDepth, setPodiumDepth] = useState('');
+  const [podiumHeight, setPodiumHeight] = useState('');
+
   const budgetListRef = useRef<HTMLDivElement>(null);
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const lastAddedItemRef = useRef<string | null>(null);
@@ -134,10 +140,15 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     const subtype = equipmentItem.subtype || '';
     const name = equipmentItem.name || '';
     const category = equipmentItem.category || '';
-    
+
     return (subtype.includes('Экран P2,6') || subtype.includes('Экран P3,91') ||
             name.includes('LED') || name.includes('Светодиодный экран')) &&
            category === 'Видео';
+  };
+
+  const isStagePodium = (equipmentItem: EquipmentItem) => {
+    const name = equipmentItem.name || '';
+    return name.includes('Сценический подиум');
   };
 
   const handleEquipmentClick = async (equipmentItem: EquipmentItem) => {
@@ -146,10 +157,15 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
       setShowLedSizeDialog(true);
       return;
     }
+    if (isStagePodium(equipmentItem)) {
+      setSelectedPodiumEquipment(equipmentItem);
+      setShowPodiumDialog(true);
+      return;
+    }
     await handleAddItem(equipmentItem, 1, undefined, selectedCategoryId || undefined);
   };
 
-  const handleAddItem = async (equipmentItem: EquipmentItem, quantity: number = 1, modificationId?: string, categoryId?: string, customName?: string) => {
+  const handleAddItem = async (equipmentItem: EquipmentItem, quantity: number = 1, modificationId?: string, categoryId?: string, customName?: string, customPrice?: number) => {
     try {
       const targetCategoryId = categoryId || selectedCategoryId || undefined;
 
@@ -159,7 +175,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
         modification_id: modificationId || null,
         item_type: 'equipment',
         quantity,
-        price: equipmentItem.rental_price,
+        price: customPrice !== undefined ? customPrice : equipmentItem.rental_price,
         exchange_rate: exchangeRate,
         category_id: targetCategoryId,
         notes: customName || ''
@@ -191,14 +207,33 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
 
   const handleAddLedScreen = async () => {
     if (!selectedLedEquipment || !ledWidth || !ledHeight) return;
-    
+
     const customName = `(${ledWidth}x${ledHeight}м)`;
-    
+
     await handleAddItem(selectedLedEquipment, 1, undefined, selectedCategoryId || undefined, customName);
     setShowLedSizeDialog(false);
     setLedWidth('');
     setLedHeight('');
     setSelectedLedEquipment(null);
+  };
+
+  const handleAddPodium = async () => {
+    if (!selectedPodiumEquipment || !podiumWidth || !podiumDepth || !podiumHeight) return;
+
+    const width = parseFloat(podiumWidth);
+    const depth = parseFloat(podiumDepth);
+    const height = parseFloat(podiumHeight);
+    const area = width * depth;
+
+    const customName = `${width}x${depth}x${height}`;
+    const totalPrice = selectedPodiumEquipment.rental_price * area;
+
+    await handleAddItem(selectedPodiumEquipment, 1, undefined, selectedCategoryId || undefined, customName, totalPrice);
+    setShowPodiumDialog(false);
+    setPodiumWidth('');
+    setPodiumDepth('');
+    setPodiumHeight('');
+    setSelectedPodiumEquipment(null);
   };
 
   const handleAddWorkItem = async (workItem: WorkItem, categoryId?: string) => {
@@ -889,7 +924,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                     />
                   </div>
                 </div>
-                
+
                 {ledWidth && ledHeight && (
                   <div className="bg-gray-800/30 rounded-lg p-3">
                     <p className="text-xs text-gray-400 mb-1">Общая площадь</p>
@@ -910,6 +945,105 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
               <button
                 onClick={handleAddLedScreen}
                 disabled={!ledWidth || !ledHeight}
+                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Добавить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPodiumDialog && selectedPodiumEquipment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70]">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-[400px] overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-800 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Calculator className="w-4 h-4 text-cyan-500" />
+                <h3 className="text-sm font-bold text-white">Размер подиума</h3>
+              </div>
+              <button
+                onClick={() => { setShowPodiumDialog(false); setPodiumWidth(''); setPodiumDepth(''); setPodiumHeight(''); setSelectedPodiumEquipment(null); }}
+                className="text-gray-500 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="bg-gray-800/50 rounded-lg p-3">
+                <p className="text-xs text-gray-400 mb-1">Оборудование</p>
+                <p className="text-sm font-medium text-white">{selectedPodiumEquipment.name}</p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-2">Ширина (м)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={podiumWidth}
+                      onChange={(e) => setPodiumWidth(e.target.value)}
+                      placeholder="4"
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddPodium()}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-2">Глубина (м)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={podiumDepth}
+                      onChange={(e) => setPodiumDepth(e.target.value)}
+                      placeholder="3"
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddPodium()}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-2">Высота (м)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={podiumHeight}
+                      onChange={(e) => setPodiumHeight(e.target.value)}
+                      placeholder="0.6"
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddPodium()}
+                    />
+                  </div>
+                </div>
+
+                {podiumWidth && podiumDepth && (
+                  <div className="bg-gray-800/30 rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-1">Общая площадь</p>
+                    <p className="text-sm font-bold text-cyan-400">
+                      {(parseFloat(podiumWidth) * parseFloat(podiumDepth)).toFixed(2)} м²
+                    </p>
+                  </div>
+                )}
+
+                {podiumWidth && podiumDepth && podiumHeight && (
+                  <div className="bg-gray-800/30 rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-1">Сумма ({selectedPodiumEquipment.rental_price}$ × {(parseFloat(podiumWidth) * parseFloat(podiumDepth)).toFixed(2)} м²)</p>
+                    <p className="text-sm font-bold text-green-400">
+                      ${(selectedPodiumEquipment.rental_price * parseFloat(podiumWidth) * parseFloat(podiumDepth)).toFixed(2)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="px-4 py-3 border-t border-gray-800 flex justify-end gap-2">
+              <button
+                onClick={() => { setShowPodiumDialog(false); setPodiumWidth(''); setPodiumDepth(''); setPodiumHeight(''); setSelectedPodiumEquipment(null); }}
+                className="px-4 py-2 text-xs text-gray-400 hover:text-white transition-colors"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleAddPodium}
+                disabled={!podiumWidth || !podiumDepth || !podiumHeight}
                 className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Добавить
