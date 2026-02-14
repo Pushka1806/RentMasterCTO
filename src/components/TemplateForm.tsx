@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, GripVertical } from 'lucide-react';
 import {
   Template,
-  TemplateWithItems,
   createTemplate,
   updateTemplate,
   addTemplateItem,
   updateTemplateItem,
   removeTemplateItem,
-  getTemplateById
+  getTemplateById,
+  reorderTemplateItems
 } from '../lib/templates';
 import { EquipmentItem } from '../lib/equipment';
 import { EquipmentSelector } from './EquipmentSelector';
@@ -27,6 +27,8 @@ export function TemplateForm({ template: initialTemplate, onClose, onSave }: Tem
   const [saving, setSaving] = useState(false);
   const [showEquipmentSelector, setShowEquipmentSelector] = useState(false);
   const [templateId, setTemplateId] = useState<string | null>(initialTemplate?.id || null);
+  const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
+  const [dragOverItemIndex, setDragOverItemIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (initialTemplate) {
@@ -134,6 +136,57 @@ export function TemplateForm({ template: initialTemplate, onClose, onSave }: Tem
         console.error('Error removing item:', error);
       }
     }
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedItemIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverItemIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverItemIndex(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    setDragOverItemIndex(null);
+
+    if (draggedItemIndex === null || draggedItemIndex === dropIndex) {
+      setDraggedItemIndex(null);
+      return;
+    }
+
+    const newItems = [...items];
+    const [draggedItem] = newItems.splice(draggedItemIndex, 1);
+    newItems.splice(dropIndex, 0, draggedItem);
+    setItems(newItems);
+
+    if (templateId && !draggedItem.templateItemId.startsWith('new_')) {
+      try {
+        const reorderData = newItems
+          .filter(item => !item.templateItemId.startsWith('new_'))
+          .map((item, idx) => ({
+            id: item.templateItemId,
+            sort_order: idx
+          }));
+        await reorderTemplateItems(templateId, reorderData);
+      } catch (error) {
+        console.error('Error reordering items:', error);
+      }
+    }
+
+    setDraggedItemIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItemIndex(null);
+    setDragOverItemIndex(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -254,9 +307,22 @@ export function TemplateForm({ template: initialTemplate, onClose, onSave }: Tem
                       {items.map((item, index) => (
                         <div
                           key={item.templateItemId}
-                          className="flex flex-col gap-2 p-3 bg-gray-900 rounded border border-gray-600"
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, index)}
+                          onDragOver={(e) => handleDragOver(e, index)}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDrop(e, index)}
+                          onDragEnd={handleDragEnd}
+                          className={`flex flex-col gap-2 p-3 bg-gray-900 rounded border transition-all cursor-move ${
+                            dragOverItemIndex === index && draggedItemIndex !== index
+                              ? 'border-cyan-500 bg-cyan-500/10'
+                              : 'border-gray-600'
+                          } ${draggedItemIndex === index ? 'opacity-50' : ''}`}
                         >
                           <div className="flex items-center gap-3">
+                            <div className="cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300">
+                              <GripVertical className="w-4 h-4" />
+                            </div>
                             <div className="flex-1">
                               <div className="font-medium text-white">{item.name}</div>
                             </div>
@@ -270,7 +336,7 @@ export function TemplateForm({ template: initialTemplate, onClose, onSave }: Tem
                             </button>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="grid grid-cols-2 gap-2 text-sm ml-7">
                             <div>
                               <label className="text-xs text-gray-400">Кол-во</label>
                               <div className="flex items-center gap-1">
