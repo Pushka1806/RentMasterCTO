@@ -960,7 +960,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
             <div className="px-4 py-3 border-b border-gray-800 flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <Calculator className="w-4 h-4 text-cyan-500" />
-                <h3 className="text-sm font-bold text-white">Размер подиума</h3>
+                <h3 className="text-sm font-bold text-white">Размеры</h3>
               </div>
               <button
                 onClick={() => { setShowPodiumDialog(false); setPodiumWidth(''); setPodiumDepth(''); setPodiumHeight(''); setSelectedPodiumEquipment(null); }}
@@ -1024,7 +1024,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                   </div>
                 )}
 
-                {podiumWidth && podiumDepth && podiumHeight && (
+                {podiumWidth && podiumDepth && (
                   <div className="bg-gray-800/30 rounded-lg p-3">
                     <p className="text-xs text-gray-400 mb-1">Сумма ({selectedPodiumEquipment.rental_price}$ × {(parseFloat(podiumWidth) * parseFloat(podiumDepth)).toFixed(2)} м²)</p>
                     <p className="text-sm font-bold text-green-400">
