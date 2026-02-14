@@ -218,7 +218,7 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
 
   const imgWidth = 210;
   const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  const pdfHeight = Math.max(297, imgHeight);
+  const pdfHeight = Math.max(imgHeight, imgWidth);
 
   const pdf = new jsPDF({
     orientation: 'portrait',
