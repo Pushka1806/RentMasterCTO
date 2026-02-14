@@ -181,7 +181,7 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Артикул (SKU) *
+                  Артикул (SKU)
                 </label>
                 <input
                   type="text"
@@ -190,7 +190,6 @@ export function EquipmentForm({ item, categories, onClose }: EquipmentFormProps)
                   onChange={handleChange}
                   placeholder="VI_FIX_FRM"
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 font-mono"
-                  required
                 />
               </div>
 
