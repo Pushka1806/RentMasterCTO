@@ -207,8 +207,9 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
   document.body.appendChild(container);
   await document.fonts.ready;
 
+  const renderScale = 2;
   const canvas = await html2canvas(container, {
-    scale: 2,
+    scale: renderScale,
     backgroundColor: '#0a0a0a',
     useCORS: true,
     logging: false
@@ -216,16 +217,16 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
 
   document.body.removeChild(container);
 
-  const imgWidth = 210;
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  const pdfHeight = imgHeight;
+  const pdfWidth = canvas.width / renderScale;
+  const pdfHeight = canvas.height / renderScale;
+  const orientation = pdfWidth > pdfHeight ? 'landscape' : 'portrait';
 
   const pdf = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: [imgWidth, pdfHeight]
+    orientation,
+    unit: 'px',
+    format: [pdfWidth, pdfHeight]
   });
 
-  pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
+  pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfWidth, pdfHeight);
   pdf.save(`Proposal_${data.eventName || 'event'}.pdf`);
 }
