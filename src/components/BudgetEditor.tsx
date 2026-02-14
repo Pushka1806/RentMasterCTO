@@ -148,7 +148,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
 
   const isStagePodium = (equipmentItem: EquipmentItem) => {
     const name = equipmentItem.name || '';
-    return name.includes('Сценический подиум');
+    return name.includes('Сценический подиум') || name.toLowerCase().includes('ступенька');
   };
 
   const handleEquipmentClick = async (equipmentItem: EquipmentItem) => {
