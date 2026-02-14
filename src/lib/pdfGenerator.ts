@@ -67,8 +67,8 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
   const container = document.createElement('div');
   // Уменьшены отступы для компактности [cite: 53]
   container.style.cssText = `
-    position: absolute; left: -9999px; width: 800px; 
-    background-color: #0a0a0a; color: #ffffff; 
+    position: absolute; left: -9999px; width: 800px; height: auto;
+    background-color: #0a0a0a; color: #ffffff;
     font-family: 'Montserrat', sans-serif; padding: 25px 40px;
     box-sizing: border-box; line-height: 1.2;
   `;
@@ -211,19 +211,20 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
     scale: 2,
     backgroundColor: '#0a0a0a',
     useCORS: true,
-    logging: false
+    logging: false,
+    height: container.scrollHeight,
+    windowHeight: container.scrollHeight
   });
 
   document.body.removeChild(container);
 
   const imgWidth = 210;
   const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  const pdfHeight = imgHeight;
 
   const pdf = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
-    format: [imgWidth, pdfHeight]
+    format: [imgWidth, imgHeight]
   });
 
   pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
