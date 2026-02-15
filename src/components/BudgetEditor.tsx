@@ -489,9 +489,8 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
   };
 
   const calculateBYNNonCash = (priceUSD: number, quantity: number): number => {
-    const baseAmount = priceUSD * exchangeRate * quantity;
-    const withBankRate = baseAmount / 0.8;
-    return Math.round(withBankRate / 5) * 5;
+    const baseAmount = priceUSD * quantity * exchangeRate * 1.67;
+    return Math.round(baseAmount / 5) * 5;
   };
 
   const equipmentCategories = ['Все', ...Array.from(new Set(equipment.map(item => item.category)))];
