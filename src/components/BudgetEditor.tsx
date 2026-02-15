@@ -210,15 +210,18 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     if (!selectedLedEquipment) return;
 
     let area: number;
+    let customName: string;
+
     if (ledSizeType === 'dimensions') {
       if (!ledWidth || !ledHeight) return;
       area = parseFloat(ledWidth) * parseFloat(ledHeight);
+      customName = `(${ledWidth}x${ledHeight})`;
     } else {
       if (!ledArea) return;
       area = parseFloat(ledArea);
+      customName = `(${area.toFixed(2)} м.кв.)`;
     }
 
-    const customName = `(${area.toFixed(2)} м.кв.)`;
     const totalPrice = selectedLedEquipment.rental_price * area;
 
     await handleAddItem(selectedLedEquipment, 1, undefined, selectedCategoryId || undefined, customName, totalPrice);
