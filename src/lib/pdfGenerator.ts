@@ -6,6 +6,7 @@ interface BudgetItem {
   category_id?: string;
   equipment?: { name: string };
   work_item?: { name: string };
+  item_type?: 'equipment' | 'work';
   quantity: number;
   price: number;
   total: number;
@@ -33,8 +34,21 @@ const calculateBYNCashPrice = (priceUSD: number, exchangeRate: number): number =
   return Math.round(baseAmount / 5) * 5;
 };
 
-const calculateBYNNonCashPrice = (priceUSD: number, exchangeRate: number): number => {
+const calculateBYNNonCashPrice = (priceUSD: number, exchangeRate: number, itemType?: 'equipment' | 'work', workItemName?: string): number => {
   const baseAmount = priceUSD * exchangeRate;
+  
+  // For work items (except equipment delivery and personnel delivery), use 1.67 multiplier
+  if (itemType === 'work' && workItemName) {
+    const isDeliveryWork = workItemName.toLowerCase().includes('доставка оборудования') ||
+                           workItemName.toLowerCase().includes('доставка персонала');
+    
+    if (!isDeliveryWork) {
+      const withSpecialRate = baseAmount * 1.67;
+      return Math.round(withSpecialRate / 5) * 5;
+    }
+  }
+  
+  // For equipment, delivery work items, and others, use the standard bank rate (divide by 0.8)
   const withBankRate = baseAmount / 0.8;
   return Math.round(withBankRate / 5) * 5;
 };
@@ -92,12 +106,12 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
   const paymentMode = data.paymentMode || 'usd';
   const currencySuffix = paymentMode !== 'usd' ? ' BYN' : ' $';
 
-  const calculatePrice = (usdPrice: number): number => {
+  const calculatePrice = (usdPrice: number, itemType?: 'equipment' | 'work', workItemName?: string): number => {
     switch (paymentMode) {
       case 'byn_cash':
         return calculateBYNCashPrice(usdPrice, data.exchangeRate);
       case 'byn_noncash':
-        return calculateBYNNonCashPrice(usdPrice, data.exchangeRate);
+        return calculateBYNNonCashPrice(usdPrice, data.exchangeRate, itemType, workItemName);
       default:
         return usdPrice;
     }
@@ -113,7 +127,7 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
       const name = item.equipment?.name || item.work_item?.name || '—';
       const qty = item.quantity || 0;
       const usdPrice = item.price || 0;
-      const price = calculatePrice(usdPrice);
+      const price = calculatePrice(usdPrice, item.item_type, item.work_item?.name);
       const total = price * qty;
       categorySum += total;
 

@@ -85,19 +85,48 @@ export function WorkPersonnelManager({ workItems, onClose, onSave, paymentMode, 
     }
   };
 
-  const calculateBYN = (priceUSD: number, quantity: number): number => {
+  const calculateBYN = (priceUSD: number, quantity: number, workItemName?: string): number => {
     const baseAmount = priceUSD * exchangeRate * quantity;
     const withMarkup = baseAmount * 1.2;
     return Math.round(withMarkup / 5) * 5;
+  };
+
+  const calculateBYNNonCash = (priceUSD: number, quantity: number, workItemName?: string): number => {
+    const baseAmount = priceUSD * exchangeRate * quantity;
+
+    // For work items (except equipment delivery and personnel delivery), use 1.67 multiplier
+    if (workItemName) {
+      const isDeliveryWork = workItemName.toLowerCase().includes('доставка оборудования') ||
+                             workItemName.toLowerCase().includes('доставка персонала');
+
+      if (!isDeliveryWork) {
+        const withSpecialRate = baseAmount * 1.67;
+        return Math.round(withSpecialRate / 5) * 5;
+      }
+    }
+
+    // For delivery work items and others, use the standard bank rate (divide by 0.8)
+    const withBankRate = baseAmount / 0.8;
+    return Math.round(withBankRate / 5) * 5;
   };
 
   const calculatePersonnelShare = (item: BudgetItem): number => {
     const assignedCount = (assignments[item.id] || []).length;
     if (assignedCount === 0) return 0;
 
-    const totalAmount = showInBYN
-      ? calculateBYN(item.price, item.quantity)
-      : item.price * item.quantity;
+    let totalAmount: number;
+    const workItemName = item.work_item?.name;
+
+    switch (paymentMode) {
+      case 'byn_cash':
+        totalAmount = calculateBYN(item.price, item.quantity, workItemName);
+        break;
+      case 'byn_noncash':
+        totalAmount = calculateBYNNonCash(item.price, item.quantity, workItemName);
+        break;
+      default:
+        totalAmount = item.price * item.quantity;
+    }
 
     return totalAmount / assignedCount;
   };
@@ -148,9 +177,17 @@ export function WorkPersonnelManager({ workItems, onClose, onSave, paymentMode, 
                 .map(id => personnel.find(p => p.id === id))
                 .filter(Boolean) as Personnel[];
               const isExpanded = expandedItems[item.id];
-              const totalAmount = showInBYN
-                ? calculateBYN(item.price, item.quantity)
-                : item.price * item.quantity;
+              const workItemName = item.work_item?.name;
+              const totalAmount = (() => {
+                switch (paymentMode) {
+                  case 'byn_cash':
+                    return calculateBYN(item.price, item.quantity, workItemName);
+                  case 'byn_noncash':
+                    return calculateBYNNonCash(item.price, item.quantity, workItemName);
+                  default:
+                    return item.price * item.quantity;
+                }
+              })();
 
               return (
                 <div key={item.id} className="bg-gray-800 rounded-lg border border-gray-700">
@@ -175,7 +212,10 @@ export function WorkPersonnelManager({ workItems, onClose, onSave, paymentMode, 
 
                     <div className="text-right">
                       <p className="text-cyan-400 font-semibold">
-                        {showInBYN ? `${totalAmount.toFixed(2)} BYN` : `$${totalAmount.toFixed(2)}`}
+                        {paymentMode === 'byn_cash' || paymentMode === 'byn_noncash'
+                          ? `${totalAmount.toFixed(2)} BYN`
+                          : `${totalAmount.toFixed(2)}`
+                        }
                       </p>
                       <p className="text-sm text-gray-400">
                         {assignedPersonnel.length} {assignedPersonnel.length === 1 ? 'человек' : 'человек'}
@@ -215,7 +255,10 @@ export function WorkPersonnelManager({ workItems, onClose, onSave, paymentMode, 
                                 {isAssigned && (
                                   <div className="text-right">
                                     <p className="text-green-400 font-semibold">
-                                      {showInBYN ? `${amount.toFixed(2)} BYN` : `$${amount.toFixed(2)}`}
+                                      {paymentMode === 'byn_cash' || paymentMode === 'byn_noncash'
+                                        ? `${amount.toFixed(2)} BYN`
+                                        : `${amount.toFixed(2)}`
+                                      }
                                     </p>
                                     <p className="text-xs text-gray-400">
                                       К выплате
@@ -233,9 +276,9 @@ export function WorkPersonnelManager({ workItems, onClose, onSave, paymentMode, 
                           <div className="flex justify-between items-center">
                             <span className="text-gray-400">На человека (базовая доля):</span>
                             <span className="text-white font-semibold">
-                              {showInBYN
+                              {paymentMode === 'byn_cash' || paymentMode === 'byn_noncash'
                                 ? `${calculatePersonnelShare(item).toFixed(2)} BYN`
-                                : `$${calculatePersonnelShare(item).toFixed(2)}`
+                                : `${calculatePersonnelShare(item).toFixed(2)}`
                               }
                             </span>
                           </div>
