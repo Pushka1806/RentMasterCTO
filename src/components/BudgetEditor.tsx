@@ -32,7 +32,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEquipmentCategory, setSelectedEquipmentCategory] = useState<string>('Все');
   const [exchangeRate, setExchangeRate] = useState(3.0);
-  const [showInBYN, setShowInBYN] = useState(false);
+  const [paymentMode, setPaymentMode] = useState<'usd' | 'byn_cash' | 'byn_noncash'>('usd');
   const [workPersonnelManagerOpen, setWorkPersonnelManagerOpen] = useState(false);
   const [selectedCategoryForPersonnel, setSelectedCategoryForPersonnel] = useState<string | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
@@ -349,7 +349,8 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
         organizerName: event.organizers?.full_name,
         budgetItems: budgetItems,
         categories: categories,
-        exchangeRate: exchangeRate
+        exchangeRate: exchangeRate,
+        paymentMode: paymentMode
       });
     } catch (error: any) {
       console.error('Error generating PDF:', error);
@@ -467,10 +468,15 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     setDraggedItem(null);
   };
 
-  const calculateBYN = (priceUSD: number, quantity: number): number => {
+  const calculateBYNCash = (priceUSD: number, quantity: number): number => {
     const baseAmount = priceUSD * exchangeRate * quantity;
-    const withMarkup = baseAmount * 1.2;
-    return Math.round(withMarkup / 5) * 5;
+    return Math.round(baseAmount / 5) * 5;
+  };
+
+  const calculateBYNNonCash = (priceUSD: number, quantity: number): number => {
+    const baseAmount = priceUSD * exchangeRate * quantity;
+    const withBankRate = baseAmount / 0.8;
+    return Math.round(withBankRate / 5) * 5;
   };
 
   const equipmentCategories = ['Все', ...Array.from(new Set(equipment.map(item => item.category)))];
@@ -496,9 +502,28 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
   }, {} as GroupedItems);
 
   const totalUSD = budgetItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const totalBYN = budgetItems.reduce((sum, item) =>
-    sum + calculateBYN(item.price, item.quantity), 0
+  const totalBYNCash = budgetItems.reduce((sum, item) =>
+    sum + calculateBYNCash(item.price, item.quantity), 0
   );
+  const totalBYNNonCash = budgetItems.reduce((sum, item) =>
+    sum + calculateBYNNonCash(item.price, item.quantity), 0
+  );
+
+  const getTotalForMode = () => {
+    switch (paymentMode) {
+      case 'byn_cash': return totalBYNCash;
+      case 'byn_noncash': return totalBYNNonCash;
+      default: return totalUSD;
+    }
+  };
+
+  const getCurrencyLabel = () => {
+    switch (paymentMode) {
+      case 'byn_cash': return 'BYN';
+      case 'byn_noncash': return 'BYN';
+      default: return 'USD';
+    }
+  };
 
   if (loading) {
     return (
@@ -601,13 +626,13 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                     className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg border border-gray-700 transition-all"
                   >
                     <Settings className="w-3.5 h-3.5 text-gray-500" />
-                    <span className="text-xs font-medium">{showInBYN ? 'BYN' : 'USD'}</span>
+                    <span className="text-xs font-medium">{getCurrencyLabel()}</span>
                     <span className="text-[10px] text-gray-500 font-mono">({exchangeRate.toFixed(2)})</span>
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showExchangeRatePopover ? 'rotate-180' : ''}`} />
                   </button>
 
                   {showExchangeRatePopover && (
-                    <div className="absolute top-full right-0 mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-50 p-3 min-w-[180px]">
+                    <div className="absolute top-full right-0 mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-50 p-3 min-w-[200px]">
                       <div className="space-y-3">
                         <div>
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Курс валюты</label>
@@ -619,15 +644,39 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                             className="w-full px-2.5 py-1.5 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:ring-2 focus:ring-cyan-500 outline-none"
                           />
                         </div>
-                        <label className="flex items-center gap-2 cursor-pointer group">
-                          <input
-                            type="checkbox"
-                            checked={showInBYN}
-                            onChange={(e) => setShowInBYN(e.target.checked)}
-                            className="w-4 h-4 rounded border-gray-700 bg-gray-900 text-cyan-600 focus:ring-cyan-600"
-                          />
-                          <span className="text-xs text-gray-300 group-hover:text-white">Режим BYN (с наценкой)</span>
-                        </label>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Система расчёта</label>
+                          <button
+                            onClick={() => setPaymentMode('usd')}
+                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+                              paymentMode === 'usd'
+                                ? 'bg-cyan-600 text-white'
+                                : 'text-gray-300 hover:bg-gray-700'
+                            }`}
+                          >
+                            USD
+                          </button>
+                          <button
+                            onClick={() => setPaymentMode('byn_noncash')}
+                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+                              paymentMode === 'byn_noncash'
+                                ? 'bg-cyan-600 text-white'
+                                : 'text-gray-300 hover:bg-gray-700'
+                            }`}
+                          >
+                            BYN (безналичный)
+                          </button>
+                          <button
+                            onClick={() => setPaymentMode('byn_cash')}
+                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+                              paymentMode === 'byn_cash'
+                                ? 'bg-cyan-600 text-white'
+                                : 'text-gray-300 hover:bg-gray-700'
+                            }`}
+                          >
+                            BYN (наличный)
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -668,7 +717,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                           onUpdateItem={handleUpdateItem}
                           onDeleteItem={handleDeleteItem}
                           onManagePersonnel={handleOpenWorkPersonnelManager}
-                          showInBYN={showInBYN}
+                          paymentMode={paymentMode}
                           exchangeRate={exchangeRate}
                           onDragStart={handleDragStart}
                           onDragOver={(e) => handleDragOver(e, category.id)}
@@ -698,7 +747,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                         onUpdateItem={handleUpdateItem}
                         onDeleteItem={handleDeleteItem}
                         onManagePersonnel={handleOpenWorkPersonnelManager}
-                        showInBYN={showInBYN}
+                        paymentMode={paymentMode}
                         exchangeRate={exchangeRate}
                         onDragStart={handleDragStart}
                         onDragOver={(e) => handleDragOver(e, 'uncategorized')}
@@ -803,11 +852,8 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
             <div className="flex flex-col">
               <span className="text-[9px] uppercase font-bold text-gray-500 tracking-widest">Итоговая сумма</span>
               <span className="text-xl font-black text-white">
-                {showInBYN ? (
-                  <><span className="text-cyan-400">{totalBYN.toLocaleString()}</span> <span className="text-xs font-normal text-gray-400 ml-1">BYN</span></>
-                ) : (
-                  <><span className="text-cyan-400">${totalUSD.toLocaleString()}</span> <span className="text-xs font-normal text-gray-400 ml-1">USD</span></>
-                )}
+                <span className="text-cyan-400">{getTotalForMode().toLocaleString()}</span>
+                <span className="text-xs font-normal text-gray-400 ml-1">{getCurrencyLabel()}</span>
               </span>
             </div>
           </div>
@@ -854,7 +900,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
           workItems={budgetItems.filter(item => item.item_type === 'work' && (selectedCategoryForPersonnel === 'uncategorized' ? !item.category_id : item.category_id === selectedCategoryForPersonnel))}
           onClose={() => { setWorkPersonnelManagerOpen(false); setSelectedCategoryForPersonnel(null); }}
           onSave={handleWorkPersonnelSave}
-          showInBYN={showInBYN}
+          paymentMode={paymentMode}
           exchangeRate={exchangeRate}
         />
       )}
