@@ -328,12 +328,18 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     if (supportCount > 0 && !uShapeSupportLength) return;
 
     const supportLength = supportCount > 0 ? parseFloat(uShapeSupportLength) : 0;
-    const totalPrice = supportCount > 0
+    const baseTotal = supportCount > 0
       ? (width + (height * 2) + 4 + (supportCount * supportLength)) * 5
       : (width + (height * 2) + 2) * 5 + 10;
+    const totalPrice = roundToFive(baseTotal);
 
-    const supportLabel = supportCount > 0 ? `, упоры: ${supportCount}x${supportLength}` : ', упоры: 0';
-    const customName = `${width}x${height}${supportLabel}`;
+    const baseLabel = `${width}x${height}м`;
+    let customName = baseLabel;
+    if (supportCount === 2) {
+      customName = `${baseLabel} с двумя упорами`;
+    } else if (supportCount === 4) {
+      customName = `${baseLabel} с четырьмя упорами`;
+    }
 
     await handleAddItem(selectedUShapeEquipment, 1, undefined, selectedCategoryId || undefined, customName, totalPrice);
 
@@ -645,6 +651,8 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     }
   };
 
+  const roundToFive = (value: number) => Math.round(value / 5) * 5;
+
   const uShapeSupportCountValue = parseInt(uShapeSupportCount, 10) || 0;
   const uShapeTotalPrice = () => {
     if (!uShapeWidth || !uShapeHeight) return null;
@@ -654,11 +662,11 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     const height = parseFloat(uShapeHeight);
     const supportLength = uShapeSupportCountValue > 0 ? parseFloat(uShapeSupportLength) : 0;
 
-    if (uShapeSupportCountValue > 0) {
-      return (width + (height * 2) + 4 + (uShapeSupportCountValue * supportLength)) * 5;
-    }
+    const baseTotal = uShapeSupportCountValue > 0
+      ? (width + (height * 2) + 4 + (uShapeSupportCountValue * supportLength)) * 5
+      : (width + (height * 2) + 2) * 5 + 10;
 
-    return (width + (height * 2) + 2) * 5 + 10;
+    return roundToFive(baseTotal);
   };
 
   if (loading) {
@@ -1410,22 +1418,27 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs text-gray-400 block mb-2">Количество упоров</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={uShapeSupportCount}
-                      onChange={(e) => {
-                        const nextValue = e.target.value;
-                        setUShapeSupportCount(nextValue);
-                        if ((parseInt(nextValue, 10) || 0) <= 0) {
-                          setUShapeSupportLength('');
-                        }
-                      }}
-                      placeholder="0"
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddUShape()}
-                    />
+                    <div className="flex gap-2">
+                      {[0, 2, 4].map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => {
+                            setUShapeSupportCount(option.toString());
+                            if (option === 0) {
+                              setUShapeSupportLength('');
+                            }
+                          }}
+                          className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                            uShapeSupportCountValue === option
+                              ? 'bg-cyan-600 text-white border-cyan-500'
+                              : 'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700'
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <div>
                     <label className="text-xs text-gray-400 block mb-2">Длина упора (м)</label>
