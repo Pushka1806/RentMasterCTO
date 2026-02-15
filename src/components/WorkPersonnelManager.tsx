@@ -7,7 +7,7 @@ interface WorkPersonnelManagerProps {
   workItems: BudgetItem[];
   onClose: () => void;
   onSave: () => void;
-  showInBYN: boolean;
+  paymentMode: 'usd' | 'byn_cash' | 'byn_noncash';
   exchangeRate: number;
 }
 
@@ -16,7 +16,7 @@ interface WorkPersonnelAssignment {
   personnelIds: string[];
 }
 
-export function WorkPersonnelManager({ workItems, onClose, onSave, showInBYN, exchangeRate }: WorkPersonnelManagerProps) {
+export function WorkPersonnelManager({ workItems, onClose, onSave, paymentMode, exchangeRate }: WorkPersonnelManagerProps) {
   const [personnel, setPersonnel] = useState<Personnel[]>([]);
   const [assignments, setAssignments] = useState<Record<string, string[]>>({});
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});

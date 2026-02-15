@@ -14,7 +14,7 @@ interface CategoryBlockProps {
   onUpdateItem: (itemId: string, updates: Partial<BudgetItem>) => void;
   onDeleteItem: (itemId: string) => void;
   onManagePersonnel?: (categoryId: string) => void;
-  showInBYN: boolean;
+  paymentMode: 'usd' | 'byn_cash' | 'byn_noncash';
   exchangeRate: number;
   onDragStart?: (e: React.DragEvent, type: 'category' | 'item', id: string) => void;
   onDragOver?: (e: React.DragEvent, categoryId: string) => void;
@@ -37,7 +37,7 @@ export function CategoryBlock({
   onUpdateItem,
   onDeleteItem,
   onManagePersonnel,
-  showInBYN,
+  paymentMode,
   exchangeRate,
   onDragStart,
   onDragOver,
@@ -62,27 +62,63 @@ export function CategoryBlock({
     setIsEditingName(false);
   };
 
-  const calculateBYN = (priceUSD: number, quantity: number): number => {
+  const calculateBYNCash = (priceUSD: number, quantity: number): number => {
     const baseAmount = priceUSD * exchangeRate * quantity;
-    const withMarkup = baseAmount * 1.2;
-    return Math.round(withMarkup / 5) * 5;
+    return Math.round(baseAmount / 5) * 5;
   };
 
-  const convertUSDtoBYNPrice = (priceUSD: number): number => {
+  const calculateBYNNonCash = (priceUSD: number, quantity: number): number => {
+    const baseAmount = priceUSD * exchangeRate * quantity;
+    const withBankRate = baseAmount / 0.8;
+    return Math.round(withBankRate / 5) * 5;
+  };
+
+  const convertUSDtoBYNCashPrice = (priceUSD: number): number => {
     const baseAmount = priceUSD * exchangeRate;
-    const withMarkup = baseAmount * 1.2;
-    return Math.round(withMarkup / 5) * 5;
+    return Math.round(baseAmount / 5) * 5;
   };
 
-  const convertBYNtoUSDPrice = (priceBYN: number): number => {
-    const withoutMarkup = priceBYN / 1.2;
-    const usdPrice = withoutMarkup / exchangeRate;
+  const convertUSDtoBYNNonCashPrice = (priceUSD: number): number => {
+    const baseAmount = priceUSD * exchangeRate;
+    const withBankRate = baseAmount / 0.8;
+    return Math.round(withBankRate / 5) * 5;
+  };
+
+  const convertBYNCashtoUSDPrice = (priceBYN: number): number => {
+    const usdPrice = priceBYN / exchangeRate;
     return Math.round(usdPrice * 100) / 100;
   };
 
-  const categoryTotal = items.reduce((sum, item) => {
-    return sum + (showInBYN ? calculateBYN(item.price, item.quantity) : item.price * item.quantity);
-  }, 0);
+  const convertBYNNonCashtoUSDPrice = (priceBYN: number): number => {
+    const withoutBankRate = priceBYN * 0.8;
+    const usdPrice = withoutBankRate / exchangeRate;
+    return Math.round(usdPrice * 100) / 100;
+  };
+
+  const getCategoryTotal = () => {
+    return items.reduce((sum, item) => {
+      switch (paymentMode) {
+        case 'byn_cash':
+          return sum + calculateBYNCash(item.price, item.quantity);
+        case 'byn_noncash':
+          return sum + calculateBYNNonCash(item.price, item.quantity);
+        default:
+          return sum + item.price * item.quantity;
+      }
+    }, 0);
+  };
+
+  const getCurrencyLabel = () => {
+    switch (paymentMode) {
+      case 'byn_cash':
+      case 'byn_noncash':
+        return 'BYN';
+      default:
+        return '';
+    }
+  };
+
+  const categoryTotal = getCategoryTotal();
 
   const hasWorkItems = items.some(item => item.item_type === 'work');
 
@@ -197,7 +233,7 @@ export function CategoryBlock({
         )}
 
         <div className="text-[10px] font-medium text-cyan-400 ml-0.5" onClick={(e) => e.stopPropagation()}>
-          {showInBYN ? `${categoryTotal.toFixed(2)} BYN` : `${categoryTotal.toFixed(2)}`}
+          {paymentMode !== 'usd' ? `${categoryTotal.toFixed(2)} ${getCurrencyLabel()}` : `${categoryTotal.toFixed(2)}`}
         </div>
 
         <div className="text-[10px] text-gray-600 ml-0.5" onClick={(e) => e.stopPropagation()}>
@@ -282,10 +318,29 @@ export function CategoryBlock({
                       <input
                         type="number"
                         step="0.01"
-                        value={showInBYN ? convertUSDtoBYNPrice(item.price) : item.price}
+                        value={(() => {
+                          switch (paymentMode) {
+                            case 'byn_cash':
+                              return convertUSDtoBYNCashPrice(item.price);
+                            case 'byn_noncash':
+                              return convertUSDtoBYNNonCashPrice(item.price);
+                            default:
+                              return item.price;
+                          }
+                        })()}
                         onChange={(e) => {
                           const inputValue = parseFloat(e.target.value) || 0;
-                          const usdPrice = showInBYN ? convertBYNtoUSDPrice(inputValue) : inputValue;
+                          let usdPrice: number;
+                          switch (paymentMode) {
+                            case 'byn_cash':
+                              usdPrice = convertBYNCashtoUSDPrice(inputValue);
+                              break;
+                            case 'byn_noncash':
+                              usdPrice = convertBYNNonCashtoUSDPrice(inputValue);
+                              break;
+                            default:
+                              usdPrice = inputValue;
+                          }
                           onUpdateItem(item.id, { price: usdPrice });
                         }}
                         className="w-14 px-0.5 py-0.5 bg-transparent text-right text-gray-400 text-xs focus:outline-none focus:bg-gray-800 rounded"
@@ -293,9 +348,16 @@ export function CategoryBlock({
                     </div>
 
                     <div className="col-span-3 text-right text-cyan-400 font-medium text-xs">
-                      {showInBYN
-                        ? `${calculateBYN(item.price, item.quantity).toFixed(2)} BYN`
-                        : `${(item.price * item.quantity).toFixed(2)}`}
+                      {(() => {
+                        switch (paymentMode) {
+                          case 'byn_cash':
+                            return `${calculateBYNCash(item.price, item.quantity).toFixed(2)} BYN`;
+                          case 'byn_noncash':
+                            return `${calculateBYNNonCash(item.price, item.quantity).toFixed(2)} BYN`;
+                          default:
+                            return `${(item.price * item.quantity).toFixed(2)}`;
+                        }
+                      })()}
                     </div>
                   </div>
 

@@ -25,13 +25,18 @@ interface PDFData {
   budgetItems: BudgetItem[];
   categories: Category[];
   exchangeRate: number;
-  showInBYN?: boolean;
+  paymentMode?: 'usd' | 'byn_cash' | 'byn_noncash';
 }
 
-const calculateBYNPrice = (priceUSD: number, exchangeRate: number): number => {
+const calculateBYNCashPrice = (priceUSD: number, exchangeRate: number): number => {
   const baseAmount = priceUSD * exchangeRate;
-  const withMarkup = baseAmount * 1.2;
-  return Math.round(withMarkup / 5) * 5;
+  return Math.round(baseAmount / 5) * 5;
+};
+
+const calculateBYNNonCashPrice = (priceUSD: number, exchangeRate: number): number => {
+  const baseAmount = priceUSD * exchangeRate;
+  const withBankRate = baseAmount / 0.8;
+  return Math.round(withBankRate / 5) * 5;
 };
 
 export async function generateBudgetPDF(data: PDFData): Promise<void> {
@@ -84,8 +89,19 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
   let grandTotal = 0;
   const grayAccent = '#4b5563';
   const grayBg = 'rgba(255, 255, 255, 0.05)';
-  const showInBYN = data.showInBYN || false;
-  const currencySuffix = showInBYN ? ' BYN' : ' $';
+  const paymentMode = data.paymentMode || 'usd';
+  const currencySuffix = paymentMode !== 'usd' ? ' BYN' : ' $';
+
+  const calculatePrice = (usdPrice: number): number => {
+    switch (paymentMode) {
+      case 'byn_cash':
+        return calculateBYNCashPrice(usdPrice, data.exchangeRate);
+      case 'byn_noncash':
+        return calculateBYNNonCashPrice(usdPrice, data.exchangeRate);
+      default:
+        return usdPrice;
+    }
+  };
 
   sortedCategoryIds.forEach(catId => {
     const items = groupedByCategory[catId];
@@ -97,7 +113,7 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
       const name = item.equipment?.name || item.work_item?.name || '—';
       const qty = item.quantity || 0;
       const usdPrice = item.price || 0;
-      const price = showInBYN ? calculateBYNPrice(usdPrice, data.exchangeRate) : usdPrice;
+      const price = calculatePrice(usdPrice);
       const total = price * qty;
       categorySum += total;
 
