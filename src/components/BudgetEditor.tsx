@@ -488,8 +488,19 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     return Math.round(baseAmount / 5) * 5;
   };
 
-  const calculateBYNNonCash = (priceUSD: number, quantity: number): number => {
+  const calculateBYNNonCash = (priceUSD: number, quantity: number, item?: BudgetItem): number => {
     const baseAmount = priceUSD * exchangeRate * quantity;
+    
+    // Для элементов типа "work" (кроме доставки) применяем специальную формулу
+    if (item?.item_type === 'work') {
+      const workItemName = item.work_item?.name?.toLowerCase() || '';
+      // Исключаем доставку оборудования и доставку персонала
+      if (!workItemName.includes('доставка оборудования') && !workItemName.includes('доставка персонала')) {
+        const workAmount = priceUSD * exchangeRate * quantity * 1.67;
+        return Math.round(workAmount / 5) * 5;
+      }
+    }
+    
     const withBankRate = baseAmount / 0.8;
     return Math.round(withBankRate / 5) * 5;
   };
@@ -521,7 +532,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     sum + calculateBYNCash(item.price, item.quantity), 0
   );
   const totalBYNNonCash = budgetItems.reduce((sum, item) =>
-    sum + calculateBYNNonCash(item.price, item.quantity), 0
+    sum + calculateBYNNonCash(item.price, item.quantity, item), 0
   );
 
   const getTotalForMode = () => {
