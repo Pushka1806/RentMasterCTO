@@ -68,9 +68,8 @@ export function CategoryBlock({
   };
 
   const calculateBYNNonCash = (priceUSD: number, quantity: number): number => {
-    const baseAmount = priceUSD * exchangeRate * quantity;
-    const withBankRate = baseAmount / 0.8;
-    return Math.round(withBankRate / 5) * 5;
+    const baseAmount = priceUSD * exchangeRate * quantity * 1.67;
+    return Math.round(baseAmount / 5) * 5;
   };
 
   const convertUSDtoBYNCashPrice = (priceUSD: number): number => {
@@ -79,9 +78,8 @@ export function CategoryBlock({
   };
 
   const convertUSDtoBYNNonCashPrice = (priceUSD: number): number => {
-    const baseAmount = priceUSD * exchangeRate;
-    const withBankRate = baseAmount / 0.8;
-    return Math.round(withBankRate / 5) * 5;
+    const baseAmount = priceUSD * exchangeRate * 1.67;
+    return Math.round(baseAmount / 5) * 5;
   };
 
   const convertBYNCashtoUSDPrice = (priceBYN: number): number => {
@@ -90,8 +88,7 @@ export function CategoryBlock({
   };
 
   const convertBYNNonCashtoUSDPrice = (priceBYN: number): number => {
-    const withoutBankRate = priceBYN * 0.8;
-    const usdPrice = withoutBankRate / exchangeRate;
+    const usdPrice = priceBYN / (exchangeRate * 1.67);
     return Math.round(usdPrice * 100) / 100;
   };
 
