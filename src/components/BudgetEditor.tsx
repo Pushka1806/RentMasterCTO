@@ -486,7 +486,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
   const isDeliveryWork = (item: BudgetItem): boolean => {
     if (item.item_type !== 'work') return false;
     const workName = item.work_item?.name?.toLowerCase() || '';
-    return workName.includes('доставка оборудования') || workName.includes('доставка персонала');
+    return workName.includes('доставка оборудования') || workName.includes('доставка тех. персонала');
   };
 
   const calculateBYNCash = (priceUSD: number, quantity: number): number => {
