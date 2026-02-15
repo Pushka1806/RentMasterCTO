@@ -6,6 +6,7 @@ interface BudgetItem {
   category_id?: string;
   equipment?: { name: string };
   work_item?: { name: string };
+  item_type?: 'equipment' | 'work';
   quantity: number;
   price: number;
   total: number;
@@ -33,8 +34,19 @@ const calculateBYNCashPrice = (priceUSD: number, exchangeRate: number): number =
   return Math.round(baseAmount / 5) * 5;
 };
 
-const calculateBYNNonCashPrice = (priceUSD: number, exchangeRate: number): number => {
+const calculateBYNNonCashPrice = (priceUSD: number, exchangeRate: number, item?: BudgetItem): number => {
   const baseAmount = priceUSD * exchangeRate;
+  
+  // Для элементов типа "work" (кроме доставки) применяем специальную формулу
+  if (item?.item_type === 'work') {
+    const workItemName = item.work_item?.name?.toLowerCase() || '';
+    // Исключаем доставку оборудования и доставку персонала
+    if (!workItemName.includes('доставка оборудования') && !workItemName.includes('доставка персонала')) {
+      const workAmount = priceUSD * exchangeRate * 1.67;
+      return Math.round(workAmount / 5) * 5;
+    }
+  }
+  
   const withBankRate = baseAmount / 0.8;
   return Math.round(withBankRate / 5) * 5;
 };
@@ -92,12 +104,12 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
   const paymentMode = data.paymentMode || 'usd';
   const currencySuffix = paymentMode !== 'usd' ? ' BYN' : ' $';
 
-  const calculatePrice = (usdPrice: number): number => {
+  const calculatePrice = (usdPrice: number, item?: BudgetItem): number => {
     switch (paymentMode) {
       case 'byn_cash':
         return calculateBYNCashPrice(usdPrice, data.exchangeRate);
       case 'byn_noncash':
-        return calculateBYNNonCashPrice(usdPrice, data.exchangeRate);
+        return calculateBYNNonCashPrice(usdPrice, data.exchangeRate, item);
       default:
         return usdPrice;
     }
@@ -113,7 +125,7 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
       const name = item.equipment?.name || item.work_item?.name || '—';
       const qty = item.quantity || 0;
       const usdPrice = item.price || 0;
-      const price = calculatePrice(usdPrice);
+      const price = calculatePrice(usdPrice, item);
       const total = price * qty;
       categorySum += total;
 

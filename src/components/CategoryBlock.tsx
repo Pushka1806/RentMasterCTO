@@ -67,8 +67,19 @@ export function CategoryBlock({
     return Math.round(baseAmount / 5) * 5;
   };
 
-  const calculateBYNNonCash = (priceUSD: number, quantity: number): number => {
+  const calculateBYNNonCash = (priceUSD: number, quantity: number, item?: BudgetItem): number => {
     const baseAmount = priceUSD * exchangeRate * quantity;
+    
+    // Для элементов типа "work" (кроме доставки) применяем специальную формулу
+    if (item?.item_type === 'work') {
+      const workItemName = item.work_item?.name?.toLowerCase() || '';
+      // Исключаем доставку оборудования и доставку персонала
+      if (!workItemName.includes('доставка оборудования') && !workItemName.includes('доставка персонала')) {
+        const workAmount = priceUSD * exchangeRate * quantity * 1.67;
+        return Math.round(workAmount / 5) * 5;
+      }
+    }
+    
     const withBankRate = baseAmount / 0.8;
     return Math.round(withBankRate / 5) * 5;
   };
@@ -101,7 +112,7 @@ export function CategoryBlock({
         case 'byn_cash':
           return sum + calculateBYNCash(item.price, item.quantity);
         case 'byn_noncash':
-          return sum + calculateBYNNonCash(item.price, item.quantity);
+          return sum + calculateBYNNonCash(item.price, item.quantity, item);
         default:
           return sum + item.price * item.quantity;
       }
@@ -353,7 +364,7 @@ export function CategoryBlock({
                           case 'byn_cash':
                             return `${calculateBYNCash(item.price, item.quantity).toFixed(2)} BYN`;
                           case 'byn_noncash':
-                            return `${calculateBYNNonCash(item.price, item.quantity).toFixed(2)} BYN`;
+                            return `${calculateBYNNonCash(item.price, item.quantity, item).toFixed(2)} BYN`;
                           default:
                             return `${(item.price * item.quantity).toFixed(2)}`;
                         }
