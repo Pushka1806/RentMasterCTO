@@ -68,6 +68,18 @@ export function CategoryBlock({
     return Math.round(withMarkup / 5) * 5;
   };
 
+  const convertUSDtoBYNPrice = (priceUSD: number): number => {
+    const baseAmount = priceUSD * exchangeRate;
+    const withMarkup = baseAmount * 1.2;
+    return Math.round(withMarkup / 5) * 5;
+  };
+
+  const convertBYNtoUSDPrice = (priceBYN: number): number => {
+    const withoutMarkup = priceBYN / 1.2;
+    const usdPrice = withoutMarkup / exchangeRate;
+    return Math.round(usdPrice * 100) / 100;
+  };
+
   const categoryTotal = items.reduce((sum, item) => {
     return sum + (showInBYN ? calculateBYN(item.price, item.quantity) : item.price * item.quantity);
   }, 0);
@@ -270,8 +282,12 @@ export function CategoryBlock({
                       <input
                         type="number"
                         step="0.01"
-                        value={item.price}
-                        onChange={(e) => onUpdateItem(item.id, { price: parseFloat(e.target.value) || 0 })}
+                        value={showInBYN ? convertUSDtoBYNPrice(item.price) : item.price}
+                        onChange={(e) => {
+                          const inputValue = parseFloat(e.target.value) || 0;
+                          const usdPrice = showInBYN ? convertBYNtoUSDPrice(inputValue) : inputValue;
+                          onUpdateItem(item.id, { price: usdPrice });
+                        }}
                         className="w-14 px-0.5 py-0.5 bg-transparent text-right text-gray-400 text-xs focus:outline-none focus:bg-gray-800 rounded"
                       />
                     </div>

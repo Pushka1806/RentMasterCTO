@@ -25,7 +25,14 @@ interface PDFData {
   budgetItems: BudgetItem[];
   categories: Category[];
   exchangeRate: number;
+  showInBYN?: boolean;
 }
+
+const calculateBYNPrice = (priceUSD: number, exchangeRate: number): number => {
+  const baseAmount = priceUSD * exchangeRate;
+  const withMarkup = baseAmount * 1.2;
+  return Math.round(withMarkup / 5) * 5;
+};
 
 export async function generateBudgetPDF(data: PDFData): Promise<void> {
   const loadImageAsDataURL = async (url: string): Promise<string> => {
@@ -75,28 +82,31 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
 
   let categoriesHtml = '';
   let grandTotal = 0;
-  const grayAccent = '#4b5563'; 
+  const grayAccent = '#4b5563';
   const grayBg = 'rgba(255, 255, 255, 0.05)';
+  const showInBYN = data.showInBYN || false;
+  const currencySuffix = showInBYN ? ' BYN' : ' $';
 
   sortedCategoryIds.forEach(catId => {
     const items = groupedByCategory[catId];
     const category = data.categories.find(c => c.id === catId);
     const categoryName = category?.name || 'Прочее';
-    
+
     let categorySum = 0;
     const rows = items.map(item => {
       const name = item.equipment?.name || item.work_item?.name || '—';
       const qty = item.quantity || 0;
-      const price = item.price || 0;
-      const total = item.total || (qty * price);
+      const usdPrice = item.price || 0;
+      const price = showInBYN ? calculateBYNPrice(usdPrice, data.exchangeRate) : usdPrice;
+      const total = price * qty;
       categorySum += total;
-      
+
       return `
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
           <td style="padding: 6px 8px; font-size: 13px; color: #ffffff; width: 60%;">${name}</td>
           <td style="padding: 6px 8px; font-size: 13px; text-align: center; color: #ffffff; width: 10%;">${qty}</td>
-          <td style="padding: 6px 8px; font-size: 13px; text-align: right; color: #ffffff; width: 15%;">${price.toFixed(0)} $</td>
-          <td style="padding: 6px 8px; font-size: 13px; text-align: right; font-weight: 600; color: #ffffff; width: 15%;">${total.toFixed(0)} $</td>
+          <td style="padding: 6px 8px; font-size: 13px; text-align: right; color: #ffffff; width: 15%;">${price.toFixed(0)}${currencySuffix}</td>
+          <td style="padding: 6px 8px; font-size: 13px; text-align: right; font-weight: 600; color: #ffffff; width: 15%;">${total.toFixed(0)}${currencySuffix}</td>
         </tr>
       `;
     }).join('');
@@ -124,7 +134,7 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
             ${rows}
             <tr style="background: ${grayBg};">
               <td colspan="3" style="padding: 8px; text-align: right; font-size: 10px; font-weight: 700; color: #9ca3af;">ИТОГО ПО РАЗДЕЛУ:</td>
-              <td style="padding: 8px; text-align: right; font-weight: 700; color: #ffffff; font-size: 13px;">${categorySum.toFixed(0)} $</td>
+              <td style="padding: 8px; text-align: right; font-weight: 700; color: #ffffff; font-size: 13px;">${categorySum.toFixed(0)}${currencySuffix}</td>
             </tr>
           </tbody>
         </table>
@@ -199,7 +209,7 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
       
       <div style="display: flex; align-items: center; gap: 15px;">
         <span style="font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 1px;">Общий итог:</span>
-        <span style="font-size: 28px; font-weight: 800; line-height: 1; padding-bottom: 2px;">${grandTotal.toFixed(0)} $</span>
+        <span style="font-size: 28px; font-weight: 800; line-height: 1; padding-bottom: 2px;">${grandTotal.toFixed(0)}${currencySuffix}</span>
       </div>
     </footer>
   `;

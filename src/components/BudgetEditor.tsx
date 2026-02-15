@@ -349,7 +349,8 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
         organizerName: event.organizers?.full_name,
         budgetItems: budgetItems,
         categories: categories,
-        exchangeRate: exchangeRate
+        exchangeRate: exchangeRate,
+        showInBYN: showInBYN
       });
     } catch (error: any) {
       console.error('Error generating PDF:', error);
