@@ -333,7 +333,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
       : (width + (height * 2) + 2) * 5 + 10;
     const totalPrice = roundToFive(baseTotal);
 
-    const baseLabel = `${width}x${height}м`;
+    const baseLabel = `размером ${width}x${height}м`;
     let customName = baseLabel;
     if (supportCount === 2) {
       customName = `${baseLabel} с двумя упорами`;
