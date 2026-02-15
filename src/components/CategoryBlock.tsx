@@ -67,9 +67,20 @@ export function CategoryBlock({
     return Math.round(baseAmount / 5) * 5;
   };
 
-  const calculateBYNNonCash = (priceUSD: number, quantity: number): number => {
+  const isDeliveryWork = (item: BudgetItem): boolean => {
+    if (item.item_type !== 'work') return false;
+    const workName = item.work_item?.name?.toLowerCase() || '';
+    return workName.includes('доставка оборудования') || workName.includes('доставка персонала');
+  };
+
+  const calculateBYNNonCash = (priceUSD: number, quantity: number, item?: BudgetItem): number => {
     const baseAmount = priceUSD * exchangeRate * quantity;
-    const withBankRate = baseAmount / 0.8;
+    let withBankRate: number;
+    if (item && item.item_type === 'work' && !isDeliveryWork(item)) {
+      withBankRate = baseAmount * 1.67;
+    } else {
+      withBankRate = baseAmount / 0.8;
+    }
     return Math.round(withBankRate / 5) * 5;
   };
 
@@ -78,9 +89,14 @@ export function CategoryBlock({
     return Math.round(baseAmount / 5) * 5;
   };
 
-  const convertUSDtoBYNNonCashPrice = (priceUSD: number): number => {
+  const convertUSDtoBYNNonCashPrice = (priceUSD: number, item?: BudgetItem): number => {
     const baseAmount = priceUSD * exchangeRate;
-    const withBankRate = baseAmount / 0.8;
+    let withBankRate: number;
+    if (item && item.item_type === 'work' && !isDeliveryWork(item)) {
+      withBankRate = baseAmount * 1.67;
+    } else {
+      withBankRate = baseAmount / 0.8;
+    }
     return Math.round(withBankRate / 5) * 5;
   };
 
@@ -89,8 +105,13 @@ export function CategoryBlock({
     return Math.round(usdPrice * 100) / 100;
   };
 
-  const convertBYNNonCashtoUSDPrice = (priceBYN: number): number => {
-    const withoutBankRate = priceBYN * 0.8;
+  const convertBYNNonCashtoUSDPrice = (priceBYN: number, item?: BudgetItem): number => {
+    let withoutBankRate: number;
+    if (item && item.item_type === 'work' && !isDeliveryWork(item)) {
+      withoutBankRate = priceBYN / 1.67;
+    } else {
+      withoutBankRate = priceBYN * 0.8;
+    }
     const usdPrice = withoutBankRate / exchangeRate;
     return Math.round(usdPrice * 100) / 100;
   };
@@ -101,7 +122,7 @@ export function CategoryBlock({
         case 'byn_cash':
           return sum + calculateBYNCash(item.price, item.quantity);
         case 'byn_noncash':
-          return sum + calculateBYNNonCash(item.price, item.quantity);
+          return sum + calculateBYNNonCash(item.price, item.quantity, item);
         default:
           return sum + item.price * item.quantity;
       }
@@ -323,7 +344,7 @@ export function CategoryBlock({
                             case 'byn_cash':
                               return convertUSDtoBYNCashPrice(item.price);
                             case 'byn_noncash':
-                              return convertUSDtoBYNNonCashPrice(item.price);
+                              return convertUSDtoBYNNonCashPrice(item.price, item);
                             default:
                               return item.price;
                           }
@@ -336,7 +357,7 @@ export function CategoryBlock({
                               usdPrice = convertBYNCashtoUSDPrice(inputValue);
                               break;
                             case 'byn_noncash':
-                              usdPrice = convertBYNNonCashtoUSDPrice(inputValue);
+                              usdPrice = convertBYNNonCashtoUSDPrice(inputValue, item);
                               break;
                             default:
                               usdPrice = inputValue;
@@ -353,7 +374,7 @@ export function CategoryBlock({
                           case 'byn_cash':
                             return `${calculateBYNCash(item.price, item.quantity).toFixed(2)} BYN`;
                           case 'byn_noncash':
-                            return `${calculateBYNNonCash(item.price, item.quantity).toFixed(2)} BYN`;
+                            return `${calculateBYNNonCash(item.price, item.quantity, item).toFixed(2)} BYN`;
                           default:
                             return `${(item.price * item.quantity).toFixed(2)}`;
                         }

@@ -33,9 +33,20 @@ const calculateBYNCashPrice = (priceUSD: number, exchangeRate: number): number =
   return Math.round(baseAmount / 5) * 5;
 };
 
-const calculateBYNNonCashPrice = (priceUSD: number, exchangeRate: number): number => {
+const isWorkNonDelivery = (item: BudgetItem): boolean => {
+  if (!item.work_item?.name) return false;
+  const workName = item.work_item.name.toLowerCase();
+  return !workName.includes('доставка оборудования') && !workName.includes('доставка персонала');
+};
+
+const calculateBYNNonCashPrice = (priceUSD: number, exchangeRate: number, item?: BudgetItem): number => {
   const baseAmount = priceUSD * exchangeRate;
-  const withBankRate = baseAmount / 0.8;
+  let withBankRate: number;
+  if (item && item.work_item && isWorkNonDelivery(item)) {
+    withBankRate = baseAmount * 1.67;
+  } else {
+    withBankRate = baseAmount / 0.8;
+  }
   return Math.round(withBankRate / 5) * 5;
 };
 
@@ -92,12 +103,12 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
   const paymentMode = data.paymentMode || 'usd';
   const currencySuffix = paymentMode !== 'usd' ? ' BYN' : ' $';
 
-  const calculatePrice = (usdPrice: number): number => {
+  const calculatePrice = (usdPrice: number, item?: BudgetItem): number => {
     switch (paymentMode) {
       case 'byn_cash':
         return calculateBYNCashPrice(usdPrice, data.exchangeRate);
       case 'byn_noncash':
-        return calculateBYNNonCashPrice(usdPrice, data.exchangeRate);
+        return calculateBYNNonCashPrice(usdPrice, data.exchangeRate, item);
       default:
         return usdPrice;
     }
@@ -113,7 +124,7 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
       const name = item.equipment?.name || item.work_item?.name || '—';
       const qty = item.quantity || 0;
       const usdPrice = item.price || 0;
-      const price = calculatePrice(usdPrice);
+      const price = calculatePrice(usdPrice, item);
       const total = price * qty;
       categorySum += total;
 
