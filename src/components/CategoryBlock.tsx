@@ -62,13 +62,29 @@ export function CategoryBlock({
     setIsEditingName(false);
   };
 
+  const isNonCashWorkItemSpecial = (item: BudgetItem) => {
+    if (item.item_type !== 'work') return false;
+
+    const name = item.work_item?.name?.toLowerCase() || '';
+    const isDeliveryEquipment = name.includes('доставка оборудования');
+    const isDeliveryPersonnel = name.includes('доставка персонала');
+
+    return !isDeliveryEquipment && !isDeliveryPersonnel;
+  };
+
   const calculateBYNCash = (priceUSD: number, quantity: number): number => {
     const baseAmount = priceUSD * exchangeRate * quantity;
     return Math.round(baseAmount / 5) * 5;
   };
 
-  const calculateBYNNonCash = (priceUSD: number, quantity: number): number => {
-    const baseAmount = priceUSD * exchangeRate * quantity;
+  const calculateBYNNonCash = (item: BudgetItem): number => {
+    const baseAmount = item.price * exchangeRate * item.quantity;
+
+    if (isNonCashWorkItemSpecial(item)) {
+      const withMarkup = baseAmount * 1.67;
+      return Math.round(withMarkup / 5) * 5;
+    }
+
     const withBankRate = baseAmount / 0.8;
     return Math.round(withBankRate / 5) * 5;
   };
@@ -78,8 +94,14 @@ export function CategoryBlock({
     return Math.round(baseAmount / 5) * 5;
   };
 
-  const convertUSDtoBYNNonCashPrice = (priceUSD: number): number => {
-    const baseAmount = priceUSD * exchangeRate;
+  const convertUSDtoBYNNonCashPrice = (item: BudgetItem): number => {
+    const baseAmount = item.price * exchangeRate;
+
+    if (isNonCashWorkItemSpecial(item)) {
+      const withMarkup = baseAmount * 1.67;
+      return Math.round(withMarkup / 5) * 5;
+    }
+
     const withBankRate = baseAmount / 0.8;
     return Math.round(withBankRate / 5) * 5;
   };
@@ -89,7 +111,12 @@ export function CategoryBlock({
     return Math.round(usdPrice * 100) / 100;
   };
 
-  const convertBYNNonCashtoUSDPrice = (priceBYN: number): number => {
+  const convertBYNNonCashtoUSDPrice = (priceBYN: number, item: BudgetItem): number => {
+    if (isNonCashWorkItemSpecial(item)) {
+      const usdPrice = priceBYN / (exchangeRate * 1.67);
+      return Math.round(usdPrice * 100) / 100;
+    }
+
     const withoutBankRate = priceBYN * 0.8;
     const usdPrice = withoutBankRate / exchangeRate;
     return Math.round(usdPrice * 100) / 100;
@@ -101,7 +128,7 @@ export function CategoryBlock({
         case 'byn_cash':
           return sum + calculateBYNCash(item.price, item.quantity);
         case 'byn_noncash':
-          return sum + calculateBYNNonCash(item.price, item.quantity);
+          return sum + calculateBYNNonCash(item);
         default:
           return sum + item.price * item.quantity;
       }
@@ -323,7 +350,7 @@ export function CategoryBlock({
                             case 'byn_cash':
                               return convertUSDtoBYNCashPrice(item.price);
                             case 'byn_noncash':
-                              return convertUSDtoBYNNonCashPrice(item.price);
+                              return convertUSDtoBYNNonCashPrice(item);
                             default:
                               return item.price;
                           }
@@ -336,7 +363,7 @@ export function CategoryBlock({
                               usdPrice = convertBYNCashtoUSDPrice(inputValue);
                               break;
                             case 'byn_noncash':
-                              usdPrice = convertBYNNonCashtoUSDPrice(inputValue);
+                              usdPrice = convertBYNNonCashtoUSDPrice(inputValue, item);
                               break;
                             default:
                               usdPrice = inputValue;
@@ -353,7 +380,7 @@ export function CategoryBlock({
                           case 'byn_cash':
                             return `${calculateBYNCash(item.price, item.quantity).toFixed(2)} BYN`;
                           case 'byn_noncash':
-                            return `${calculateBYNNonCash(item.price, item.quantity).toFixed(2)} BYN`;
+                            return `${calculateBYNNonCash(item).toFixed(2)} BYN`;
                           default:
                             return `${(item.price * item.quantity).toFixed(2)}`;
                         }
