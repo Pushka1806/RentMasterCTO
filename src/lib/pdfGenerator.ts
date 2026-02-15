@@ -250,14 +250,7 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
   
   // Calculate proportional height in mm to fit content exactly
   // This ensures page height matches the budget content height
-  let pageHeight = (imgHeightPx * pageWidth) / imgWidthPx;
-  
-  // Ensure portrait orientation: height must be >= width
-  // If content is short, set minimum height to width (210mm) to maintain portrait
-  // This adds minimal empty space while keeping portrait orientation
-  if (pageHeight < pageWidth) {
-    pageHeight = pageWidth;
-  }
+  const pageHeight = (imgHeightPx * pageWidth) / imgWidthPx;
 
   const pdf = new jsPDF({
     orientation: 'portrait',
