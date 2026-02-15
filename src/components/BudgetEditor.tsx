@@ -63,6 +63,13 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
   const [totemHeight, setTotemHeight] = useState('');
   const [isMonototem, setIsMonototem] = useState(false);
 
+  const [showUShapeDialog, setShowUShapeDialog] = useState(false);
+  const [selectedUShapeEquipment, setSelectedUShapeEquipment] = useState<EquipmentItem | null>(null);
+  const [uShapeWidth, setUShapeWidth] = useState('');
+  const [uShapeHeight, setUShapeHeight] = useState('');
+  const [uShapeSupportCount, setUShapeSupportCount] = useState('0');
+  const [uShapeSupportLength, setUShapeSupportLength] = useState('');
+
   const budgetListRef = useRef<HTMLDivElement>(null);
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const lastAddedItemRef = useRef<string | null>(null);
@@ -167,6 +174,11 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     return name.includes('Тотем') && !name.includes('Монототем');
   };
 
+  const isUShapeConstruction = (equipmentItem: EquipmentItem) => {
+    const name = equipmentItem.name || '';
+    return name.toLowerCase().includes('п-образная конструкция');
+  };
+
   const handleEquipmentClick = async (equipmentItem: EquipmentItem) => {
     if (isLedScreen(equipmentItem)) {
       setSelectedLedEquipment(equipmentItem);
@@ -188,6 +200,15 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
       setSelectedTotemEquipment(equipmentItem);
       setIsMonototem(false);
       setShowTotemDialog(true);
+      return;
+    }
+    if (isUShapeConstruction(equipmentItem)) {
+      setSelectedUShapeEquipment(equipmentItem);
+      setShowUShapeDialog(true);
+      setUShapeWidth('');
+      setUShapeHeight('');
+      setUShapeSupportCount('0');
+      setUShapeSupportLength('');
       return;
     }
     await handleAddItem(equipmentItem, 1, undefined, selectedCategoryId || undefined);
@@ -295,6 +316,33 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     setTotemHeight('');
     setSelectedTotemEquipment(null);
     setIsMonototem(false);
+  };
+
+  const handleAddUShape = async () => {
+    if (!selectedUShapeEquipment || !uShapeWidth || !uShapeHeight) return;
+
+    const width = parseFloat(uShapeWidth);
+    const height = parseFloat(uShapeHeight);
+    const supportCount = parseInt(uShapeSupportCount, 10) || 0;
+
+    if (supportCount > 0 && !uShapeSupportLength) return;
+
+    const supportLength = supportCount > 0 ? parseFloat(uShapeSupportLength) : 0;
+    const totalPrice = supportCount > 0
+      ? (width + (height * 2) + 4 + (supportCount * supportLength)) * 5
+      : (width + (height * 2) + 2) * 5 + 10;
+
+    const supportLabel = supportCount > 0 ? `, упоры: ${supportCount}x${supportLength}` : ', упоры: 0';
+    const customName = `${width}x${height}${supportLabel}`;
+
+    await handleAddItem(selectedUShapeEquipment, 1, undefined, selectedCategoryId || undefined, customName, totalPrice);
+
+    setShowUShapeDialog(false);
+    setUShapeWidth('');
+    setUShapeHeight('');
+    setUShapeSupportCount('0');
+    setUShapeSupportLength('');
+    setSelectedUShapeEquipment(null);
   };
 
   const handleAddWorkItem = async (workItem: WorkItem, categoryId?: string) => {
@@ -595,6 +643,22 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
       case 'byn_noncash': return 'BYN';
       default: return 'USD';
     }
+  };
+
+  const uShapeSupportCountValue = parseInt(uShapeSupportCount, 10) || 0;
+  const uShapeTotalPrice = () => {
+    if (!uShapeWidth || !uShapeHeight) return null;
+    if (uShapeSupportCountValue > 0 && !uShapeSupportLength) return null;
+
+    const width = parseFloat(uShapeWidth);
+    const height = parseFloat(uShapeHeight);
+    const supportLength = uShapeSupportCountValue > 0 ? parseFloat(uShapeSupportLength) : 0;
+
+    if (uShapeSupportCountValue > 0) {
+      return (width + (height * 2) + 4 + (uShapeSupportCountValue * supportLength)) * 5;
+    }
+
+    return (width + (height * 2) + 2) * 5 + 10;
   };
 
   if (loading) {
@@ -1278,6 +1342,131 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
               <button
                 onClick={handleAddTotem}
                 disabled={!totemHeight}
+                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Добавить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showUShapeDialog && selectedUShapeEquipment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70]">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-[420px] overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-800 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Calculator className="w-4 h-4 text-cyan-500" />
+                <h3 className="text-sm font-bold text-white">П-образная конструкция</h3>
+              </div>
+              <button
+                onClick={() => {
+                  setShowUShapeDialog(false);
+                  setUShapeWidth('');
+                  setUShapeHeight('');
+                  setUShapeSupportCount('0');
+                  setUShapeSupportLength('');
+                  setSelectedUShapeEquipment(null);
+                }}
+                className="text-gray-500 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="bg-gray-800/50 rounded-lg p-3">
+                <p className="text-xs text-gray-400 mb-1">Оборудование</p>
+                <p className="text-sm font-medium text-white">{selectedUShapeEquipment.name}</p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-2">Ширина (м)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={uShapeWidth}
+                      onChange={(e) => setUShapeWidth(e.target.value)}
+                      placeholder="например: 6"
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddUShape()}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-2">Высота (м)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={uShapeHeight}
+                      onChange={(e) => setUShapeHeight(e.target.value)}
+                      placeholder="например: 4"
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddUShape()}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-2">Количество упоров</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={uShapeSupportCount}
+                      onChange={(e) => {
+                        const nextValue = e.target.value;
+                        setUShapeSupportCount(nextValue);
+                        if ((parseInt(nextValue, 10) || 0) <= 0) {
+                          setUShapeSupportLength('');
+                        }
+                      }}
+                      placeholder="0"
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddUShape()}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-2">Длина упора (м)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={uShapeSupportLength}
+                      onChange={(e) => setUShapeSupportLength(e.target.value)}
+                      placeholder="например: 2"
+                      disabled={uShapeSupportCountValue <= 0}
+                      className={`w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none ${uShapeSupportCountValue <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddUShape()}
+                    />
+                  </div>
+                </div>
+
+                {uShapeTotalPrice() !== null && (
+                  <div className="bg-gray-800/30 rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-1">Стоимость</p>
+                    <p className="text-sm font-bold text-green-400">${uShapeTotalPrice()!.toFixed(2)}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="px-4 py-3 border-t border-gray-800 flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowUShapeDialog(false);
+                  setUShapeWidth('');
+                  setUShapeHeight('');
+                  setUShapeSupportCount('0');
+                  setUShapeSupportLength('');
+                  setSelectedUShapeEquipment(null);
+                }}
+                className="px-4 py-2 text-xs text-gray-400 hover:text-white transition-colors"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleAddUShape}
+                disabled={!uShapeWidth || !uShapeHeight || (uShapeSupportCountValue > 0 && !uShapeSupportLength)}
                 className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Добавить
