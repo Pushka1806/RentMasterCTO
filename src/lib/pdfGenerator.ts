@@ -34,9 +34,13 @@ const calculateBYNCashPrice = (priceUSD: number, exchangeRate: number): number =
 };
 
 const calculateBYNNonCashPrice = (priceUSD: number, exchangeRate: number): number => {
-  const baseAmount = priceUSD * exchangeRate;
-  const withBankRate = baseAmount / 0.8;
-  return Math.round(withBankRate / 5) * 5;
+  const baseAmount = priceUSD * exchangeRate * 1.67;
+  return Math.round(baseAmount / 5) * 5;
+};
+
+const calculateBYNNonCashTotal = (priceUSD: number, exchangeRate: number, quantity: number): number => {
+  const baseAmount = priceUSD * exchangeRate * quantity * 1.67;
+  return Math.round(baseAmount / 5) * 5;
 };
 
 export async function generateBudgetPDF(data: PDFData): Promise<void> {
@@ -114,7 +118,9 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
       const qty = item.quantity || 0;
       const usdPrice = item.price || 0;
       const price = calculatePrice(usdPrice);
-      const total = price * qty;
+      const total = paymentMode === 'byn_noncash'
+        ? calculateBYNNonCashTotal(usdPrice, data.exchangeRate, qty)
+        : price * qty;
       categorySum += total;
 
       return `
