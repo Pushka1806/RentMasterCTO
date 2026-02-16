@@ -184,12 +184,12 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
 
   const isUShapeConstruction = (equipmentItem: EquipmentItem) => {
     const name = equipmentItem.name || '';
-    return name.toLowerCase().includes('п-образная конструкция');
+    return name.toLowerCase().includes('п-образная конструкция') && !name.toLowerCase().includes('с системой подъема');
   };
 
   const isUShapeLedConstruction = (equipmentItem: EquipmentItem) => {
     const name = equipmentItem.name || '';
-    return name.toLowerCase().includes('п-образная конструкция для светодиодного экрана');
+    return name.toLowerCase().includes('п-образная конструкция с системой подъема');
   };
 
   const handleEquipmentClick = async (equipmentItem: EquipmentItem) => {
@@ -1577,7 +1577,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
             <div className="px-4 py-3 border-b border-gray-800 flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <Calculator className="w-4 h-4 text-cyan-500" />
-                <h3 className="text-sm font-bold text-white">П-образная конструкция для светодиодного экрана</h3>
+                <h3 className="text-sm font-bold text-white">П-образная конструкция с системой подъема</h3>
               </div>
               <button
                 onClick={() => {
