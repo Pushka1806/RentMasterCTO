@@ -87,9 +87,9 @@ export function UShapeUnifiedDialog({
   ): string => {
     const baseLabel = `размером ${widthNum}x${heightNum}м`;
     if (supportCountNum === 2) {
-      return `${baseLabel} с двумя упорами длиной ${supportLengthNum}м`;
+      return `${baseLabel} и двумя упорами длиной ${supportLengthNum}м`;
     } else if (supportCountNum === 4) {
-      return `${baseLabel} с четырьмя упорами длиной ${supportLengthNum}м`;
+      return `${baseLabel} и четырьмя упорами длиной ${supportLengthNum}м`;
     }
     return baseLabel;
   };
@@ -104,9 +104,9 @@ export function UShapeUnifiedDialog({
     const hoistLabel = hoist === 'manual' ? 'ручных талей' : 'электрических лебёдок';
     const baseLabel = `размером ${widthNum}x${heightNum}м, оснащенная системой подъёма на базе ${hoistLabel}`;
     if (supportCountNum === 2) {
-      return `${baseLabel} с двумя упорами длиной ${supportLengthNum}м`;
+      return `${baseLabel} и двумя упорами длиной ${supportLengthNum}м`;
     } else if (supportCountNum === 4) {
-      return `${baseLabel} с четырьмя упорами длиной ${supportLengthNum}м`;
+      return `${baseLabel} и четырьмя упорами длиной ${supportLengthNum}м`;
     }
     return baseLabel;
   };
@@ -214,7 +214,7 @@ export function UShapeUnifiedDialog({
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-gray-400 block mb-2">Ширина (м)</label>
+                <label className="text-xs text-gray-400 block mb-2">Ширина (м) {mode === 'standard' ? 'K4-290' : 'K4-390'}</label>
                 <input
                   type="number"
                   step="0.1"
@@ -226,7 +226,7 @@ export function UShapeUnifiedDialog({
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-400 block mb-2">Высота (м)</label>
+                <label className="text-xs text-gray-400 block mb-2">Высота (м) K4-290</label>
                 <input
                   type="number"
                   step="0.1"
@@ -265,7 +265,7 @@ export function UShapeUnifiedDialog({
                 </div>
               </div>
               <div>
-                <label className="text-xs text-gray-400 block mb-2">Длина упора (м)</label>
+                <label className="text-xs text-gray-400 block mb-2">Длина упора (м) K4-290</label>
                 <input
                   type="number"
                   step="0.1"
