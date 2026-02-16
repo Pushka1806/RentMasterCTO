@@ -9,6 +9,7 @@ interface BudgetItem {
   quantity: number;
   price: number;
   total: number;
+  notes?: string;
 }
 
 interface Category {
@@ -122,6 +123,8 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
     let categorySum = 0;
     const rows = items.map(item => {
       const name = item.equipment?.name || item.work_item?.name || '—';
+      const notes = item.notes?.trim();
+      const displayName = notes ? `${name} ${notes}` : name;
       const qty = item.quantity || 0;
       const usdPrice = item.price || 0;
       const price = calculatePrice(usdPrice, item);
@@ -130,7 +133,7 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
 
       return `
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-          <td style="padding: 6px 8px; font-size: 13px; color: #ffffff; width: 60%;">${name}</td>
+          <td style="padding: 6px 8px; font-size: 13px; color: #ffffff; width: 60%;">${displayName}</td>
           <td style="padding: 6px 8px; font-size: 13px; text-align: center; color: #ffffff; width: 10%;">${qty}</td>
           <td style="padding: 6px 8px; font-size: 13px; text-align: right; color: #ffffff; width: 15%;">${price.toFixed(0)}${currencySuffix}</td>
           <td style="padding: 6px 8px; font-size: 13px; text-align: right; font-weight: 600; color: #ffffff; width: 15%;">${total.toFixed(0)}${currencySuffix}</td>
