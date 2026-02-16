@@ -51,9 +51,9 @@ export function UShapeDialog({ equipment, isOpen, onClose, onConfirm }: UShapeDi
     const baseLabel = `размером ${widthNum}x${heightNum}м`;
     let customName = baseLabel;
     if (supportCountNum === 2) {
-      customName = `${baseLabel} с двумя упорами`;
+      customName = `${baseLabel} с двумя упорами длиной ${supportLengthNum}м`;
     } else if (supportCountNum === 4) {
-      customName = `${baseLabel} с четырьмя упорами`;
+      customName = `${baseLabel} с четырьмя упорами длиной ${supportLengthNum}м`;
     }
 
     onConfirm({
