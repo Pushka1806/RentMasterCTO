@@ -37,7 +37,7 @@ export function LedSizeDialog({ equipment, isOpen, onClose, onConfirm }: LedSize
     if (sizeType === 'dimensions') {
       if (!width || !height) return;
       calculatedArea = parseFloat(width) * parseFloat(height);
-      customName = `(${width}x${height})`;
+      customName = `(${width}x${height}м)`;
     } else {
       if (!area) return;
       calculatedArea = parseFloat(area);
