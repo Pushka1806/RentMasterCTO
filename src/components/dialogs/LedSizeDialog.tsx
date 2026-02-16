@@ -21,6 +21,10 @@ export function LedSizeDialog({ equipment, isOpen, onClose, onConfirm }: LedSize
   const [area, setArea] = useState('');
   const [sizeType, setSizeType] = useState<'dimensions' | 'area'>('dimensions');
 
+  const formatArea = (value: number): string => {
+    return parseFloat(value.toFixed(2)).toString();
+  };
+
   if (!isOpen) return null;
 
   const handleClose = () => {
@@ -41,7 +45,7 @@ export function LedSizeDialog({ equipment, isOpen, onClose, onConfirm }: LedSize
     } else {
       if (!area) return;
       calculatedArea = parseFloat(area);
-      customName = `(${calculatedArea.toFixed(2)} м.кв.)`;
+      customName = `(${formatArea(calculatedArea)} м.кв.)`;
     }
 
     const totalPrice = equipment.rental_price * calculatedArea;
