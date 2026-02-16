@@ -52,13 +52,13 @@ export function UShapeLedDialog({ equipment, isOpen, onClose, onConfirm }: UShap
       totalPrice = widthNum * 7 + heightNum * 2 * 5 + 10 + 10 + 5 + hoistPrice;
     }
 
-    const hoistLabel = hoistType === 'manual' ? 'ручная таль' : 'мотор';
-    const baseLabel = `размером ${widthNum}x${heightNum}м, ${hoistLabel}`;
+    const hoistLabel = hoistType === 'manual' ? 'ручных талей' : 'электрических лебёдок';
+    const baseLabel = `размером ${widthNum}x${heightNum}м, оснащенная системой подъёма на базе ${hoistLabel}`;
     let customName = baseLabel;
     if (supportCountNum === 2) {
-      customName = `${baseLabel} с двумя упорами`;
+      customName = `${baseLabel} с двумя упорами длиной ${supportLengthNum}м`;
     } else if (supportCountNum === 4) {
-      customName = `${baseLabel} с четырьмя упорами`;
+      customName = `${baseLabel} с четырьмя упорами длиной ${supportLengthNum}м`;
     }
 
     onConfirm({
