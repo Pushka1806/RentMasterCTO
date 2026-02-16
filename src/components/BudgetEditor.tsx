@@ -10,8 +10,7 @@ import { TemplatesInBudget } from './TemplatesInBudget';
 import { WarehouseSpecification } from './WarehouseSpecification';
 import { generateBudgetPDF } from '../lib/pdfGenerator';
 import {
-  UShapeDialog,
-  UShapeLedDialog,
+  UShapeUnifiedDialog,
   LedSizeDialog,
   PodiumDialog,
   TotemDialog
@@ -63,15 +62,10 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
   const [showTotemDialog, setShowTotemDialog] = useState(false);
   const [selectedTotemEquipment, setSelectedTotemEquipment] = useState<EquipmentItem | null>(null);
   const [isMonototem, setIsMonototem] = useState(false);
-  
 
-  const [showUShapeDialog, setShowUShapeDialog] = useState(false);
+  const [showUShapeUnifiedDialog, setShowUShapeUnifiedDialog] = useState(false);
   const [selectedUShapeEquipment, setSelectedUShapeEquipment] = useState<EquipmentItem | null>(null);
-  
-
-  const [showUShapeLedDialog, setShowUShapeLedDialog] = useState(false);
-  const [selectedUShapeLedEquipment, setSelectedUShapeLedEquipment] = useState<EquipmentItem | null>(null);
-  
+  const [uShapeMode, setUShapeMode] = useState<'standard' | 'lifting'>('standard');
 
   const budgetListRef = useRef<HTMLDivElement>(null);
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -182,7 +176,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     return name.toLowerCase().includes('п-образная конструкция') && !name.toLowerCase().includes('с системой подъема');
   };
 
-  const isUShapeLedConstruction = (equipmentItem: EquipmentItem) => {
+  const isUShapeLiftingConstruction = (equipmentItem: EquipmentItem) => {
     const name = equipmentItem.name || '';
     return name.toLowerCase().includes('п-образная конструкция с системой подъема');
   };
@@ -210,14 +204,10 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
       setShowTotemDialog(true);
       return;
     }
-    if (isUShapeConstruction(equipmentItem)) {
+    if (isUShapeConstruction(equipmentItem) || isUShapeLiftingConstruction(equipmentItem)) {
       setSelectedUShapeEquipment(equipmentItem);
-      setShowUShapeDialog(true);
-      return;
-    }
-    if (isUShapeLedConstruction(equipmentItem)) {
-      setSelectedUShapeLedEquipment(equipmentItem);
-      setShowUShapeLedDialog(true);
+      setUShapeMode(isUShapeLiftingConstruction(equipmentItem) ? 'lifting' : 'standard');
+      setShowUShapeUnifiedDialog(true);
       return;
     }
     await handleAddItem(equipmentItem, 1, undefined, selectedCategoryId || undefined);
@@ -264,7 +254,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     setSelectedTotemEquipment(null);
   };
 
-  const handleUShapeConfirm = (result: { quantity: number; customName: string; customPrice: number }) => {
+  const handleUShapeUnifiedConfirm = (result: { quantity: number; customName: string; customPrice: number }) => {
     if (!selectedUShapeEquipment) return;
     handleAddItem(
       selectedUShapeEquipment,
@@ -274,24 +264,9 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
       result.customName,
       result.customPrice
     );
-    setShowUShapeDialog(false);
+    setShowUShapeUnifiedDialog(false);
     setSelectedUShapeEquipment(null);
   };
-
-  const handleUShapeLedConfirm = (result: { quantity: number; customName: string; customPrice: number }) => {
-    if (!selectedUShapeLedEquipment) return;
-    handleAddItem(
-      selectedUShapeLedEquipment,
-      result.quantity,
-      undefined,
-      selectedCategoryId || undefined,
-      result.customName,
-      result.customPrice
-    );
-    setShowUShapeLedDialog(false);
-    setSelectedUShapeLedEquipment(null);
-  };
-
 
   const handleAddItem = async (equipmentItem: EquipmentItem, quantity: number = 1, modificationId?: string, categoryId?: string, customName?: string, customPrice?: number) => {
     try {
@@ -1079,27 +1054,16 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
         />
       )}
 
-      {showUShapeDialog && selectedUShapeEquipment && (
-        <UShapeDialog
+      {showUShapeUnifiedDialog && selectedUShapeEquipment && (
+        <UShapeUnifiedDialog
           equipment={selectedUShapeEquipment}
-          isOpen={showUShapeDialog}
+          isOpen={showUShapeUnifiedDialog}
           onClose={() => {
-            setShowUShapeDialog(false);
+            setShowUShapeUnifiedDialog(false);
             setSelectedUShapeEquipment(null);
           }}
-          onConfirm={handleUShapeConfirm}
-        />
-      )}
-
-      {showUShapeLedDialog && selectedUShapeLedEquipment && (
-        <UShapeLedDialog
-          equipment={selectedUShapeLedEquipment}
-          isOpen={showUShapeLedDialog}
-          onClose={() => {
-            setShowUShapeLedDialog(false);
-            setSelectedUShapeLedEquipment(null);
-          }}
-          onConfirm={handleUShapeLedConfirm}
+          onConfirm={handleUShapeUnifiedConfirm}
+          initialMode={uShapeMode}
         />
       )}
     </div>
