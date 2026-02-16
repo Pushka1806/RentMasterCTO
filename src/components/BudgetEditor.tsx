@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Plus, Save, Package, Download, FileText, Settings, ChevronDown, Calculator } from 'lucide-react';
+import { X, Plus, Save, Package, Download, FileText, Settings, ChevronDown } from 'lucide-react';
 import { BudgetItem, getBudgetItems, createBudgetItem, updateBudgetItem, deleteBudgetItem, getEvent } from '../lib/events';
 import { EquipmentItem, getEquipmentItems, getEquipmentModifications, EquipmentModification } from '../lib/equipment';
 import { WorkItem, getWorkItems } from '../lib/personnel';
@@ -9,6 +9,13 @@ import { WorkPersonnelManager } from './WorkPersonnelManager';
 import { TemplatesInBudget } from './TemplatesInBudget';
 import { WarehouseSpecification } from './WarehouseSpecification';
 import { generateBudgetPDF } from '../lib/pdfGenerator';
+import {
+  UShapeDialog,
+  UShapeLedDialog,
+  LedSizeDialog,
+  PodiumDialog,
+  TotemDialog
+} from './dialogs';
 
 interface BudgetEditorProps {
   eventId: string;
@@ -47,36 +54,24 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
   const [showExchangeRatePopover, setShowExchangeRatePopover] = useState(false);
   const [showLedSizeDialog, setShowLedSizeDialog] = useState(false);
   const [selectedLedEquipment, setSelectedLedEquipment] = useState<EquipmentItem | null>(null);
-  const [ledWidth, setLedWidth] = useState('');
-  const [ledHeight, setLedHeight] = useState('');
-  const [ledArea, setLedArea] = useState('');
-  const [ledSizeType, setLedSizeType] = useState<'dimensions' | 'area'>('dimensions');
+  
 
   const [showPodiumDialog, setShowPodiumDialog] = useState(false);
   const [selectedPodiumEquipment, setSelectedPodiumEquipment] = useState<EquipmentItem | null>(null);
-  const [podiumWidth, setPodiumWidth] = useState('');
-  const [podiumDepth, setPodiumDepth] = useState('');
-  const [podiumHeight, setPodiumHeight] = useState('');
+  
 
   const [showTotemDialog, setShowTotemDialog] = useState(false);
   const [selectedTotemEquipment, setSelectedTotemEquipment] = useState<EquipmentItem | null>(null);
-  const [totemHeight, setTotemHeight] = useState('');
   const [isMonototem, setIsMonototem] = useState(false);
+  
 
   const [showUShapeDialog, setShowUShapeDialog] = useState(false);
   const [selectedUShapeEquipment, setSelectedUShapeEquipment] = useState<EquipmentItem | null>(null);
-  const [uShapeWidth, setUShapeWidth] = useState('');
-  const [uShapeHeight, setUShapeHeight] = useState('');
-  const [uShapeSupportCount, setUShapeSupportCount] = useState('0');
-  const [uShapeSupportLength, setUShapeSupportLength] = useState('');
+  
 
   const [showUShapeLedDialog, setShowUShapeLedDialog] = useState(false);
   const [selectedUShapeLedEquipment, setSelectedUShapeLedEquipment] = useState<EquipmentItem | null>(null);
-  const [uShapeLedWidth, setUShapeLedWidth] = useState('');
-  const [uShapeLedHeight, setUShapeLedHeight] = useState('');
-  const [uShapeLedSupportCount, setUShapeLedSupportCount] = useState('0');
-  const [uShapeLedSupportLength, setUShapeLedSupportLength] = useState('');
-  const [uShapeLedHoistType, setUShapeLedHoistType] = useState<'manual' | 'motor'>('manual');
+  
 
   const budgetListRef = useRef<HTMLDivElement>(null);
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -218,24 +213,85 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     if (isUShapeConstruction(equipmentItem)) {
       setSelectedUShapeEquipment(equipmentItem);
       setShowUShapeDialog(true);
-      setUShapeWidth('');
-      setUShapeHeight('');
-      setUShapeSupportCount('0');
-      setUShapeSupportLength('');
       return;
     }
     if (isUShapeLedConstruction(equipmentItem)) {
       setSelectedUShapeLedEquipment(equipmentItem);
       setShowUShapeLedDialog(true);
-      setUShapeLedWidth('');
-      setUShapeLedHeight('');
-      setUShapeLedSupportCount('0');
-      setUShapeLedSupportLength('');
-      setUShapeLedHoistType('manual');
       return;
     }
     await handleAddItem(equipmentItem, 1, undefined, selectedCategoryId || undefined);
   };
+  const handleLedSizeConfirm = (result: { quantity: number; customName: string; customPrice: number }) => {
+    if (!selectedLedEquipment) return;
+    handleAddItem(
+      selectedLedEquipment,
+      result.quantity,
+      undefined,
+      selectedCategoryId || undefined,
+      result.customName,
+      result.customPrice
+    );
+    setShowLedSizeDialog(false);
+    setSelectedLedEquipment(null);
+  };
+
+  const handlePodiumConfirm = (result: { quantity: number; customName: string; customPrice: number }) => {
+    if (!selectedPodiumEquipment) return;
+    handleAddItem(
+      selectedPodiumEquipment,
+      result.quantity,
+      undefined,
+      selectedCategoryId || undefined,
+      result.customName,
+      result.customPrice
+    );
+    setShowPodiumDialog(false);
+    setSelectedPodiumEquipment(null);
+  };
+
+  const handleTotemConfirm = (result: { quantity: number; customName: string; customPrice?: number }) => {
+    if (!selectedTotemEquipment) return;
+    handleAddItem(
+      selectedTotemEquipment,
+      result.quantity,
+      undefined,
+      selectedCategoryId || undefined,
+      result.customName,
+      result.customPrice
+    );
+    setShowTotemDialog(false);
+    setSelectedTotemEquipment(null);
+  };
+
+  const handleUShapeConfirm = (result: { quantity: number; customName: string; customPrice: number }) => {
+    if (!selectedUShapeEquipment) return;
+    handleAddItem(
+      selectedUShapeEquipment,
+      result.quantity,
+      undefined,
+      selectedCategoryId || undefined,
+      result.customName,
+      result.customPrice
+    );
+    setShowUShapeDialog(false);
+    setSelectedUShapeEquipment(null);
+  };
+
+  const handleUShapeLedConfirm = (result: { quantity: number; customName: string; customPrice: number }) => {
+    if (!selectedUShapeLedEquipment) return;
+    handleAddItem(
+      selectedUShapeLedEquipment,
+      result.quantity,
+      undefined,
+      selectedCategoryId || undefined,
+      result.customName,
+      result.customPrice
+    );
+    setShowUShapeLedDialog(false);
+    setSelectedUShapeLedEquipment(null);
+  };
+
 
   const handleAddItem = async (equipmentItem: EquipmentItem, quantity: number = 1, modificationId?: string, categoryId?: string, customName?: string, customPrice?: number) => {
     try {
@@ -277,141 +333,15 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     }
   };
 
-  const handleAddLedScreen = async () => {
-    if (!selectedLedEquipment) return;
+  
 
-    let area: number;
-    let customName: string;
+  
 
-    if (ledSizeType === 'dimensions') {
-      if (!ledWidth || !ledHeight) return;
-      area = parseFloat(ledWidth) * parseFloat(ledHeight);
-      customName = `(${ledWidth}x${ledHeight})`;
-    } else {
-      if (!ledArea) return;
-      area = parseFloat(ledArea);
-      customName = `(${area.toFixed(2)} м.кв.)`;
-    }
+  
 
-    const totalPrice = selectedLedEquipment.rental_price * area;
+  
 
-    await handleAddItem(selectedLedEquipment, 1, undefined, selectedCategoryId || undefined, customName, totalPrice);
-    setShowLedSizeDialog(false);
-    setLedWidth('');
-    setLedHeight('');
-    setLedArea('');
-    setSelectedLedEquipment(null);
-  };
-
-  const handleAddPodium = async () => {
-    if (!selectedPodiumEquipment || !podiumWidth || !podiumDepth || !podiumHeight) return;
-
-    const width = parseFloat(podiumWidth);
-    const depth = parseFloat(podiumDepth);
-    const height = parseFloat(podiumHeight);
-    const area = width * depth;
-
-    const customName = `${width}x${depth}x${height}`;
-    const totalPrice = selectedPodiumEquipment.rental_price * area;
-
-    await handleAddItem(selectedPodiumEquipment, 1, undefined, selectedCategoryId || undefined, customName, totalPrice);
-    setShowPodiumDialog(false);
-    setPodiumWidth('');
-    setPodiumDepth('');
-    setPodiumHeight('');
-    setSelectedPodiumEquipment(null);
-  };
-
-  const handleAddTotem = async () => {
-    if (!selectedTotemEquipment || !totemHeight) return;
-
-    const height = parseFloat(totemHeight);
-    const heightLabel = `${height}м`;
-
-    if (isMonototem) {
-      await handleAddItem(selectedTotemEquipment, 1, undefined, selectedCategoryId || undefined, heightLabel);
-    } else {
-      const totalPrice = height <= 2 ? 10 : 10 + Math.ceil((height - 2) / 0.5) * 5;
-      await handleAddItem(selectedTotemEquipment, 1, undefined, selectedCategoryId || undefined, heightLabel, totalPrice);
-    }
-
-    setShowTotemDialog(false);
-    setTotemHeight('');
-    setSelectedTotemEquipment(null);
-    setIsMonototem(false);
-  };
-
-  const handleAddUShape = async () => {
-    if (!selectedUShapeEquipment || !uShapeWidth || !uShapeHeight) return;
-
-    const width = parseFloat(uShapeWidth);
-    const height = parseFloat(uShapeHeight);
-    const supportCount = parseInt(uShapeSupportCount, 10) || 0;
-
-    if (supportCount > 0 && !uShapeSupportLength) return;
-
-    const supportLength = supportCount > 0 ? parseFloat(uShapeSupportLength) : 0;
-    const baseTotal = supportCount > 0
-      ? (width + (height * 2) + 4 + (supportCount * supportLength)) * 5
-      : (width + (height * 2) + 2) * 5 + 10;
-    const totalPrice = roundToFive(baseTotal);
-
-    const baseLabel = `размером ${width}x${height}м`;
-    let customName = baseLabel;
-    if (supportCount === 2) {
-      customName = `${baseLabel} с двумя упорами`;
-    } else if (supportCount === 4) {
-      customName = `${baseLabel} с четырьмя упорами`;
-    }
-
-    await handleAddItem(selectedUShapeEquipment, 1, undefined, selectedCategoryId || undefined, customName, totalPrice);
-
-    setShowUShapeDialog(false);
-    setUShapeWidth('');
-    setUShapeHeight('');
-    setUShapeSupportCount('0');
-    setUShapeSupportLength('');
-    setSelectedUShapeEquipment(null);
-  };
-
-  const handleAddUShapeLed = async () => {
-    if (!selectedUShapeLedEquipment || !uShapeLedWidth || !uShapeLedHeight) return;
-
-    const width = parseFloat(uShapeLedWidth);
-    const height = parseFloat(uShapeLedHeight);
-    const supportCount = parseInt(uShapeLedSupportCount, 10) || 0;
-
-    if (supportCount > 0 && !uShapeLedSupportLength) return;
-
-    const supportLength = supportCount > 0 ? parseFloat(uShapeLedSupportLength) : 0;
-    const hoistPrice = uShapeLedHoistType === 'manual' ? 20 : 80;
-
-    let totalPrice: number;
-    if (supportCount > 0) {
-      totalPrice = width * 7 + height * 2 * 5 + supportCount * supportLength * 5 + 10 + 5 + hoistPrice;
-    } else {
-      totalPrice = width * 7 + height * 2 * 5 + 10 + 10 + 5 + hoistPrice;
-    }
-
-    const hoistLabel = uShapeLedHoistType === 'manual' ? 'ручная таль' : 'мотор';
-    const baseLabel = `размером ${width}x${height}м, ${hoistLabel}`;
-    let customName = baseLabel;
-    if (supportCount === 2) {
-      customName = `${baseLabel} с двумя упорами`;
-    } else if (supportCount === 4) {
-      customName = `${baseLabel} с четырьмя упорами`;
-    }
-
-    await handleAddItem(selectedUShapeLedEquipment, 1, undefined, selectedCategoryId || undefined, customName, totalPrice);
-
-    setShowUShapeLedDialog(false);
-    setUShapeLedWidth('');
-    setUShapeLedHeight('');
-    setUShapeLedSupportCount('0');
-    setUShapeLedSupportLength('');
-    setUShapeLedHoistType('manual');
-    setSelectedUShapeLedEquipment(null);
-  };
+  
 
   const handleAddWorkItem = async (workItem: WorkItem, categoryId?: string) => {
     try {
@@ -713,43 +643,9 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     }
   };
 
-  const roundToFive = (value: number) => Math.round(value / 5) * 5;
+  
 
-  const uShapeSupportCountValue = parseInt(uShapeSupportCount, 10) || 0;
-  const uShapeTotalPrice = () => {
-    if (!uShapeWidth || !uShapeHeight) return null;
-    if (uShapeSupportCountValue > 0 && !uShapeSupportLength) return null;
-
-    const width = parseFloat(uShapeWidth);
-    const height = parseFloat(uShapeHeight);
-    const supportLength = uShapeSupportCountValue > 0 ? parseFloat(uShapeSupportLength) : 0;
-
-    const baseTotal = uShapeSupportCountValue > 0
-      ? (width + (height * 2) + 4 + (uShapeSupportCountValue * supportLength)) * 5
-      : (width + (height * 2) + 2) * 5 + 10;
-
-    return roundToFive(baseTotal);
-  };
-
-  const uShapeLedSupportCountValue = parseInt(uShapeLedSupportCount, 10) || 0;
-  const uShapeLedTotalPrice = () => {
-    if (!uShapeLedWidth || !uShapeLedHeight) return null;
-    if (uShapeLedSupportCountValue > 0 && !uShapeLedSupportLength) return null;
-
-    const width = parseFloat(uShapeLedWidth);
-    const height = parseFloat(uShapeLedHeight);
-    const supportLength = uShapeLedSupportCountValue > 0 ? parseFloat(uShapeLedSupportLength) : 0;
-    const hoistPrice = uShapeLedHoistType === 'manual' ? 20 : 80;
-
-    let totalPrice: number;
-    if (uShapeLedSupportCountValue > 0) {
-      totalPrice = width * 7 + height * 2 * 5 + uShapeLedSupportCountValue * supportLength * 5 + 10 + 5 + hoistPrice;
-    } else {
-      totalPrice = width * 7 + height * 2 * 5 + 10 + 10 + 5 + hoistPrice;
-    }
-
-    return totalPrice;
-  };
+  
 
   if (loading) {
     return (
@@ -1148,582 +1044,63 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
       )}
 
       {showLedSizeDialog && selectedLedEquipment && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70]">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-[400px] overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-800 flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <Calculator className="w-4 h-4 text-cyan-500" />
-                <h3 className="text-sm font-bold text-white">Размер экрана</h3>
-              </div>
-              <button
-                onClick={() => { setShowLedSizeDialog(false); setLedWidth(''); setLedHeight(''); setLedArea(''); setSelectedLedEquipment(null); }}
-                className="text-gray-500 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="bg-gray-800/50 rounded-lg p-3">
-                <p className="text-xs text-gray-400 mb-1">Оборудование</p>
-                <p className="text-sm font-medium text-white">{selectedLedEquipment.name}</p>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex bg-gray-800 p-0.5 rounded-lg">
-                  <button
-                    onClick={() => { setLedSizeType('dimensions'); setLedArea(''); }}
-                    className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${
-                      ledSizeType === 'dimensions' ? 'bg-gray-700 text-cyan-400 shadow-sm' : 'text-gray-500 hover:text-gray-300'
-                    }`}
-                  >
-                    Размеры
-                  </button>
-                  <button
-                    onClick={() => { setLedSizeType('area'); setLedWidth(''); setLedHeight(''); }}
-                    className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${
-                      ledSizeType === 'area' ? 'bg-gray-700 text-cyan-400 shadow-sm' : 'text-gray-500 hover:text-gray-300'
-                    }`}
-                  >
-                    Площадь
-                  </button>
-                </div>
-
-                {ledSizeType === 'dimensions' ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs text-gray-400 block mb-2">Ширина (м)</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={ledWidth}
-                        onChange={(e) => setLedWidth(e.target.value)}
-                        placeholder="например: 4"
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
-                        onKeyDown={(e) => e.key === 'Enter' && handleAddLedScreen()}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-400 block mb-2">Высота (м)</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={ledHeight}
-                        onChange={(e) => setLedHeight(e.target.value)}
-                        placeholder="например: 3"
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
-                        onKeyDown={(e) => e.key === 'Enter' && handleAddLedScreen()}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-2">Площадь (м²)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={ledArea}
-                      onChange={(e) => setLedArea(e.target.value)}
-                      placeholder="например: 12"
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddLedScreen()}
-                    />
-                  </div>
-                )}
-
-                {(ledSizeType === 'dimensions' && ledWidth && ledHeight) || (ledSizeType === 'area' && ledArea) ? (
-                  <>
-                    <div className="bg-gray-800/30 rounded-lg p-3">
-                      <p className="text-xs text-gray-400 mb-1">Общая площадь</p>
-                      <p className="text-sm font-bold text-cyan-400">
-                        {(ledSizeType === 'dimensions' ? parseFloat(ledWidth) * parseFloat(ledHeight) : parseFloat(ledArea)).toFixed(2)} м²
-                      </p>
-                    </div>
-                    <div className="bg-gray-800/30 rounded-lg p-3">
-                      <p className="text-xs text-gray-400 mb-1">Сумма ({selectedLedEquipment.rental_price}$ × {(ledSizeType === 'dimensions' ? (parseFloat(ledWidth) * parseFloat(ledHeight)).toFixed(2) : parseFloat(ledArea).toFixed(2))} м²)</p>
-                      <p className="text-sm font-bold text-green-400">
-                        ${(selectedLedEquipment.rental_price * (ledSizeType === 'dimensions' ? parseFloat(ledWidth) * parseFloat(ledHeight) : parseFloat(ledArea))).toFixed(2)}
-                      </p>
-                    </div>
-                  </>
-                ) : null}
-              </div>
-            </div>
-            <div className="px-4 py-3 border-t border-gray-800 flex justify-end gap-2">
-              <button
-                onClick={() => { setShowLedSizeDialog(false); setLedWidth(''); setLedHeight(''); setLedArea(''); setSelectedLedEquipment(null); }}
-                className="px-4 py-2 text-xs text-gray-400 hover:text-white transition-colors"
-              >
-                Отмена
-              </button>
-              <button
-                onClick={handleAddLedScreen}
-                disabled={(ledSizeType === 'dimensions' && (!ledWidth || !ledHeight)) || (ledSizeType === 'area' && !ledArea)}
-                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Добавить
-              </button>
-            </div>
-          </div>
-        </div>
+        <LedSizeDialog
+          equipment={selectedLedEquipment}
+          isOpen={showLedSizeDialog}
+          onClose={() => {
+            setShowLedSizeDialog(false);
+            setSelectedLedEquipment(null);
+          }}
+          onConfirm={handleLedSizeConfirm}
+        />
       )}
 
       {showPodiumDialog && selectedPodiumEquipment && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70]">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-[400px] overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-800 flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <Calculator className="w-4 h-4 text-cyan-500" />
-                <h3 className="text-sm font-bold text-white">Размеры</h3>
-              </div>
-              <button
-                onClick={() => { setShowPodiumDialog(false); setPodiumWidth(''); setPodiumDepth(''); setPodiumHeight(''); setSelectedPodiumEquipment(null); }}
-                className="text-gray-500 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="bg-gray-800/50 rounded-lg p-3">
-                <p className="text-xs text-gray-400 mb-1">Оборудование</p>
-                <p className="text-sm font-medium text-white">{selectedPodiumEquipment.name}</p>
-              </div>
-
-              <div className="space-y-3">
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-2">Ширина (м)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={podiumWidth}
-                      onChange={(e) => setPodiumWidth(e.target.value)}
-                      placeholder="4"
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddPodium()}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-2">Глубина (м)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={podiumDepth}
-                      onChange={(e) => setPodiumDepth(e.target.value)}
-                      placeholder="3"
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddPodium()}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-2">Высота (м)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={podiumHeight}
-                      onChange={(e) => setPodiumHeight(e.target.value)}
-                      placeholder="0.6"
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddPodium()}
-                    />
-                  </div>
-                </div>
-
-                {podiumWidth && podiumDepth && (
-                  <div className="bg-gray-800/30 rounded-lg p-3">
-                    <p className="text-xs text-gray-400 mb-1">Общая площадь</p>
-                    <p className="text-sm font-bold text-cyan-400">
-                      {(parseFloat(podiumWidth) * parseFloat(podiumDepth)).toFixed(2)} м²
-                    </p>
-                  </div>
-                )}
-
-                {podiumWidth && podiumDepth && (
-                  <div className="bg-gray-800/30 rounded-lg p-3">
-                    <p className="text-xs text-gray-400 mb-1">Сумма ({selectedPodiumEquipment.rental_price}$ × {(parseFloat(podiumWidth) * parseFloat(podiumDepth)).toFixed(2)} м²)</p>
-                    <p className="text-sm font-bold text-green-400">
-                      ${(selectedPodiumEquipment.rental_price * parseFloat(podiumWidth) * parseFloat(podiumDepth)).toFixed(2)}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="px-4 py-3 border-t border-gray-800 flex justify-end gap-2">
-              <button
-                onClick={() => { setShowPodiumDialog(false); setPodiumWidth(''); setPodiumDepth(''); setPodiumHeight(''); setSelectedPodiumEquipment(null); }}
-                className="px-4 py-2 text-xs text-gray-400 hover:text-white transition-colors"
-              >
-                Отмена
-              </button>
-              <button
-                onClick={handleAddPodium}
-                disabled={!podiumWidth || !podiumDepth || !podiumHeight}
-                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Добавить
-              </button>
-            </div>
-          </div>
-        </div>
+        <PodiumDialog
+          equipment={selectedPodiumEquipment}
+          isOpen={showPodiumDialog}
+          onClose={() => {
+            setShowPodiumDialog(false);
+            setSelectedPodiumEquipment(null);
+          }}
+          onConfirm={handlePodiumConfirm}
+        />
       )}
       {showTotemDialog && selectedTotemEquipment && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70]">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-[400px] overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-800 flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <Calculator className="w-4 h-4 text-cyan-500" />
-                <h3 className="text-sm font-bold text-white">
-                  {isMonototem ? 'Высота монототема' : 'Высота тотема'}
-                </h3>
-              </div>
-              <button
-                onClick={() => { setShowTotemDialog(false); setTotemHeight(''); setSelectedTotemEquipment(null); setIsMonototem(false); }}
-                className="text-gray-500 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="bg-gray-800/50 rounded-lg p-3">
-                <p className="text-xs text-gray-400 mb-1">Оборудование</p>
-                <p className="text-sm font-medium text-white">{selectedTotemEquipment.name}</p>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs text-gray-400 block mb-2">Высота (м)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="0.1"
-                    value={totemHeight}
-                    onChange={(e) => setTotemHeight(e.target.value)}
-                    placeholder="например: 2.5"
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
-                    onKeyDown={(e) => e.key === 'Enter' && handleAddTotem()}
-                  />
-                </div>
-
-                {!isMonototem && totemHeight && (
-                  <div className="bg-gray-800/30 rounded-lg p-3">
-                    <p className="text-xs text-gray-400 mb-1">Расчет стоимости</p>
-                    <p className="text-xs text-gray-500 mb-2">
-                      Базовая цена: $10 (до 2м)
-                      <br />
-                      +$5 за каждые 0.5м свыше 2м
-                    </p>
-                    <p className="text-sm font-bold text-green-400">
-                      ${(() => {
-                        const height = parseFloat(totemHeight);
-                        const totalPrice = height <= 2 ? 10 : 10 + Math.ceil((height - 2) / 0.5) * 5;
-                        return totalPrice.toFixed(2);
-                      })()}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="px-4 py-3 border-t border-gray-800 flex justify-end gap-2">
-              <button
-                onClick={() => { setShowTotemDialog(false); setTotemHeight(''); setSelectedTotemEquipment(null); setIsMonototem(false); }}
-                className="px-4 py-2 text-xs text-gray-400 hover:text-white transition-colors"
-              >
-                Отмена
-              </button>
-              <button
-                onClick={handleAddTotem}
-                disabled={!totemHeight}
-                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Добавить
-              </button>
-            </div>
-          </div>
-        </div>
+        <TotemDialog
+          equipment={selectedTotemEquipment}
+          isOpen={showTotemDialog}
+          onClose={() => {
+            setShowTotemDialog(false);
+            setSelectedTotemEquipment(null);
+          }}
+          onConfirm={handleTotemConfirm}
+          isMonototem={isMonototem}
+        />
       )}
 
       {showUShapeDialog && selectedUShapeEquipment && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70]">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-[420px] overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-800 flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <Calculator className="w-4 h-4 text-cyan-500" />
-                <h3 className="text-sm font-bold text-white">П-образная конструкция</h3>
-              </div>
-              <button
-                onClick={() => {
-                  setShowUShapeDialog(false);
-                  setUShapeWidth('');
-                  setUShapeHeight('');
-                  setUShapeSupportCount('0');
-                  setUShapeSupportLength('');
-                  setSelectedUShapeEquipment(null);
-                }}
-                className="text-gray-500 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="bg-gray-800/50 rounded-lg p-3">
-                <p className="text-xs text-gray-400 mb-1">Оборудование</p>
-                <p className="text-sm font-medium text-white">{selectedUShapeEquipment.name}</p>
-              </div>
-
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-2">Ширина (м)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={uShapeWidth}
-                      onChange={(e) => setUShapeWidth(e.target.value)}
-                      placeholder="например: 6"
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddUShape()}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-2">Высота (м)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={uShapeHeight}
-                      onChange={(e) => setUShapeHeight(e.target.value)}
-                      placeholder="например: 4"
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddUShape()}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-2">Количество упоров</label>
-                    <div className="flex gap-2">
-                      {[0, 2, 4].map((option) => (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => {
-                            setUShapeSupportCount(option.toString());
-                            if (option === 0) {
-                              setUShapeSupportLength('');
-                            }
-                          }}
-                          className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                            uShapeSupportCountValue === option
-                              ? 'bg-cyan-600 text-white border-cyan-500'
-                              : 'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700'
-                          }`}
-                        >
-                          {option}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-2">Длина упора (м)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={uShapeSupportLength}
-                      onChange={(e) => setUShapeSupportLength(e.target.value)}
-                      placeholder="например: 2"
-                      disabled={uShapeSupportCountValue <= 0}
-                      className={`w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none ${uShapeSupportCountValue <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddUShape()}
-                    />
-                  </div>
-                </div>
-
-                {uShapeTotalPrice() !== null && (
-                  <div className="bg-gray-800/30 rounded-lg p-3">
-                    <p className="text-xs text-gray-400 mb-1">Стоимость</p>
-                    <p className="text-sm font-bold text-green-400">${uShapeTotalPrice()!.toFixed(2)}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="px-4 py-3 border-t border-gray-800 flex justify-end gap-2">
-              <button
-                onClick={() => {
-                  setShowUShapeDialog(false);
-                  setUShapeWidth('');
-                  setUShapeHeight('');
-                  setUShapeSupportCount('0');
-                  setUShapeSupportLength('');
-                  setSelectedUShapeEquipment(null);
-                }}
-                className="px-4 py-2 text-xs text-gray-400 hover:text-white transition-colors"
-              >
-                Отмена
-              </button>
-              <button
-                onClick={handleAddUShape}
-                disabled={!uShapeWidth || !uShapeHeight || (uShapeSupportCountValue > 0 && !uShapeSupportLength)}
-                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Добавить
-              </button>
-            </div>
-          </div>
-        </div>
+        <UShapeDialog
+          equipment={selectedUShapeEquipment}
+          isOpen={showUShapeDialog}
+          onClose={() => {
+            setShowUShapeDialog(false);
+            setSelectedUShapeEquipment(null);
+          }}
+          onConfirm={handleUShapeConfirm}
+        />
       )}
 
       {showUShapeLedDialog && selectedUShapeLedEquipment && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70]">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-[420px] overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-800 flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <Calculator className="w-4 h-4 text-cyan-500" />
-                <h3 className="text-sm font-bold text-white">П-образная конструкция с системой подъема</h3>
-              </div>
-              <button
-                onClick={() => {
-                  setShowUShapeLedDialog(false);
-                  setUShapeLedWidth('');
-                  setUShapeLedHeight('');
-                  setUShapeLedSupportCount('0');
-                  setUShapeLedSupportLength('');
-                  setUShapeLedHoistType('manual');
-                  setSelectedUShapeLedEquipment(null);
-                }}
-                className="text-gray-500 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="bg-gray-800/50 rounded-lg p-3">
-                <p className="text-xs text-gray-400 mb-1">Оборудование</p>
-                <p className="text-sm font-medium text-white">{selectedUShapeLedEquipment.name}</p>
-              </div>
-
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-2">Ширина(м) K4-390</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={uShapeLedWidth}
-                      onChange={(e) => setUShapeLedWidth(e.target.value)}
-                      placeholder="например: 6"
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddUShapeLed()}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-2">Высота(м) K4-290</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={uShapeLedHeight}
-                      onChange={(e) => setUShapeLedHeight(e.target.value)}
-                      placeholder="например: 4"
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddUShapeLed()}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-2">Количество упоров</label>
-                    <div className="flex gap-2">
-                      {[0, 2, 4].map((option) => (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => {
-                            setUShapeLedSupportCount(option.toString());
-                            if (option === 0) {
-                              setUShapeLedSupportLength('');
-                            }
-                          }}
-                          className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                            uShapeLedSupportCountValue === option
-                              ? 'bg-cyan-600 text-white border-cyan-500'
-                              : 'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700'
-                          }`}
-                        >
-                          {option}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-2">Длина упора (м)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={uShapeLedSupportLength}
-                      onChange={(e) => setUShapeLedSupportLength(e.target.value)}
-                      placeholder="например: 2"
-                      disabled={uShapeLedSupportCountValue <= 0}
-                      className={`w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none ${uShapeLedSupportCountValue <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddUShapeLed()}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs text-gray-400 block mb-2">Тип тали</label>
-                  <div className="flex gap-2">
-                    {[
-                      { value: 'manual', label: 'ручная таль' },
-                      { value: 'motor', label: 'мотор' }
-                    ].map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => setUShapeLedHoistType(option.value as 'manual' | 'motor')}
-                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                          uShapeLedHoistType === option.value
-                            ? 'bg-cyan-600 text-white border-cyan-500'
-                            : 'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700'
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {uShapeLedTotalPrice() !== null && (
-                  <div className="bg-gray-800/30 rounded-lg p-3">
-                    <p className="text-xs text-gray-400 mb-1">Стоимость</p>
-                    <p className="text-sm font-bold text-green-400">${uShapeLedTotalPrice()!.toFixed(2)}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="px-4 py-3 border-t border-gray-800 flex justify-end gap-2">
-              <button
-                onClick={() => {
-                  setShowUShapeLedDialog(false);
-                  setUShapeLedWidth('');
-                  setUShapeLedHeight('');
-                  setUShapeLedSupportCount('0');
-                  setUShapeLedSupportLength('');
-                  setUShapeLedHoistType('manual');
-                  setSelectedUShapeLedEquipment(null);
-                }}
-                className="px-4 py-2 text-xs text-gray-400 hover:text-white transition-colors"
-              >
-                Отмена
-              </button>
-              <button
-                onClick={handleAddUShapeLed}
-                disabled={!uShapeLedWidth || !uShapeLedHeight || (uShapeLedSupportCountValue > 0 && !uShapeLedSupportLength)}
-                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Добавить
-              </button>
-            </div>
-          </div>
-        </div>
+        <UShapeLedDialog
+          equipment={selectedUShapeLedEquipment}
+          isOpen={showUShapeLedDialog}
+          onClose={() => {
+            setShowUShapeLedDialog(false);
+            setSelectedUShapeLedEquipment(null);
+          }}
+          onConfirm={handleUShapeLedConfirm}
+        />
       )}
     </div>
   );
