@@ -12,3 +12,6 @@ export type { DialogResult as UShapeDialogResult } from './UShapeDialog';
 
 export { UShapeLedDialog } from './UShapeLedDialog';
 export type { DialogResult as UShapeLedDialogResult } from './UShapeLedDialog';
+
+export { UShapeUnifiedDialog } from './UShapeUnifiedDialog';
+export type { DialogResult as UShapeUnifiedDialogResult } from './UShapeUnifiedDialog';
