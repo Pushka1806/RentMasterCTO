@@ -5,7 +5,7 @@ import html2canvas from 'html2canvas';
 interface BudgetItem {
   category_id?: string;
   equipment?: { name: string };
-  work_item?: { name: string };
+  work_item?: { name: string; unit?: string };
   quantity: number;
   price: number;
   total: number;
@@ -126,6 +126,7 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
       const notes = item.notes?.trim();
       const displayName = notes ? `${name} ${notes}` : name;
       const qty = item.quantity || 0;
+      const unit = item.work_item?.unit || 'шт';
       const usdPrice = item.price || 0;
       const price = calculatePrice(usdPrice, item);
       const total = price * qty;
@@ -134,7 +135,7 @@ export async function generateBudgetPDF(data: PDFData): Promise<void> {
       return `
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
           <td style="padding: 6px 8px; font-size: 13px; color: #ffffff; width: 60%;">${displayName}</td>
-          <td style="padding: 6px 8px; font-size: 13px; text-align: center; color: #ffffff; width: 10%;">${qty}</td>
+          <td style="padding: 6px 8px; font-size: 13px; text-align: center; color: #ffffff; width: 10%;">${qty} ${unit}</td>
           <td style="padding: 6px 8px; font-size: 13px; text-align: right; color: #ffffff; width: 15%;">${price.toFixed(0)}${currencySuffix}</td>
           <td style="padding: 6px 8px; font-size: 13px; text-align: right; font-weight: 600; color: #ffffff; width: 15%;">${total.toFixed(0)}${currencySuffix}</td>
         </tr>
