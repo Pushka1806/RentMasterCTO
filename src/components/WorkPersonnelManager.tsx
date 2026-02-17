@@ -95,6 +95,7 @@ export function WorkPersonnelManager({ workItems, onClose, onSave, paymentMode, 
     const assignedCount = (assignments[item.id] || []).length;
     if (assignedCount === 0) return 0;
 
+    const showInBYN = paymentMode === 'byn_cash' || paymentMode === 'byn_noncash';
     const totalAmount = showInBYN
       ? calculateBYN(item.price, item.quantity)
       : item.price * item.quantity;
@@ -148,6 +149,7 @@ export function WorkPersonnelManager({ workItems, onClose, onSave, paymentMode, 
                 .map(id => personnel.find(p => p.id === id))
                 .filter(Boolean) as Personnel[];
               const isExpanded = expandedItems[item.id];
+              const showInBYN = paymentMode === 'byn_cash' || paymentMode === 'byn_noncash';
               const totalAmount = showInBYN
                 ? calculateBYN(item.price, item.quantity)
                 : item.price * item.quantity;
