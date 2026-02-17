@@ -3,7 +3,7 @@ import { X, Plus, Save, Package, Download, FileText, Settings, ChevronDown } fro
 import { BudgetItem, getBudgetItems, createBudgetItem, updateBudgetItem, deleteBudgetItem, getEvent } from '../lib/events';
 import { EquipmentItem, getEquipmentItems, getEquipmentModifications, EquipmentModification } from '../lib/equipment';
 import { WorkItem, getWorkItems } from '../lib/personnel';
-import { Category, getCategories, updateCategory } from '../lib/categories';
+import { Category, getCategories, updateCategory, deleteCategory } from '../lib/categories';
 import { CategoryBlock } from './CategoryBlock';
 import { WorkPersonnelManager } from './WorkPersonnelManager';
 import { TemplatesInBudget } from './TemplatesInBudget';
@@ -385,6 +385,30 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
     } catch (error: any) {
       console.error('Error deleting item:', error);
       alert(`Ошибка удаления: ${error.message}`);
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    try {
+      const itemsToDelete = budgetItems.filter(item => item.category_id === categoryId);
+
+      for (const item of itemsToDelete) {
+        await deleteBudgetItem(item.id);
+      }
+
+      await deleteCategory(categoryId);
+
+      setBudgetItems(budgetItems.filter(item => item.category_id !== categoryId));
+      setCategories(categories.filter(cat => cat.id !== categoryId));
+      setActiveCategoryIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(categoryId);
+        return newSet;
+      });
+      setSelectedCategoryId(prev => prev === categoryId ? null : prev);
+    } catch (error: any) {
+      console.error('Error deleting category:', error);
+      alert(`Ошибка удаления категории: ${error.message}`);
     }
   };
 
@@ -813,6 +837,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                           onUpdateCategoryName={(name) => handleUpdateCategoryName(category.id, name)}
                           onUpdateItem={handleUpdateItem}
                           onDeleteItem={handleDeleteItem}
+                          onDeleteCategory={handleDeleteCategory}
                           onManagePersonnel={handleOpenWorkPersonnelManager}
                           paymentMode={paymentMode}
                           exchangeRate={exchangeRate}
@@ -843,6 +868,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
                         onUpdateCategoryName={() => {}}
                         onUpdateItem={handleUpdateItem}
                         onDeleteItem={handleDeleteItem}
+                        onDeleteCategory={handleDeleteCategory}
                         onManagePersonnel={handleOpenWorkPersonnelManager}
                         paymentMode={paymentMode}
                         exchangeRate={exchangeRate}
