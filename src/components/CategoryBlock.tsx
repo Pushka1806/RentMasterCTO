@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Edit2, Check, X, GripVertical, Users } from 'lucide-react';
+import { ChevronDown, ChevronRight, Edit2, Check, X, GripVertical, Users, Trash2 } from 'lucide-react';
 import { BudgetItem } from '../lib/events';
 
 interface CategoryBlockProps {
@@ -13,6 +13,7 @@ interface CategoryBlockProps {
   onUpdateCategoryName: (newName: string) => void;
   onUpdateItem: (itemId: string, updates: Partial<BudgetItem>) => void;
   onDeleteItem: (itemId: string) => void;
+  onDeleteCategory?: (categoryId: string) => void;
   onManagePersonnel?: (categoryId: string) => void;
   paymentMode: 'usd' | 'byn_cash' | 'byn_noncash';
   exchangeRate: number;
@@ -36,6 +37,7 @@ export function CategoryBlock({
   onUpdateCategoryName,
   onUpdateItem,
   onDeleteItem,
+  onDeleteCategory,
   onManagePersonnel,
   paymentMode,
   exchangeRate,
@@ -248,6 +250,21 @@ export function CategoryBlock({
                 className="text-gray-500 hover:text-gray-400 transition-colors"
               >
                 <Edit2 className="w-2.5 h-2.5" />
+              </button>
+            )}
+            {categoryId !== 'uncategorized' && onDeleteCategory && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm(`Удалить категорию "${categoryName}" и все элементы в ней?`)) {
+                    onDeleteCategory(categoryId);
+                  }
+                }}
+                className="text-red-500/50 hover:text-red-400 transition-colors"
+                title="Удалить категорию"
+              >
+                <Trash2 className="w-2.5 h-2.5" />
               </button>
             )}
           </>
