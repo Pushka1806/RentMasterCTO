@@ -95,7 +95,7 @@ function AppContent() {
       case 'contacts':
         return (
           <Contacts
-            key={refreshKey}
+            refreshSignal={refreshKey}
             onClientFormOpen={(client) => {
               setEditingClient(client);
               setClientFormOpen(true);

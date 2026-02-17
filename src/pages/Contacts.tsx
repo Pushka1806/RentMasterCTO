@@ -8,9 +8,10 @@ interface ContactsProps {
   onClientFormOpen?: (client?: Client) => void;
   onVenueFormOpen?: (venue?: Venue) => void;
   onOrganizerFormOpen?: (organizer?: Organizer) => void;
+  refreshSignal?: number;
 }
 
-export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpen }: ContactsProps) {
+export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpen, refreshSignal }: ContactsProps) {
   const [activeTab, setActiveTab] = useState<Tab>('clients');
   const [clients, setClients] = useState<Client[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -21,6 +22,10 @@ export function Contacts({ onClientFormOpen, onVenueFormOpen, onOrganizerFormOpe
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [refreshSignal]);
 
   const loadData = async () => {
     try {
