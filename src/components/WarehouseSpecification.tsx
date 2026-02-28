@@ -998,7 +998,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
                     : 'border-transparent text-gray-500 hover:text-gray-300'
                 }`}
               >
-                {tab === 'budget' ? 'Смета' : tab === 'cables' ? 'Кабели' : tab === 'connectors' ? 'Коннекторы' : 'Прочее'}
+                {tab === 'budget' ? 'Смета' : tab === 'cables' ? 'Кабеля' : tab === 'connectors' ? 'Коннекторы' : 'Прочее'}
               </button>
             ))}
           </div>
