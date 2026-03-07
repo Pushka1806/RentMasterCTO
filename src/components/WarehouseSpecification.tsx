@@ -560,18 +560,58 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
       const createdItems: { oldId: string; newId: string }[] = [];
       
       for (const budgetItemId of modifiedItems) {
-        // Find the expanded item to get current values
-        const expandedItem = expandedItems.find(item => 
-          item.budgetItemId === budgetItemId || item.budgetItemId.startsWith(budgetItemId + '-')
+        // Check if this budget item has LED cases that need to be created
+        const caseItems = expandedItems.filter(item => 
+          item.budgetItemId.startsWith(`${budgetItemId}-case-`)
         );
+        
+        // First, create all LED cases as new budget items
+        for (const caseItem of caseItems) {
+          try {
+            const newItem = await createBudgetItem({
+              event_id: eventId,
+              item_type: 'equipment',
+              equipment_id: null,
+              work_item_id: null,
+              category_id: caseItem.categoryId,
+              name: caseItem.name,
+              sku: caseItem.sku,
+              quantity: caseItem.quantity,
+              unit: caseItem.unit,
+              notes: caseItem.notes,
+              picked_in_warehouse: caseItem.picked
+            });
+            createdItems.push({ oldId: caseItem.budgetItemId, newId: newItem.id });
+          } catch (err) {
+            console.error('Error creating LED case budget item:', caseItem.budgetItemId, err);
+            errors.push(caseItem.name);
+          }
+        }
+        
+        // Find the expanded item to get current values for quantity/notes update
+        const expandedItem = expandedItems.find(item => item.budgetItemId === budgetItemId);
         
         if (!expandedItem) continue;
         
-        // Check if this is a virtual item (case or modification)
-        const isVirtualItem = budgetItemId.includes('-case-') || budgetItemId.includes('-mod-');
+        // Check if this is the parent LED item that has cases attached
+        const hasCases = caseItems.length > 0;
         
-        if (isVirtualItem) {
-          // For virtual items, create a new budget item
+        if (hasCases) {
+          // For items with LED cases, update the parent (cases are already created above)
+          const budgetItem = budgetItems.find(b => b.id === budgetItemId);
+          if (budgetItem) {
+            try {
+              await updateBudgetItem(budgetItemId, {
+                quantity: expandedItem.quantity,
+                notes: expandedItem.notes
+              });
+            } catch (err) {
+              console.error('Error saving budget item:', budgetItemId, err);
+              errors.push(expandedItem.name);
+            }
+          }
+        } else if (budgetItemId.includes('-case-') || budgetItemId.includes('-mod-')) {
+          // For other virtual items (not parent LED), create a new budget item
           try {
             const newItem = await createBudgetItem({
               event_id: eventId,
@@ -592,7 +632,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
             errors.push(expandedItem.name);
           }
         } else {
-          // Find the original budget item
+          // Find the original budget item for regular (non-virtual) items
           const budgetItem = budgetItems.find(b => b.id === budgetItemId);
           if (!budgetItem) continue;
           
@@ -617,6 +657,16 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
           }
           return item;
         }));
+        
+        // Track which budget items have LED cases so they reload on next open
+        const newLedItemsWithCases = new Set(ledItemsWithCases);
+        for (const budgetItemId of modifiedItems) {
+          const hasNewCases = createdItems.some(c => c.oldId.startsWith(`${budgetItemId}-case-`));
+          if (hasNewCases) {
+            newLedItemsWithCases.add(budgetItemId);
+          }
+        }
+        setLedItemsWithCases(newLedItemsWithCases);
       }
       
       if (errors.length > 0) {
