@@ -3,7 +3,7 @@ import { X, Plus, Save, Package, Download, FileText, Settings, ChevronDown } fro
 import { BudgetItem, getBudgetItems, createBudgetItem, updateBudgetItem, deleteBudgetItem, getEvent } from '../lib/events';
 import { EquipmentItem, getEquipmentItems, getEquipmentModifications, EquipmentModification } from '../lib/equipment';
 import { WorkItem, getWorkItems } from '../lib/personnel';
-import { Category, getCategories, updateCategory, deleteCategory } from '../lib/categories';
+import { Category, getCategories, updateCategory } from '../lib/categories';
 import { CategoryBlock } from './CategoryBlock';
 import { WorkPersonnelManager } from './WorkPersonnelManager';
 import { TemplatesInBudget } from './TemplatesInBudget';
@@ -116,7 +116,10 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
       const initialExpanded: Record<string, boolean> = {};
       const initialActive = new Set<string>();
 
-      categoriesData.forEach(cat => {
+      // Filter to only show non-template categories in the dropdown and initial state
+      const nonTemplateCategories = categoriesData.filter(cat => !cat.is_template);
+
+      nonTemplateCategories.forEach(cat => {
         initialExpanded[cat.id] = true;
       });
 
@@ -396,8 +399,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
         await deleteBudgetItem(item.id);
       }
 
-      await deleteCategory(categoryId);
-
+      // Remove category from local state only - do not delete from database
       setBudgetItems(budgetItems.filter(item => item.category_id !== categoryId));
       setCategories(categories.filter(cat => cat.id !== categoryId));
       setActiveCategoryIds(prev => {
@@ -729,7 +731,7 @@ export function BudgetEditor({ eventId, eventName, onClose }: BudgetEditorProps)
 
                 {showCategoryDropdown && (
                   <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-50 min-w-[200px] max-h-[300px] overflow-y-auto custom-scrollbar p-0.5">
-                    {categories.map(category => (
+                    {categories.filter(cat => !cat.is_template).map(category => (
                       <button
                         key={category.id}
                         onClick={() => handleSelectCategory(category.id)}
