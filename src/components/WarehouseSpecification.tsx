@@ -568,11 +568,23 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
         // First, create all LED cases as new budget items
         for (const caseItem of caseItems) {
           try {
+            console.log('Creating LED case with data:', {
+              event_id: eventId,
+              item_type: 'equipment',
+              category_id: caseItem.categoryId,
+              name: caseItem.name,
+              sku: caseItem.sku,
+              quantity: caseItem.quantity,
+              price: 0,
+              total: 0,
+              exchange_rate: 1,
+              notes: caseItem.notes,
+              picked: caseItem.picked,
+              sort_order: 0
+            });
             const newItem = await createBudgetItem({
               event_id: eventId,
               item_type: 'equipment',
-              equipment_id: null,
-              work_item_id: null,
               category_id: caseItem.categoryId,
               name: caseItem.name,
               sku: caseItem.sku,
@@ -585,12 +597,14 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
               sort_order: 0
             });
             createdItems.push({ oldId: caseItem.budgetItemId, newId: newItem.id });
-          } catch (err) {
+          } catch (err: any) {
             console.error('Error creating LED case budget item:', caseItem.budgetItemId, err);
+            console.error('Error message:', err?.message);
+            console.error('Error details:', err?.details);
+            console.error('Error hint:', err?.hint);
             errors.push(caseItem.name);
           }
-        }
-        
+        }        
         // Find the expanded item to get current values for quantity/notes update
         const expandedItem = expandedItems.find(item => item.budgetItemId === budgetItemId);
         
