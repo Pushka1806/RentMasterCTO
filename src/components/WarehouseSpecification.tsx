@@ -572,13 +572,11 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
               event_id: eventId,
               item_type: 'equipment',
               category_id: caseItem.categoryId,
-              name: caseItem.name,
-              sku: caseItem.sku,
               quantity: caseItem.quantity,
               price: 0,
               total: 0,
               exchange_rate: 1,
-              notes: caseItem.notes,
+              notes: `${caseItem.name} (${caseItem.sku}) - ${caseItem.notes}`,
               picked: caseItem.picked,
               sort_order: 0
             });
@@ -586,13 +584,11 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
               event_id: eventId,
               item_type: 'equipment',
               category_id: caseItem.categoryId,
-              name: caseItem.name,
-              sku: caseItem.sku,
               quantity: caseItem.quantity,
               price: 0,
               total: 0,
               exchange_rate: 1,
-              notes: caseItem.notes,
+              notes: `${caseItem.name} (${caseItem.sku}) - ${caseItem.notes}`,
               picked: caseItem.picked,
               sort_order: 0
             });
@@ -601,11 +597,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
             console.error('Error creating LED case budget item:', caseItem.budgetItemId, err);
             console.error('Error message:', err?.message);
             console.error('Error details:', err?.details);
-            console.error('Error hint:', err?.hint);
-            errors.push(caseItem.name);
-          }
-        }        
-        // Find the expanded item to get current values for quantity/notes update
+            console.error('Error hint:', err?.hint);        // Find the expanded item to get current values for quantity/notes update
         const expandedItem = expandedItems.find(item => item.budgetItemId === budgetItemId);
         
         if (!expandedItem) continue;
