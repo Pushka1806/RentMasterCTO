@@ -5,6 +5,7 @@ export interface Category {
   name: string;
   description: string;
   sort_order: number;
+  is_template?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -20,7 +21,7 @@ export async function getCategories(): Promise<Category[]> {
   return data || [];
 }
 
-export async function createCategory(name: string, description?: string): Promise<Category> {
+export async function createCategory(name: string, description?: string, isTemplate: boolean = false): Promise<Category> {
   const { data: existing } = await supabase
     .from('categories')
     .select('*')
@@ -42,7 +43,7 @@ export async function createCategory(name: string, description?: string): Promis
 
   const { data, error } = await supabase
     .from('categories')
-    .insert({ name, description: description || '', sort_order: sortOrder })
+    .insert({ name, description: description || '', sort_order: sortOrder, is_template: isTemplate })
     .select()
     .single();
 
