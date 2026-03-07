@@ -577,9 +577,10 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
               name: caseItem.name,
               sku: caseItem.sku,
               quantity: caseItem.quantity,
-              unit: caseItem.unit,
+              price: 0,
+              total: 0,
               notes: caseItem.notes,
-              picked_in_warehouse: caseItem.picked
+              picked: caseItem.picked
             });
             createdItems.push({ oldId: caseItem.budgetItemId, newId: newItem.id });
           } catch (err) {
