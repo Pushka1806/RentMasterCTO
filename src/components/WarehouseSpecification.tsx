@@ -597,7 +597,10 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
             console.error('Error creating LED case budget item:', caseItem.budgetItemId, err);
             console.error('Error message:', err?.message);
             console.error('Error details:', err?.details);
-            console.error('Error hint:', err?.hint);        // Find the expanded item to get current values for quantity/notes update
+            console.error('Error hint:', err?.hint);
+          }
+        }
+        // Find the expanded item to get current values for quantity/notes update
         const expandedItem = expandedItems.find(item => item.budgetItemId === budgetItemId);
         
         if (!expandedItem) continue;
