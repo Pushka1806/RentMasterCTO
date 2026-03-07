@@ -353,6 +353,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
     
     setExpandedItems(updatedItems);
     setLedItemsWithCases(prev => new Set(prev).add(budgetItemId));
+    setModifiedItems(prev => new Set(prev).add(budgetItemId));
   };
 
   const handlePickedChange = async (budgetItemId: string, picked: boolean) => {
