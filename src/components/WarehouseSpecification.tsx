@@ -566,12 +566,14 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
         );
         
         // First, create all LED cases as new budget items
+        const parentBudgetItem = budgetItems.find(b => b.id === budgetItemId);
         for (const caseItem of caseItems) {
           try {
             console.log('Creating LED case with data:', {
               event_id: eventId,
               item_type: 'equipment',
               category_id: caseItem.categoryId,
+              equipment_id: parentBudgetItem ? parentBudgetItem.equipment_id : null,
               quantity: caseItem.quantity,
               price: 0,
               total: 0,
@@ -584,6 +586,7 @@ export function WarehouseSpecification({ eventId, eventName, onClose }: Warehous
               event_id: eventId,
               item_type: 'equipment',
               category_id: caseItem.categoryId,
+              equipment_id: parentBudgetItem ? parentBudgetItem.equipment_id : null,
               quantity: caseItem.quantity,
               price: 0,
               total: 0,
